@@ -10,7 +10,7 @@ https://www.conventionalcommits.org/en/v1.0.0/
 
 #### .ENV
 
-> [!IMPORTANT] # Goofy ah intellij supported keine blockquotes  
+> [!IMPORTANT]
 > very basic .env file with just db credentials \
 > kp ob wir irgendwas für spring spezifisch brauchen oder nur db connection credentials \
 > sleither hatte auf jedenfall irgendeine datei mit secrets in spring \
