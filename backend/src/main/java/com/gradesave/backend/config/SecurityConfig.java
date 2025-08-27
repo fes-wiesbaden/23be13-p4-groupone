@@ -1,4 +1,3 @@
-// src/main/java/com/gradesave/backend/config/SecurityConfig.java
 package com.gradesave.backend.config;
 
 import org.springframework.context.annotation.Bean;
