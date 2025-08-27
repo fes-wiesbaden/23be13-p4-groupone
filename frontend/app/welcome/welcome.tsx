@@ -1,5 +1,8 @@
 import logoDark from "./logo-dark.svg";
 import logoLight from "./logo-light.svg";
+import React from 'react';
+import Button from '@mui/material/Button';
+
 
 export function Welcome() {
   return (
@@ -17,6 +20,10 @@ export function Welcome() {
               alt="React Router"
               className="hidden w-full dark:block"
             />
+          </div>
+          <div>
+              <Button variant="contained">Hello world</Button>
+
           </div>
         </header>
         <div className="max-w-[300px] w-full space-y-6 px-4">
