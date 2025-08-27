@@ -54,7 +54,7 @@ docker-compose up -d
 
 - Backend -> `8080`
 - Frontend -> `3000`
-- DataBase -> `5433`
+- DataBase -> `5432`
 
 ### Commands
 
