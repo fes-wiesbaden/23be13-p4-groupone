@@ -10,12 +10,6 @@ https://www.conventionalcommits.org/en/v1.0.0/
 
 #### .ENV
 
-> [!IMPORTANT]
-> very basic .env file with just db credentials \
-> kp ob wir irgendwas für spring spezifisch brauchen oder nur db connection credentials \
-> sleither hatte auf jedenfall irgendeine datei mit secrets in spring \
-> kp ob wir was für frontend brauchen 
-
 Create .env in root dir
 
 **Example**
@@ -88,4 +82,4 @@ docker-compose up -d --build
 docker-compose logs -f
 ```
 
-Or just use docker desktop, idk
+Alternatively, you can use Docker Desktop for container managemen
