@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import logoDark from "./logo-dark.svg";
 import logoLight from "./logo-light.svg";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
 export function Welcome() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/greeting")
+    fetch(`${API_BASE_URL}/api/greeting`)
         .then((res) => res.json())
         .then((data) => setMessage(data.message))
         .catch((err) => console.error(err));
+    console.log(API_BASE_URL);
   }, []);
 
   return (
