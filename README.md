@@ -50,11 +50,14 @@ To run entire stack in Docker
 docker-compose up -d
 ```
 
-### Ports
+### Port Mapping
 
-- Backend -> `8080`
-- Frontend -> `3000`
-- DataBase -> `5432`
+| Service  | Host Port | Container Port | Notes                            |
+|----------|-----------|----------------|----------------------------------|
+| Backend  | 8080      | 8080           |                                  |
+| Frontend | 3000      | 3000           |                                  |
+| Database | 15432     | 5432           | Windows uses 5432 for `iphlpsvc` |
+
 
 ### Commands
 
