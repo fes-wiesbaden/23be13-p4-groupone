@@ -1,5 +1,3 @@
-# Use postgres/example user/password credentials
-
 services:
 
   db:
@@ -11,8 +9,6 @@ services:
       - "15432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data/
-      #- ${PWD}/db-data/:/var/lib/postgresql/data/
-      # - ${PWD}/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   backend:
     build: ./backend
