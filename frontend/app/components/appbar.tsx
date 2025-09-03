@@ -12,6 +12,7 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
+import ProfileIcon from '../assets/test_profile_icon.jpg'
 
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
@@ -43,7 +44,7 @@ function ResponsiveAppBar() {
                         variant="h6"
                         noWrap
                         component="a"
-                        href="#app-bar-with-responsive-menu"
+                        href="/"
                         sx={{
                             mr: 2,
                             display: { xs: 'none', md: 'flex' },
@@ -91,7 +92,7 @@ function ResponsiveAppBar() {
                         variant="h5"
                         noWrap
                         component="a"
-                        href="#app-bar-with-responsive-menu"
+                        href="/"
                         sx={{
                             mr: 2,
                             display: { xs: 'flex', md: 'none' },
@@ -110,7 +111,7 @@ function ResponsiveAppBar() {
                     <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open settings">
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar alt="Remy Sharp" src="https://ar.inspiredpencil.com/pictures-2023/default-profile-picture" /> {/* TODO: logic to get user icons */}
+                                <Avatar alt="Remy Sharp" src={ProfileIcon}/> {/* TODO: logic to get user icons */}
                             </IconButton>
                         </Tooltip>
                         <Menu
