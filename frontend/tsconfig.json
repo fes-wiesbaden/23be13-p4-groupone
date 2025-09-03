@@ -7,6 +7,10 @@
   ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true,
     "types": ["node", "vite/client"],
     "target": "ES2022",
     "module": "ES2022",
