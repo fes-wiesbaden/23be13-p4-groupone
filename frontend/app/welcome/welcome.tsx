@@ -2,20 +2,11 @@ import logoDark from "./logo-dark.svg";
 import logoLight from "./logo-light.svg";
 import React from 'react';
 import Button from '@mui/material/Button';
+import { postGreeting } from "../adminfunctions.tsx";
 
 
 export function Welcome() {
-const handleClick = async () => {
-        console.log("pushed button hehe");
-        try {
-            const response = await fetch (" http://localhost:8080/greeting", { method: "POST" });
-            const text = await response.text();
-            console.log("Response: ", text);
-        }
-        catch (err) {
-            console.error("Request failed:", err);
-        }
-    };
+
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
@@ -59,7 +50,7 @@ const handleClick = async () => {
             </ul>
 
             <Button
-              onClick={handleClick}
+              onClick={postGreeting}
               title="Greet the Backend"
             >Greet the Backend</Button>
           </nav>
@@ -68,23 +59,6 @@ const handleClick = async () => {
     </main>
   );
 }
-
-export default function GreetTheBackend()
-  {
-    const handleClick = async () => {
-        console.log("pushed button hehe");
-        try {
-            const response = await fetch ("/greeting", { method: "GET" });
-            const text = await response.text();
-            console.log("Response: ", text);
-        }
-        catch (err) {
-            console.error("Request failed:", err);
-        }
-    };
-
-    return <button onClick={handleClick}>Greet the Backend</button>;
-  }
 
 const resources = [
   {
