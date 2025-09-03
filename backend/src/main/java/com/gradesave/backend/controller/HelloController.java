@@ -4,11 +4,16 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.Map;
 
+
+
 @RestController
-@RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:5173")
+
+//@RequestMapping("/api")
 public class HelloController {
-    @GetMapping("/greeting")
+    @PostMapping("/greeting")
     public Map<String, Object> greeting() {
+        System.out.println("The rizzler said hi");
         return Map.of("message", "Hello from Spring", "time", Instant.now().toString());
     }
 }
