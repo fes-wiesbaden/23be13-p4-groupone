@@ -1,21 +1,31 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-  Paper
+    Box,
+    Button,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    TextField,
+    Typography,
+    Paper,
+    Snackbar,
+    Alert,
+    type SelectChangeEvent
 } from '@mui/material';
+import API_CONFIG from '../apiConfig';
 
 interface UserFormData {
   username: string;
   firstName: string;
   lastName: string;
   role: 'STUDENT' | 'TEACHER' | 'ADMIN';
+}
+
+interface AlertState {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error';
 }
 
 const initialFormData: UserFormData = {
@@ -25,8 +35,15 @@ const initialFormData: UserFormData = {
   role: 'STUDENT'
 };
 
+const initialAlertState: AlertState = {
+  open: false,
+  message: '',
+  severity: 'success'
+};
+
 const CreateUserForm: React.FC = () => {
   const [formData, setFormData] = useState<UserFormData>(initialFormData);
+  const [alert, setAlert] = useState<AlertState>(initialAlertState);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,100 +53,125 @@ const CreateUserForm: React.FC = () => {
     }));
   };
 
-  const handleRoleChange = (event: any) => {
+  const handleRoleChange = (event: SelectChangeEvent) => {
     setFormData(prev => ({
       ...prev,
       role: event.target.value as 'STUDENT' | 'TEACHER' | 'ADMIN'
     }));
   };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+  const handleCloseAlert = () => {
+    setAlert(prev => ({ ...prev, open: false }));
+  };
 
-        try {
-            console.log('Sending data:', JSON.stringify(formData, null, 2));
-            const response = await fetch('http://localhost:8080/api/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
+  const showAlert = (message: string, severity: 'success' | 'error') => {
+    setAlert({
+      open: true,
+      message,
+      severity
+    });
+  };
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server response:', response.status, errorText);
-            }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (response.ok) {
         setFormData(initialFormData);
-        console.log('User created successfully');
+        showAlert('User created successfully', 'success');
       } else {
-        console.error('Failed to create user');
+        const errorText = await response.text();
+        showAlert(`Failed to create user: ${errorText}`, 'error');
       }
     } catch (error) {
-      console.error('Error creating user:', error);
+      showAlert(`Error creating user: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, maxWidth: 400, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5" component="h2" gutterBottom>
-        Create New User
-      </Typography>
-      
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <TextField
-          required
-          fullWidth
-          label="Username"
-          name="username"
-          value={formData.username}
-          onChange={handleInputChange}
-        />
+    <>
+      <Paper elevation={3} sx={{ p: 3, maxWidth: 400, mx: 'auto', mt: 4 }}>
+        <Typography variant="h5" component="h2" gutterBottom>
+          Create New User
+        </Typography>
+        
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField
+            required
+            fullWidth
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
+          />
 
-        <TextField
-          required
-          fullWidth
-          label="First Name"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleInputChange}
-        />
+          <TextField
+            required
+            fullWidth
+            label="First Name"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleInputChange}
+          />
 
-        <TextField
-          required
-          fullWidth
-          label="Last Name"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleInputChange}
-        />
+          <TextField
+            required
+            fullWidth
+            label="Last Name"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleInputChange}
+          />
 
-        <FormControl fullWidth required>
-          <InputLabel id="role-label">Role</InputLabel>
-          <Select
-            labelId="role-label"
-            value={formData.role}
-            label="Role"
-            onChange={handleRoleChange}
+          <FormControl fullWidth required>
+            <InputLabel id="role-label">Role</InputLabel>
+            <Select
+              labelId="role-label"
+              value={formData.role}
+              label="Role"
+              onChange={handleRoleChange}
+            >
+              <MenuItem value="STUDENT">Student</MenuItem>
+              <MenuItem value="TEACHER">Teacher</MenuItem>
+              <MenuItem value="ADMIN">Admin</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary"
+            sx={{ mt: 2 }}
           >
-            <MenuItem value="STUDENT">Student</MenuItem>
-            <MenuItem value="TEACHER">Teacher</MenuItem>
-            <MenuItem value="ADMIN">Admin</MenuItem>
-          </Select>
-        </FormControl>
+            Create User
+          </Button>
+        </Box>
+      </Paper>
 
-        <Button 
-          type="submit" 
-          variant="contained" 
-          color="primary"
-          sx={{ mt: 2 }}
+      <Snackbar 
+        open={alert.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseAlert} 
+          severity={alert.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
         >
-          Create User
-        </Button>
-      </Box>
-    </Paper>
+          {alert.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
