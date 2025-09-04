@@ -41,7 +41,7 @@ public class UserService implements CrudService<User, UUID> {
     @Override
     public User update(UUID id, User patch) {
         var existing = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
 
         existing.setUsername(patch.getUsername());
         existing.setFirstName(patch.getFirstName());
