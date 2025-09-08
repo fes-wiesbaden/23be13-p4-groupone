@@ -1,4 +1,3 @@
-// created by Michael Holl on 07.09.2025
 package com.gradesave.backend.controller;
 
 import com.gradesave.backend.models.Subject;
@@ -9,6 +8,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ *    Handles incoming HTTP requests for subjects
+ * </p>
+ *
+ **/
 @RestController
 @RequestMapping("/api/subject")
 public class SubjectController {

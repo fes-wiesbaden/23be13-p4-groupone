@@ -1,4 +1,3 @@
-// Component to add, edit & delete entity in table | Created by Michael Holl on 09.07.2025
 import * as React from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { deDE } from "@mui/x-data-grid/locales";
@@ -8,9 +7,28 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 
-export default function DataGridWithAdd(props) {
-    const { columns, rows, onAddClick, onEditClick, onDeleteClick } = props;
+/**
+ * @author: Michael Holl
+ * <p>
+ *   Component to add, edit & delete entity in table
+ * </p>
+ *
+ **/
+interface DataGridWithAddProps {
+  columns: Column[];
+  rows: DataRow[];
+  onAddClick: () => void;
+  onEditClick: (row: DataRow) => void;
+  onDeleteClick: (id: number) => void;
+}
 
+export default function DataGridWithAdd({
+  columns,
+  rows,
+  onAddClick,
+  onEditClick,
+  onDeleteClick,
+}: DataGridWithAddProps) {
     const actions = [
         {
             field: "actions",

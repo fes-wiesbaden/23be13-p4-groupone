@@ -1,4 +1,4 @@
-// Component to add, edit & delete questions for questionnaire | Created by Michael Holl on 09.07.2025
+
 import React, { useState, useEffect } from "react";
 import DataTableWithAdd from "../components/DataTableWithAddButton";
 import {
@@ -17,6 +17,13 @@ import {
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
 
+/**
+ * @author: Michael Holl
+ * <p>
+ *   Component to add, edit & delete questions for questionnaire
+ * </p>
+ *
+ **/
 interface Subject {
     id: number;
     name: string;
@@ -34,6 +41,11 @@ const columns = [
     { label: "Lernbereiche", key: "subjects" },
     { label: "Typ", key: "type" },
 ];
+
+const typeMap = {
+  TEXT: "Text",
+  GRADE: "Note",
+};
 
 export default function Question() {
     const [rows, setRows] = useState<any[]>([]);
@@ -112,7 +124,7 @@ export default function Question() {
                 columns={columns}
                 rows={allQuestions.map(q => ({
                     ...q,
-                    type: q.type === "TEXT" ? "Text" : "Note",
+                    type: typeMap[q.type],
                     subjects: q.subjects.map(s => s.name).join(", ")
                 }))}
                 onAddClick={handleAddClick}

@@ -1,4 +1,3 @@
-// created by Michael Holl on 07.09.2025
 package com.gradesave.backend.services;
 
 import com.gradesave.backend.models.Subject;
@@ -8,6 +7,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ *   Business logic for subjects
+ * </p>
+ *
+ **/
 @Service
 public class SubjectService implements CrudService<Subject, Long>{
     private final SubjectRepository subjectRepository;

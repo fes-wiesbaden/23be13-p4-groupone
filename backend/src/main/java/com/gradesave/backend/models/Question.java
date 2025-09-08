@@ -9,6 +9,13 @@ import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ *    Creates question and question_subject table
+ * </p>
+ *
+ **/
 @Entity
 @Table(name = "question")
 public class Question {
@@ -24,7 +31,7 @@ public class Question {
     @Enumerated(EnumType.STRING)
     private QuestionType type;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "question_subject",
             joinColumns = @JoinColumn(name = "question_id"),

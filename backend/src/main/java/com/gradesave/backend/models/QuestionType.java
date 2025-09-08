@@ -1,6 +1,12 @@
-// created by Michael Holl on 07.09.2025
 package com.gradesave.backend.models;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ *    Enum created for question table
+ * </p>
+ *
+ **/
 public enum QuestionType {
     GRADE,
     TEXT

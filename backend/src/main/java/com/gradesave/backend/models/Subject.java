@@ -1,4 +1,3 @@
-// Model for subjects/learning fields | Created by Michael Holl on 07.09.2025
 package com.gradesave.backend.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,6 +8,13 @@ import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ *    Creates subject table
+ * </p>
+ *
+ **/
 @Entity
 @Table(name = "subject")
 public class Subject {

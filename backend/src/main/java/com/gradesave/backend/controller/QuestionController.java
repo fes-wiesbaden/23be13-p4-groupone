@@ -1,4 +1,3 @@
-// created by Michael Holl on 07.09.2025
 package com.gradesave.backend.controller;
 
 import com.gradesave.backend.models.Question;
@@ -7,6 +6,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ *    Handles incoming HTTP requests for questions
+ * </p>
+ *
+ **/
 @RestController
 @RequestMapping("/api/question")
 public class QuestionController {
