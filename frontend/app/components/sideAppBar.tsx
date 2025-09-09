@@ -1,3 +1,8 @@
+/*
+  * @Author: Paul motherfucking Geisthardt
+  * @Date: 09/09/2024
+  * Creates a Side + Appbar for the Frontend
+*/
 import * as React from 'react';
 import {type CSSObject, styled, type Theme, useTheme} from '@mui/material/styles';
 import Box from '@mui/material/Box';
