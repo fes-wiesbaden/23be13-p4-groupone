@@ -4,6 +4,7 @@ import com.gradesave.backend.models.Course;
 import com.gradesave.backend.repositories.CourseRepository;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
+@Transactional
 public class CourseService implements CrudService<Course, UUID> {
 
     private final CourseRepository repo;
@@ -21,7 +24,7 @@ public class CourseService implements CrudService<Course, UUID> {
 
     @Override
     public Course create(Course entity) {
-        return null;
+        return repo.save(entity);
     }
 
     @Override
