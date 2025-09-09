@@ -1,5 +1,5 @@
 /*
-  * @Author: Paul motherfucking Geisthardt
+  * @Author: Paul Geisthardt
   * @Date: 09/09/2024
   * Creates a Side + Appbar for the Frontend
 */
