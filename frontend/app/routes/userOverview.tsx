@@ -1,4 +1,9 @@
 // app/routes/users.tsx (or any page/component)
+/*
+  * @Author: Daniel Hess
+  * @Date: 09/09/2024
+  * Creates overview of all users with actions to edit, delete and add new users
+*/
 import * as React from "react";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
