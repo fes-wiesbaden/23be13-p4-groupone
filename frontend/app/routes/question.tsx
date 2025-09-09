@@ -54,37 +54,44 @@ const typeMap = {
 };
 
 export default function Question() {
-    const [rows, setRows] = useState<any[]>([]);
-    const [subjectsList, setSubjectsList] = useState<Subject[]>([]);
-    const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
-    const [allQuestions, setAllQuestions] = useState<Question[]>([]);
-    const [openDialog, setOpenDialog] = useState(false);
+  const [rows, setRows] = useState<any[]>([]);
+  const [subjectsList, setSubjectsList] = useState<Subject[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
+  const [openDialog, setOpenDialog] = useState(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const resSubjects = await fetch(`${API_CONFIG.BASE_URL}/api/subject/findAll`);
-                const subjectsData = await resSubjects.json();
-                setSubjectsList(subjectsData);
-            } catch (err) {
-                console.error("Error fetching subjects:", err);
-            }
-            try {
-                const resQuestions = await fetch(`${API_CONFIG.BASE_URL}/api/question/findAll`);
-                const questionsData = await resQuestions.json();
-                setAllQuestions(questionsData);
-            } catch (err) {
-                console.error("Error fetching questions:", err);
-            }
-        };
-        fetchData();
-    }, []);
-
-    const handleAddClick = () => setOpenDialog(true);
-    const handleCloseDialog = () => {
-        setSelectedSubjects([]);
-        setOpenDialog(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      // load all subjects
+      try {
+        const resSubjects = await fetch(
+          `${API_CONFIG.BASE_URL}/api/subject/findAll`
+        );
+        const subjectsData = await resSubjects.json();
+        setSubjectsList(subjectsData);
+      } catch (err) {
+        console.error("Error fetching subjects:", err);
+      }
+      // load all questions
+      try {
+        const resQuestions = await fetch(
+          `${API_CONFIG.BASE_URL}/api/question/findAll`
+        );
+        const questionsData = await resQuestions.json();
+        setAllQuestions(questionsData);
+      } catch (err) {
+        console.error("Error fetching questions:", err);
+      }
     };
+    fetchData();
+  }, []);
+
+  const handleAddClick = () => setOpenDialog(true);
+
+  const handleCloseDialog = () => {
+    setSelectedSubjects([]);
+    setOpenDialog(false);
+  };
 
     const handleEditClick = async (row: QuestionRow) => {
         const question = row.original;
@@ -95,10 +102,10 @@ export default function Question() {
         // TODO: Build Logic To Delete Row
     }
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const formJson = Object.fromEntries((formData as any).entries());
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const formJson = Object.fromEntries((formData as any).entries());
 
         const payload = {
             text: formJson.question,
@@ -106,12 +113,12 @@ export default function Question() {
             subjects: selectedSubjects.map(s => ({id: s.id})),
         };
 
-        try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/question`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(payload),
-            });
+    try {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/question`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
             if (res.ok) {
                 const newQuestion = await res.json();

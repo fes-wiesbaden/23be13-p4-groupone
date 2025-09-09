@@ -1,21 +1,25 @@
 package com.gradesave.backend.services;
 
-import com.gradesave.backend.models.Subject;
-import com.gradesave.backend.repositories.SubjectRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.gradesave.backend.models.Subject;
+import com.gradesave.backend.repositories.SubjectRepository;
 
 /**
  * @author: Michael Holl
  * <p>
- *   Business logic for subjects
+ * Business logic for subjects
  * </p>
  *
- **/
+ *
+ */
 @Service
-public class SubjectService implements CrudService<Subject, Long>{
+public class SubjectService implements CrudService<Subject, UUID> {
+
     private final SubjectRepository subjectRepository;
 
     public SubjectService(SubjectRepository subjectRepository) {
@@ -23,12 +27,12 @@ public class SubjectService implements CrudService<Subject, Long>{
     }
 
     @Override
-    public Subject create(Subject entity) {
-        return null;
+    public Subject create(Subject subject) {
+        return subjectRepository.save(subject);
     }
 
     @Override
-    public Optional<Subject> getById(Long aLong) {
+    public Optional<Subject> getById(UUID id) {
         return Optional.empty();
     }
 
@@ -38,17 +42,22 @@ public class SubjectService implements CrudService<Subject, Long>{
     }
 
     @Override
-    public Subject update(Long aLong, Subject entity) {
-        return null;
+    public Subject update(UUID id, Subject subject) {
+        Subject existingSubject = subjectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+        existingSubject.setName(subject.getName());
+        existingSubject.setDescription(subject.getDescription());
+        existingSubject.setLearningField(subject.isLearningField());
+        return subjectRepository.save(existingSubject);
     }
 
     @Override
-    public void deleteById(Long aLong) {
-
+    public void deleteById(UUID id) {
+        subjectRepository.deleteById(id);
     }
 
     @Override
-    public boolean exists(Long aLong) {
+    public boolean exists(UUID id) {
         return false;
     }
 

@@ -1,24 +1,33 @@
 package com.gradesave.backend.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+
 /**
  * @author: Michael Holl
  * <p>
- *    Creates subject table
+ * Creates subject table
  * </p>
  *
- **/
+ *
+ */
 @Entity
 @Table(name = "subject")
 public class Subject {
+
     @Id
     @GeneratedValue
     private UUID id;
@@ -34,6 +43,8 @@ public class Subject {
     @JsonIgnore
     private Set<Question> questions = new HashSet<>();
 
+    @Column(name = "is_learning_field")
+    private boolean learningField;
 
     public UUID getId() {
         return id;
@@ -65,5 +76,13 @@ public class Subject {
 
     public void setQuestions(Set<Question> questions) {
         this.questions = questions;
+    }
+
+    public boolean isLearningField() {
+        return learningField;
+    }
+
+    public void setLearningField(boolean learningField) {
+        this.learningField = learningField;
     }
 }
