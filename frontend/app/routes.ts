@@ -4,5 +4,6 @@ export default [
     index("routes/home.tsx"),
     route("user", "routes/user.tsx"),
     route("fragen", "routes/question.tsx"),
+    route("klassen", "routes/klassen.tsx"),
     // route("test", "routes/test.tsx"), add routes like this
 ] satisfies RouteConfig;
