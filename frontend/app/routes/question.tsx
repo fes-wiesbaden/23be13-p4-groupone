@@ -25,12 +25,12 @@ import API_CONFIG from "../apiConfig";
  *
  **/
 interface Subject {
-    id: number;
+    id: string;
     name: string;
 }
 
 interface Question {
-    id: number;
+    id: string;
     text: string;
     type: "TEXT" | "GRADE";
     subjects: Subject[];

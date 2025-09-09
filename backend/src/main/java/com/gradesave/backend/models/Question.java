@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author: Michael Holl
@@ -21,7 +22,7 @@ import java.util.Set;
 public class Question {
     @Id
     @GeneratedValue
-    private Long id;
+    private UUID id;
 
     @NotBlank(message = "text is required")
     @Size(max = 1000, message = "text must not exceed 1000 characters")
@@ -39,11 +40,11 @@ public class Question {
     )
     private Set<Subject> subjects = new HashSet<>();
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
