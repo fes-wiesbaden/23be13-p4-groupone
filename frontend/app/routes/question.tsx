@@ -56,7 +56,6 @@ export default function Question() {
 
     useEffect(() => {
         const fetchData = async () => {
-            // load all subjects
             try {
                 const resSubjects = await fetch(`${API_CONFIG.BASE_URL}/api/subject/findAll`);
                 const subjectsData = await resSubjects.json();
@@ -64,7 +63,6 @@ export default function Question() {
             } catch (err) {
                 console.error("Error fetching subjects:", err);
             }
-            // load all questions
             try {
                 const resQuestions = await fetch(`${API_CONFIG.BASE_URL}/api/question/findAll`);
                 const questionsData = await resQuestions.json();

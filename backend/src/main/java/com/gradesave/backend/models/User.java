@@ -1,5 +1,6 @@
 package com.gradesave.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +30,10 @@ public class User {
     @NotNull(message = "Role is required")
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotBlank(message = "password is required")
+    private String password;
 
     public UUID getId() {
         return id;
@@ -68,5 +73,13 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
