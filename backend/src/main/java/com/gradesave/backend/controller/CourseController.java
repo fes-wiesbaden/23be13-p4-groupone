@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/klassen")
@@ -37,5 +38,12 @@ public class CourseController {
     public ResponseEntity<List<Course>> getAllCourses() {
         List<Course> courses = courseService.getAll();
         return ResponseEntity.ok(courses);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Course> deleteCourse(@PathVariable UUID id) {
+        System.out.println("Delete course: " + id);
+        courseService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

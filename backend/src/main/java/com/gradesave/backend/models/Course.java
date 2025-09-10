@@ -1,6 +1,8 @@
 package com.gradesave.backend.models;
 
 import jakarta.persistence.*;
+
+import java.util.UUID;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 //import java.util.HashSet;
@@ -10,15 +12,15 @@ import jakarta.persistence.*;
 @Table(name="course")
 public class Course {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    private UUID id;
 
     private String courseName;
 
 
-    public Long getId() { return id; }
+    public UUID getId() { return id; }
 
-    public void setId(Long id) { this.id = id; }
+    public void setId(UUID id) { this.id = id; }
 
     public String getCourseName() { return courseName; }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { Route } from "./+types/home";
-import { postNewTestCourseEntry, postGreeting } from "../adminfunctions.tsx";
+import { postNewTestCourseEntry, deleteCourse, postGreeting } from "../adminfunctions.tsx";
 import DataTableWithAdd from "../components/DataTableWithAddButton";
 import Button from '@mui/material/Button';
 import API_CONFIG from "../apiConfig";
@@ -24,6 +24,11 @@ export default function Klassen() {
     function printAllCourses() {
         console.log(allCourses);
     }
+    async function handleAddClick() {
+        await postNewTestCourseEntry();
+        await fetchData();
+        // sollte eigentlich tabelle updaten, hat nicht funktioniert, muss jemand machen der besser in ui ist
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -41,8 +46,8 @@ export default function Klassen() {
         <>
             <Button
                 onClick={printAllCourses}
-                title="Create New Course"
-            >Create New Course</Button>
+                title="Log all Entries"
+            >Log all Entries</Button>
             <DataTableWithAdd
                 columns={columns}
                 rows={allCourses.map(q => ({
@@ -50,7 +55,7 @@ export default function Klassen() {
                 }))}
                 onAddClick={postNewTestCourseEntry}
                 onEditClick={postGreeting}
-                onDeleteClick={postGreeting}
+                onDeleteClick={deleteCourse}
             />
         </>
     );
