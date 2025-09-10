@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import DataTableWithAdd from "../components/DataTableWithAddButton";
+import DataTableWithAdd from "../components/dataTableWithAddButton";
 import {
     Dialog,
     DialogTitle,
