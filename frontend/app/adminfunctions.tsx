@@ -13,7 +13,7 @@ export async function postGreeting () {
     }
 };
 
-export async function postNewCourseEntry () {
+export async function postNewTestCourseEntry () {
     console.log("Create New Course");
     try {
         // POST for new course
