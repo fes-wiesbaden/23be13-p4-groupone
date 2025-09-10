@@ -18,7 +18,7 @@ import java.util.UUID;
 
 
 @Entity
-@Table(name = "user")
+@Table(name = "\"user\"")
 public class User {
     @Id
     @GeneratedValue
