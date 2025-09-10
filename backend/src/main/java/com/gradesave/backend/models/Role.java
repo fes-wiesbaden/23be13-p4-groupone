@@ -1,7 +1,7 @@
 package com.gradesave.backend.models;
 
 /**
- * @author: Michael Holl
+ * @author: Daniel Hess
  * <p>
  *    Creates Enum for role table
  * </p>
