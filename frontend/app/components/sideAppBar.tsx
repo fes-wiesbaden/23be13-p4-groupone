@@ -384,6 +384,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
                 sx={{
                     flexGrow: 1,
                 }}>
+                <Toolbar />
                 {children}
             </Box>
         </Box>
