@@ -11,6 +11,15 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 
+/**
+ * @author: Michael Holl
+ * <p>
+ *   Component to add, edit & delete entities
+ *   edited by Daniel Hess
+ * </p>
+ *
+ **/
+
 export interface DataRow {
     id: string | number;
     [key: string]: any;

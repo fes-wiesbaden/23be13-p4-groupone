@@ -32,7 +32,7 @@ public class UserController {
         entity.setFirstName(req.firstName());
         entity.setLastName(req.lastName());
         entity.setRole(req.role());
-        entity.setPassword(req.password()); // raw; service must hash
+        entity.setPassword(req.password());
 
         User saved = userService.create(entity);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
