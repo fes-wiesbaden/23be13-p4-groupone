@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.gradesave.backend.models.Subject;
 import com.gradesave.backend.repositories.SubjectRepository;
@@ -43,12 +44,10 @@ public class SubjectService implements CrudService<Subject, UUID> {
 
     @Override
     public Subject update(UUID id, Subject subject) {
-        Subject existingSubject = subjectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Subject not found"));
-        existingSubject.setName(subject.getName());
-        existingSubject.setDescription(subject.getDescription());
-        existingSubject.setLearningField(subject.isLearningField());
-        return subjectRepository.save(existingSubject);
+        if (!exists(id)) {
+            throw new IllegalArgumentException("Subject with id " + id + " does not exist");
+        }
+        return subjectRepository.save(subject);
     }
 
     @Override
@@ -57,8 +56,9 @@ public class SubjectService implements CrudService<Subject, UUID> {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean exists(UUID id) {
-        return false;
+        return subjectRepository.existsById(id);
     }
 
     @Override

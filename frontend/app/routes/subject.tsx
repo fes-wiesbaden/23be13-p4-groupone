@@ -163,7 +163,7 @@ export default function Subject() {
           {editingSubject?.id ? "Bearbeite Lernbereich" : "Neuer Lernbereich"}
         </DialogTitle>
         <DialogContent>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} id="newSubjectForm">
             <TextField
               autoFocus
               required
@@ -222,7 +222,7 @@ export default function Subject() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Abbrechen</Button>
-          <Button type="submit" onClick={handleSubmit}>
+          <Button type="submit" form="newSubjectForm">
             {editingSubject?.id ? "Speichern" : "Hinzufügen"}
           </Button>
         </DialogActions>

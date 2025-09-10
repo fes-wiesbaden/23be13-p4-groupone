@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gradesave.backend.models.Subject;
 import com.gradesave.backend.services.SubjectService;
 
+import jakarta.validation.Valid;
+
 /**
  * @author: Michael Holl
  * <p>
@@ -34,7 +36,7 @@ public class SubjectController {
     }
 
     @PostMapping
-    public Subject createSubject(@RequestBody Subject subject) {
+    public Subject createSubject(@Valid @RequestBody Subject subject) {
         return subjectService.create(subject);
     }
 
