@@ -213,7 +213,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
     const menuItems: MenuItem[] = [
         {text: 'Startseite', icon: <HomeIcon/>, path: '/'},
         {text: 'Klassen', icon: <SchoolIcon/>, path: '/klassen'},
-        {text: 'Schüler', icon: <PeopleIcon/>, path: '/schueler'},
+        {text: 'Benutzer', icon: <PeopleIcon/>, path: '/user'},
         {text: 'Fragen', icon: <QuizIcon/>, path: '/fragen'},
         {text: 'Noten', icon: <GradeIcon/>, path: '/noten'},
         {text: 'Projekte', icon: <ProjectIcon/>, path: '/projekte'},
@@ -384,6 +384,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
                 sx={{
                     flexGrow: 1,
                 }}>
+                <Toolbar />
                 {children}
             </Box>
         </Box>
