@@ -1,8 +1,12 @@
 import * as React from "react";
-import { DataGrid } from "@mui/x-data-grid";
-import { deDE } from "@mui/x-data-grid/locales";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Stack, IconButton } from "@mui/material";
+import {
+    DataGrid,
+    type GridColDef,
+    type GridRenderCellParams,
+} from "@mui/x-data-grid";
+import {deDE} from "@mui/x-data-grid/locales";
+import {createTheme, ThemeProvider} from "@mui/material/styles";
+import {Stack, IconButton} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -10,88 +14,99 @@ import AddIcon from "@mui/icons-material/Add";
 /**
  * @author: Michael Holl
  * <p>
- *   Component to add, edit & delete entity in table
+ *   Component to add, edit & delete entities
+ *   edited by Daniel Hess
  * </p>
  *
  **/
+
+export interface DataRow {
+    id: string | number;
+    [key: string]: any;
+}
+
+export interface Column {
+    key: string;
+    label: string;
+}
+
 interface DataGridWithAddProps {
-  columns: Column[];
-  rows: DataRow[];
-  onAddClick: () => void;
-  onEditClick: (row: DataRow) => void;
-  onDeleteClick: (id: number) => void;
+    columns: Column[];
+    rows: DataRow[];
+    onAddClick: () => void;
+    onEditClick: (row: DataRow) => void;
+    onDeleteClick: (id: number) => void;
 }
 
 export default function DataGridWithAdd({
-  columns,
-  rows,
-  onAddClick,
-  onEditClick,
-  onDeleteClick,
-}: DataGridWithAddProps) {
-    const actions = [
-        {
-            field: "actions",
-            headerName: "Aktionen",
-            flex: 0.8,
-            sortable: false,
-            renderCell: ({ row }) => (
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{ height: "100%", alignItems: "center" }}
+                                            columns,
+                                            rows,
+                                            onAddClick,
+                                            onEditClick,
+                                            onDeleteClick,
+                                        }: DataGridWithAddProps) {
+    const actionCol: GridColDef<DataRow> = {
+        field: "actions",
+        headerName: "Aktionen",
+        flex: 0.8,
+        sortable: false,
+        filterable: false,
+        renderCell: (params: GridRenderCellParams<DataRow, unknown>) => (
+            <Stack direction="row" spacing={1} sx={{height: "100%", alignItems: "center"}}>
+                <IconButton size="small" onClick={() => onEditClick(params.row)} color="primary">
+                    <EditIcon/>
+                </IconButton>
+                <IconButton
+                    size="small"
+                    onClick={() => onDeleteClick(params.row.id as number)}
+                    color="error"
                 >
-                    <IconButton size="small" onClick={() => onEditClick(row)} color="primary">
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => onDeleteClick(row.id)} color="error">
-                        <DeleteIcon />
-                    </IconButton>
-                </Stack>
-            ),
-        },
-    ];
+                    <DeleteIcon/>
+                </IconButton>
+            </Stack>
+        ),
+    };
 
-    const gridColumns = [
-        ...columns.map((col) => ({
+    const gridColumns: GridColDef<DataRow>[] = [
+        ...columns.map<GridColDef<DataRow>>((col) => ({
             field: col.key,
             headerName: col.label,
             flex: 1,
             sortable: true,
             filterable: true,
-            renderCell: (params) => {
-                if (Array.isArray(params.value)) {
-                    return params.value.map((s) => s.name).join(", ");
+            renderCell: (params: GridRenderCellParams<DataRow>) => {
+                const v = params.value as unknown;
+                if (Array.isArray(v)) {
+                    return v.map((s: any) => s?.name ?? String(s)).join(", ");
                 }
-                return params.value;
+                return String(v ?? "");
             },
         })),
-        ...actions,
+        actionCol,
     ];
 
     const theme = createTheme(
         {
-            palette: {
-                primary: { main: "#1976d2" },
-            },
+            palette: {primary: {main: "#1976d2"}},
         },
         deDE
     );
 
     return (
         <ThemeProvider theme={theme}>
-            <div style={{ height: 600, width: "100%" }}>
-                <Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
+            <div style={{width: "100%"}}>
+                <Stack direction="row" justifyContent="flex-end" sx={{mb: 1}}>
                     <IconButton onClick={onAddClick} aria-label="add">
-                        <AddIcon />
+                        <AddIcon/>
                     </IconButton>
                 </Stack>
                 <DataGrid
                     rows={rows}
                     columns={gridColumns}
                     pagination
-                    disableSelectionOnClick
+                    disableRowSelectionOnClick
                     autoHeight
+                    localeText={deDE.components.MuiDataGrid.defaultProps?.localeText}
                 />
             </div>
         </ThemeProvider>
