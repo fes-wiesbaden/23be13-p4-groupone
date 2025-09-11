@@ -3,6 +3,7 @@ package com.gradesave.backend.repositories;
 import com.gradesave.backend.models.Subject;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.UUID;
 
 /**
  * @author: Michael Holl
@@ -12,6 +13,6 @@ import org.springframework.stereotype.Repository;
  *
  **/
 @Repository
-public interface SubjectRepository extends JpaRepository<Subject, Long> {
+public interface SubjectRepository extends JpaRepository<Subject, UUID> {
 
 }

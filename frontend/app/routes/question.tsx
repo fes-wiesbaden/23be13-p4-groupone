@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect } from "react";
-import DataTableWithAdd from "../components/dataTableWithAddButton";
+import React, {useState, useEffect} from "react";
+import DataTableWithAdd, {type DataRow} from "../components/dataTableWithAddButton";
 import {
     Dialog,
     DialogTitle,
@@ -25,26 +24,33 @@ import API_CONFIG from "../apiConfig";
  *
  **/
 interface Subject {
-    id: number;
+    id: string;
     name: string;
 }
 
 interface Question {
-    id: number;
+    id: string;
     text: string;
     type: "TEXT" | "GRADE";
     subjects: Subject[];
 }
 
+interface QuestionRow extends DataRow {
+    text: string;
+    type: string;
+    subjects: string;
+    original: Question;
+}
+
 const columns = [
-    { label: "Frage", key: "text" },
-    { label: "Lernbereiche", key: "subjects" },
-    { label: "Typ", key: "type" },
+    {label: "Frage", key: "text"},
+    {label: "Lernbereiche", key: "subjects"},
+    {label: "Typ", key: "type"},
 ];
 
 const typeMap = {
-  TEXT: "Text",
-  GRADE: "Note",
+    TEXT: "Text",
+    GRADE: "Note",
 };
 
 export default function Question() {
@@ -80,11 +86,12 @@ export default function Question() {
         setOpenDialog(false);
     };
 
-    const handleEditClick = async (row: Question) => {
+    const handleEditClick = async (row: QuestionRow) => {
+        const question = row.original;
         // TODO: Build Logic To Edit Row
     }
 
-    const handleDeleteClick = async (id: number) => {
+    const handleDeleteClick = async (id: string) => {
         // TODO: Build Logic To Delete Row
     }
 
@@ -96,13 +103,13 @@ export default function Question() {
         const payload = {
             text: formJson.question,
             type: formJson.type.toUpperCase(),
-            subjects: selectedSubjects.map(s => ({ id: s.id })),
+            subjects: selectedSubjects.map(s => ({id: s.id})),
         };
 
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/question`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(payload),
             });
 
@@ -118,12 +125,14 @@ export default function Question() {
 
     return (
         <>
-            <DataTableWithAdd
+            <DataTableWithAdd<QuestionRow>
                 columns={columns}
-                rows={allQuestions.map(q => ({
-                    ...q,
+                rows={allQuestions.map<QuestionRow>(q => ({
+                    id: q.id,
+                    text: q.text,
                     type: typeMap[q.type],
-                    subjects: q.subjects.map(s => s.name).join(", ")
+                    subjects: q.subjects.map(s => s.name).join(", "),
+                    original: q
                 }))}
                 onAddClick={handleAddClick}
                 onEditClick={handleEditClick}
@@ -153,7 +162,7 @@ export default function Question() {
                             onChange={(event, newValue) => setSelectedSubjects(newValue)}
                             getOptionLabel={(option) => option.name}
                             renderInput={(params) => (
-                                <TextField {...params} label="Fächer" variant="standard" />
+                                <TextField {...params} label="Fächer" variant="standard"/>
                             )}
                         />
 
