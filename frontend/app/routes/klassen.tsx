@@ -32,7 +32,11 @@ export default function Klassen() {
     async function handleAddClick() {
         await postNewTestCourseEntry();
         await fetchData();
-        // sollte eigentlich tabelle updaten, hat nicht funktioniert, muss jemand machen der besser in ui ist
+    }
+    
+    async function handleDeleteClick(id : any) {
+        await deleteCourse(id);
+        await fetchData();
     }
 
     const fetchData = async () => {
@@ -57,7 +61,7 @@ export default function Klassen() {
                 rows={allCourses}
                 onAddClick={handleAddClick}
                 onEditClick={postGreeting}
-                onDeleteClick={deleteCourse}
+                onDeleteClick={handleDeleteClick}
             />
         </>
     );
