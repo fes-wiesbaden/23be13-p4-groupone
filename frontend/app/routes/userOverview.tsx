@@ -186,7 +186,7 @@ export default function UsersPage() {
 
     return (
         <>
-            <DataGridWithAdd
+            <DataGridWithAdd<UserRow>
                 columns={columns}
                 rows={rows}
                 onAddClick={onAddClick}
