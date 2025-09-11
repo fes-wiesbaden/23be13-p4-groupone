@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect } from "react";
-import DataTableWithAdd, {type DataRow } from "../components/dataTableWithAddButton";
+import React, {useState, useEffect} from "react";
+import DataTableWithAdd, {type DataRow} from "../components/dataTableWithAddButton";
 import {
     Dialog,
     DialogTitle,
@@ -36,23 +35,22 @@ interface Question {
     subjects: Subject[];
 }
 
-// Strongly-typed row for the grid (includes original Question to avoid lossy mapping)
 interface QuestionRow extends DataRow {
     text: string;
-    type: string;          // localized label shown in the grid
-    subjects: string;      // joined names shown in the grid
-    original: Question;    // full, precise data for handlers
+    type: string;
+    subjects: string;
+    original: Question;
 }
 
 const columns = [
-    { label: "Frage", key: "text" },
-    { label: "Lernbereiche", key: "subjects" },
-    { label: "Typ", key: "type" },
+    {label: "Frage", key: "text"},
+    {label: "Lernbereiche", key: "subjects"},
+    {label: "Typ", key: "type"},
 ];
 
 const typeMap = {
-  TEXT: "Text",
-  GRADE: "Note",
+    TEXT: "Text",
+    GRADE: "Note",
 };
 
 export default function Question() {
@@ -105,13 +103,13 @@ export default function Question() {
         const payload = {
             text: formJson.question,
             type: formJson.type.toUpperCase(),
-            subjects: selectedSubjects.map(s => ({ id: s.id })),
+            subjects: selectedSubjects.map(s => ({id: s.id})),
         };
 
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/question`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(payload),
             });
 
@@ -164,7 +162,7 @@ export default function Question() {
                             onChange={(event, newValue) => setSelectedSubjects(newValue)}
                             getOptionLabel={(option) => option.name}
                             renderInput={(params) => (
-                                <TextField {...params} label="Fächer" variant="standard" />
+                                <TextField {...params} label="Fächer" variant="standard"/>
                             )}
                         />
 

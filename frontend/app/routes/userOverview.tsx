@@ -1,4 +1,3 @@
-// app/routes/users.tsx (or any page/component)
 /*
   * @Author: Daniel Hess
   * @Date: 09/09/2024
@@ -191,7 +190,7 @@ export default function UsersPage() {
                 rows={rows}
                 onAddClick={onAddClick}
                 onEditClick={onEditClick}
-                onDeleteClick={(id) => onDeleteClick(String(id))} // ensure string id
+                onDeleteClick={(id) => onDeleteClick(String(id))}
             />
 
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
