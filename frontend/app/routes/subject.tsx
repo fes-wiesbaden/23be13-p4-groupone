@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import DataTableWithAdd from "../components/dataTableWithAddButton";
+import DataGridWithAdd, {
+  type DataRow,
+} from "../components/dataTableWithAddButton";
 import API_CONFIG from "../apiConfig";
 import {
   Button,
@@ -23,7 +25,7 @@ import {
  *
  **/
 
-interface Subject {
+interface Subject extends DataRow {
   id: string;
   name: string;
   description: string;
@@ -138,7 +140,7 @@ export default function Subject() {
 
   return (
     <>
-      <DataTableWithAdd
+      <DataGridWithAdd<Subject>
         columns={[
           { label: "Name", key: "name" },
           { label: "Beschreibung", key: "description" },
