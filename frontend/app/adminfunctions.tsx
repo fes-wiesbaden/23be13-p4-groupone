@@ -30,7 +30,7 @@ export async function postNewTestCourseEntry () {
     }
 }
 
-export async function deleteCourse (id: any) {
+export async function deleteCourse (id: string) {
     console.log("Pressed. Id: ", id);
     try {
         const response = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${id}`, {

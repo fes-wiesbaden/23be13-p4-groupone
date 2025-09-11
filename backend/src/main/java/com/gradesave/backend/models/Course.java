@@ -12,6 +12,7 @@ public class Course {
     private UUID id;
 
     private String courseName;
+    private UUID teacherId;
 
 
     public UUID getId() { return id; }
@@ -21,4 +22,12 @@ public class Course {
     public String getCourseName() { return courseName; }
 
     public void setCourseName(String courseName) { this.courseName = courseName; }
+
+    public UUID getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(UUID teacherId) {
+        this.teacherId = teacherId;
+    }
 }
