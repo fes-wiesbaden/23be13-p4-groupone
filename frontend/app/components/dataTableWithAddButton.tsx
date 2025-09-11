@@ -21,8 +21,8 @@ import AddIcon from "@mui/icons-material/Add";
  **/
 
 export interface DataRow {
-    id: string | number;
-    [key: string]: any;
+    id: string;
+    [key: string]: unknown;
 }
 
 export interface Column {
@@ -30,35 +30,35 @@ export interface Column {
     label: string;
 }
 
-interface DataGridWithAddProps {
+interface DataGridWithAddProps<TRow extends DataRow = DataRow> {
     columns: Column[];
-    rows: DataRow[];
+    rows: TRow[];
     onAddClick: () => void;
-    onEditClick: (row: DataRow) => void;
-    onDeleteClick: (id: number) => void;
+    onEditClick: (row: TRow) => void | Promise<void>;
+    onDeleteClick: (id: TRow["id"]) => void | Promise<void>;
 }
 
-export default function DataGridWithAdd({
+export default function DataGridWithAdd<TRow extends DataRow>({
                                             columns,
                                             rows,
                                             onAddClick,
                                             onEditClick,
                                             onDeleteClick,
-                                        }: DataGridWithAddProps) {
-    const actionCol: GridColDef<DataRow> = {
+                                        }: DataGridWithAddProps<TRow>) {
+    const actionCol: GridColDef<TRow> = {
         field: "actions",
         headerName: "Aktionen",
         flex: 0.8,
         sortable: false,
         filterable: false,
-        renderCell: (params: GridRenderCellParams<DataRow, unknown>) => (
+        renderCell: (params: GridRenderCellParams<TRow, unknown>) => (
             <Stack direction="row" spacing={1} sx={{height: "100%", alignItems: "center"}}>
                 <IconButton size="small" onClick={() => onEditClick(params.row)} color="primary">
                     <EditIcon/>
                 </IconButton>
                 <IconButton
                     size="small"
-                    onClick={() => onDeleteClick(params.row.id as number)}
+                    onClick={() => onDeleteClick(params.row.id)}
                     color="error"
                 >
                     <DeleteIcon/>
@@ -67,14 +67,14 @@ export default function DataGridWithAdd({
         ),
     };
 
-    const gridColumns: GridColDef<DataRow>[] = [
-        ...columns.map<GridColDef<DataRow>>((col) => ({
+    const gridColumns: GridColDef<TRow>[] = [
+        ...columns.map<GridColDef<TRow>>((col) => ({
             field: col.key,
             headerName: col.label,
             flex: 1,
             sortable: true,
             filterable: true,
-            renderCell: (params: GridRenderCellParams<DataRow>) => {
+            renderCell: (params: GridRenderCellParams<TRow>) => {
                 const v = params.value as unknown;
                 if (Array.isArray(v)) {
                     return v.map((s: any) => s?.name ?? String(s)).join(", ");

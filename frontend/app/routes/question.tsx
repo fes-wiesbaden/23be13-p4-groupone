@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import DataTableWithAdd from "../components/dataTableWithAddButton";
+import DataTableWithAdd, {type DataRow } from "../components/dataTableWithAddButton";
 import {
     Dialog,
     DialogTitle,
@@ -34,6 +34,14 @@ interface Question {
     text: string;
     type: "TEXT" | "GRADE";
     subjects: Subject[];
+}
+
+// Strongly-typed row for the grid (includes original Question to avoid lossy mapping)
+interface QuestionRow extends DataRow {
+    text: string;
+    type: string;          // localized label shown in the grid
+    subjects: string;      // joined names shown in the grid
+    original: Question;    // full, precise data for handlers
 }
 
 const columns = [
@@ -80,11 +88,12 @@ export default function Question() {
         setOpenDialog(false);
     };
 
-    const handleEditClick = async (row: Question) => {
+    const handleEditClick = async (row: QuestionRow) => {
+        const question = row.original;
         // TODO: Build Logic To Edit Row
     }
 
-    const handleDeleteClick = async (id: number) => {
+    const handleDeleteClick = async (id: string) => {
         // TODO: Build Logic To Delete Row
     }
 
@@ -118,12 +127,14 @@ export default function Question() {
 
     return (
         <>
-            <DataTableWithAdd
+            <DataTableWithAdd<QuestionRow>
                 columns={columns}
-                rows={allQuestions.map(q => ({
-                    ...q,
+                rows={allQuestions.map<QuestionRow>(q => ({
+                    id: q.id,
+                    text: q.text,
                     type: typeMap[q.type],
-                    subjects: q.subjects.map(s => s.name).join(", ")
+                    subjects: q.subjects.map(s => s.name).join(", "),
+                    original: q
                 }))}
                 onAddClick={handleAddClick}
                 onEditClick={handleEditClick}
