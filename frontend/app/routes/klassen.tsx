@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import type { Route } from "./+types/home";
-import { postNewTestCourseEntry, deleteCourse, postGreeting } from "../adminfunctions.tsx";
-import DataTableWithAdd from "../components/DataTableWithAddButton";
+import { postNewTestCourseEntry, deleteCourse, postGreeting } from "../adminfunctions";
+import DataTableWithAdd from "../components/dataTableWithAddButton";
 import Button from '@mui/material/Button';
 import API_CONFIG from "../apiConfig";
+
+interface Course {
+    id: number;
+    courseName: string;
+}
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -30,18 +35,17 @@ export default function Klassen() {
         // sollte eigentlich tabelle updaten, hat nicht funktioniert, muss jemand machen der besser in ui ist
     }
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const resCourses = await fetch(`${API_CONFIG.BASE_URL}/api/klassen`);
-                const coursesData = await resCourses.json();
-                setAllCourses(coursesData);
-            } catch (e) {
-                console.error("Error fetching courses: ", e);
-            }
+    const fetchData = async () => {
+        try {
+            const resCourses = await fetch(`${API_CONFIG.BASE_URL}/api/klassen`);
+            const coursesData = await resCourses.json();
+            setAllCourses(coursesData);
+        } catch (e) {
+            console.error("Error fetching courses: ", e);
         }
-    fetchData();
-    }, []);
+    }
+    
+    useEffect(() => {fetchData();}, []);
     return(
         <>
             <Button
@@ -50,10 +54,8 @@ export default function Klassen() {
             >Log all Entries</Button>
             <DataTableWithAdd
                 columns={columns}
-                rows={allCourses.map(q => ({
-                    ...q,
-                }))}
-                onAddClick={postNewTestCourseEntry}
+                rows={allCourses}
+                onAddClick={handleAddClick}
                 onEditClick={postGreeting}
                 onDeleteClick={deleteCourse}
             />

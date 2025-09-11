@@ -3,10 +3,6 @@ package com.gradesave.backend.models;
 import jakarta.persistence.*;
 
 import java.util.UUID;
-//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-//import java.util.HashSet;
-//import java.util.Set;
 
 @Entity
 @Table(name="course")

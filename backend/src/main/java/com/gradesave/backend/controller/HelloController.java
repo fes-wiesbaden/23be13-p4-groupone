@@ -1,19 +1,20 @@
 package com.gradesave.backend.controller;
 
-import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.Map;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 
 
 @RestController
-//@CrossOrigin(origins = "http://localhost:5173")
-
 @RequestMapping("/api")
 public class HelloController {
     @PostMapping("/greeting")
     public Map<String, Object> greeting() {
-        System.out.println("The rizzler said hi");
+        System.out.println("Got greeted by Frontend");
         return Map.of("message", "Hello from Spring", "time", Instant.now().toString());
     }
 }
