@@ -1,18 +1,21 @@
-// created by Michael Holl on 07.09.2025
 package com.gradesave.backend.repositories;
 
-import com.gradesave.backend.models.Question;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.gradesave.backend.models.Question;
 
 /**
  * @author: Michael Holl
  * <p>
- *    Handles database requests for question table
+ * Handles database requests for question table
  * </p>
  *
- **/
+ *
+ */
 @Repository
-public interface QuestionRepository extends JpaRepository<Question, Long> {
+public interface QuestionRepository extends JpaRepository<Question, UUID> {
 
 }
