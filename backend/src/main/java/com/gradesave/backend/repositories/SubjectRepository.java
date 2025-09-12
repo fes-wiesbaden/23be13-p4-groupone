@@ -2,10 +2,10 @@ package com.gradesave.backend.repositories;
 
 import java.util.UUID;
 
-import com.gradesave.backend.models.Subject;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.UUID;
+
+import com.gradesave.backend.models.Subject;
 
 /**
  * @author: Michael Holl

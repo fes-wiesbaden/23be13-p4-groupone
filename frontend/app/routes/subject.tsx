@@ -180,7 +180,6 @@ export default function Subject() {
               }
             />
             <TextField
-              required
               margin="dense"
               label="Beschreibung"
               fullWidth
@@ -195,7 +194,9 @@ export default function Subject() {
               }
             />
             <FormControl>
-              <FormLabel id="type-label">Typ</FormLabel>
+              <FormLabel required id="type-label">
+                Typ
+              </FormLabel>
               <RadioGroup
                 row
                 aria-labelledby="type-label"
