@@ -25,6 +25,16 @@ const columns = [
 // todo: switch to teacher name
 ];
 
+type Role = "STUDENT" | "TEACHER" | "ADMIN";
+
+interface User {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    role: Role;
+}
+
 
 
 export default function Klassen() {

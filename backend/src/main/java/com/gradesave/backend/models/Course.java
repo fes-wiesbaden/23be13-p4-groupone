@@ -2,6 +2,8 @@ package com.gradesave.backend.models;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -14,6 +16,13 @@ public class Course {
     private String courseName;
     private UUID teacherId;
 
+    @ManyToMany
+    @JoinTable(
+            name = "course_user",
+            joinColumns = @JoinColumn(name = "course_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> users = new HashSet<>();
 
     public UUID getId() { return id; }
 
@@ -29,5 +38,13 @@ public class Course {
 
     public void setTeacherId(UUID teacherId) {
         this.teacherId = teacherId;
+    }
+
+    public Set<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
 }
