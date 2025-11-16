@@ -1,25 +1,35 @@
-// created by Michael Holl on 07.09.2025
 package com.gradesave.backend.models;
-
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 /**
  * @author: Michael Holl
  * <p>
- *    Creates question and question_subject table
+ * Creates question and question_subject table
  * </p>
  *
- **/
+ *
+ */
 @Entity
 @Table(name = "question")
 public class Question {
+
     @Id
     @GeneratedValue
     private UUID id;
