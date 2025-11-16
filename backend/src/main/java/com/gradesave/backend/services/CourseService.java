@@ -1,6 +1,7 @@
 package com.gradesave.backend.services;
 
 import com.gradesave.backend.models.Course;
+import com.gradesave.backend.dto.UpdateCourseRequest;
 import com.gradesave.backend.repositories.CourseRepository;
 
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,7 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class CourseService implements CrudService<Course, UUID> {
+public class CourseService {
 
     private final CourseRepository repo;
 
@@ -22,45 +23,42 @@ public class CourseService implements CrudService<Course, UUID> {
         this.repo = repo;
     }
 
-    @Override
     public Course create(Course entity) {
         return repo.save(entity);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public Optional<Course> getById(UUID id) {
         return repo.findById(id);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public List<Course> getAll() {
         return repo.findAll();
     }
 
-    @Override
-    public Course update(UUID id, Course patch) {
+    public Course update(UUID id, UpdateCourseRequest req) {
         var existing = repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id));
-        existing.setCourseName(patch.getCourseName());
+        existing.setCourseName(req.courseName());
+        if (req.teacherId() != null) {
+            existing.setTeacherId(req.teacherId());
+        }
 
         return repo.save(existing);
     }
 
-    @Override
     public void deleteById(UUID id) {
-        if (!repo.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id);
+        if (!repo.existsById(id))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id);
         repo.deleteById(id);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public boolean exists(UUID id) {
         return repo.existsById(id);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public long count() {
         return repo.count();

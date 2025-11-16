@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import DataGridWithAdd, {type Column, type DataRow} from "../components/dataTableWithAddButton";
 import {useCallback, useEffect, useState} from "react";
+import API_CONFIG from "../apiConfig";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
 
@@ -89,7 +90,7 @@ export default function UsersPage() {
     const load = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await fetch("http://localhost:8080/api/users");
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users`);
             if (!res.ok) throw new Error(`GET /api/users ${res.status}`);
             const data: Array<{
                 id: string; username: string; firstName: string; lastName: string; role: Role;
@@ -124,7 +125,7 @@ export default function UsersPage() {
 
     const onDeleteClick = async (id: string) => {
         if (!confirm("Diesen Benutzer wirklich löschen?")) return;
-        const res = await fetch(`http://localhost:8080/api/users/${id}`, {method: "DELETE"});
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/${id}`, {method: "DELETE"});
         if (res.ok) {
             setRows(prev => prev.filter(r => r.id !== id));
         } else {
@@ -149,7 +150,7 @@ export default function UsersPage() {
                 updateRequest.password = form.password;
             }
 
-            const res = await fetch(`http://localhost:8080/api/users/${editRow.id}`, {
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/${editRow.id}`, {
                 method: "PUT",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(updateRequest),
@@ -169,7 +170,7 @@ export default function UsersPage() {
                 password: form.password,
             };
 
-            const res = await fetch("http://localhost:8080/api/users", {
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users`, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(createRequest),
