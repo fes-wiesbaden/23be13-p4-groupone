@@ -1,13 +1,14 @@
 package com.gradesave.backend.models;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * @author: Michael Holl
@@ -32,9 +33,12 @@ public class Subject {
     @Size(max = 1000, message = "description must not exceed 1000 characters")
     private String description;
 
-    @ManyToMany(mappedBy = "subjects")  
+    @ManyToMany(mappedBy = "subjects")
     @JsonIgnore
     private Set<Question> questions = new HashSet<>();
+
+    @Column(name = "is_learning_field")
+    private boolean learningField;
 
     @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
     @JsonIgnore
@@ -78,5 +82,13 @@ public class Subject {
 
     public void setProjectSubjects(Set<ProjectSubject> projectSubjects) {
         this.projectSubjects = projectSubjects;
+    }
+
+    public boolean isLearningField() {
+        return learningField;
+    }
+
+    public void setLearningField(boolean learningField) {
+        this.learningField = learningField;
     }
 }
