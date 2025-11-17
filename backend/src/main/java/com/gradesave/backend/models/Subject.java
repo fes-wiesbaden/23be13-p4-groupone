@@ -12,13 +12,15 @@ import java.util.UUID;
 /**
  * @author: Michael Holl
  * <p>
- *    Creates subject table
+ * Creates subject table
  * </p>
  *
- **/
+ *
+ */
 @Entity
 @Table(name = "subject")
 public class Subject {
+
     @Id
     @GeneratedValue
     private UUID id;
@@ -30,10 +32,13 @@ public class Subject {
     @Size(max = 1000, message = "description must not exceed 1000 characters")
     private String description;
 
-    @ManyToMany(mappedBy = "subjects")
+    @ManyToMany(mappedBy = "subjects")  
     @JsonIgnore
     private Set<Question> questions = new HashSet<>();
 
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<ProjectSubject> projectSubjects = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -65,5 +70,13 @@ public class Subject {
 
     public void setQuestions(Set<Question> questions) {
         this.questions = questions;
+    }
+
+    public Set<ProjectSubject> getProjectSubjects() {
+        return projectSubjects;
+    }
+
+    public void setProjectSubjects(Set<ProjectSubject> projectSubjects) {
+        this.projectSubjects = projectSubjects;
     }
 }
