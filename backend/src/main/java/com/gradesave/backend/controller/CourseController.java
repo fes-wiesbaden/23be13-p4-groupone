@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gradesave.backend.dto.CreateCourseRequest;
 import com.gradesave.backend.models.Course;
@@ -27,6 +29,7 @@ public class CourseController {
 
     private final CourseService courseService;
     private final UserService userService;
+    private static final Logger log = LoggerFactory.getLogger(CourseController.class);
 
     public CourseController(CourseService courseService, UserService userService) {
         this.courseService = courseService;
@@ -43,10 +46,10 @@ public class CourseController {
             Course createdCourse = courseService.create(course);
             return new ResponseEntity<>(createdCourse, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            System.out.println("IllegalArgumentException: " + e.getMessage());
+            log.warn("IllegalArgumentException when creating course: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            System.out.println("Exception: " + e.getMessage());
+            log.error("Unexpected error when creating course: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -68,7 +71,7 @@ public class CourseController {
             Course updated = courseService.update(id, req);
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
-            System.out.println("IllegalArgumentException: " + e.getMessage());
+            log.warn("IllegalArgumentException when updating course with id {}: {}", id, e.getMessage(), e);
             return ResponseEntity.badRequest().build();
         }
     }

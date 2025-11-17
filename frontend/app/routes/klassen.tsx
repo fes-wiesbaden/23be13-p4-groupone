@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { Route } from "./+types/home";
-import { postNewTestCourseEntry, deleteCourse } from "../adminfunctions";
+import { deleteCourse } from "../adminfunctions";
 import DataTableWithAdd, {
   type DataRow,
 } from "../components/dataTableWithAddButton";
@@ -60,10 +60,6 @@ export default function Klassen() {
     teacherId: "",
   });
   const [teachers, setTeachers] = useState<User[]>([]);
-  // todo: delete later
-  function printAllCourses() {
-    console.log(allCourses);
-  }
 
   async function handleEditClick(row: CourseRow) {
     await fetchTeachers();
@@ -132,7 +128,9 @@ export default function Klassen() {
         courseName: form.courseName,
         teacherId: form.teacherId,
       };
-      const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${editRow.id}`, {
+      const res = await fetch(
+        `${API_CONFIG.BASE_URL}/api/klassen/${editRow.id}`,
+        {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updateRequest),
@@ -145,7 +143,6 @@ export default function Klassen() {
         alert("Aktualisieren fehlgeschlagen.");
       }
     } else {
-      console.log("create");
       const createRequest = {
         courseName: form.courseName,
         teacherId: form.teacherId,
@@ -173,9 +170,6 @@ export default function Klassen() {
   }, []);
   return (
     <>
-      <Button onClick={printAllCourses} title="Log all Entries">
-        Log all Entries
-      </Button>
       <DataTableWithAdd<CourseRow>
         columns={columns}
         rows={allCourses}
@@ -224,7 +218,11 @@ export default function Klassen() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Abbrechen</Button>
-          <Button onClick={onSave} variant="contained" disabled={!form.courseName || !form.teacherId}>
+          <Button
+            onClick={onSave}
+            variant="contained"
+            disabled={!form.courseName || !form.teacherId}
+          >
             Speichern
           </Button>
         </DialogActions>

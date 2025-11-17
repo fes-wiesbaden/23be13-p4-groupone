@@ -2,10 +2,8 @@ import React from 'react';
 import API_CONFIG from './apiConfig';
 
 export async function postNewTestCourseEntry () {
-    console.log("Create New Course");
     try {
-        // POST for new course
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/klassen`, {
+        await fetch(`${API_CONFIG.BASE_URL}/api/klassen`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -19,9 +17,8 @@ export async function postNewTestCourseEntry () {
 }
 
 export async function deleteCourse (id: string) {
-    console.log("Pressed. Id: ", id);
     try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${id}`, {
+        await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${id}`, {
             method: 'DELETE',
         });
     } catch (e) {
