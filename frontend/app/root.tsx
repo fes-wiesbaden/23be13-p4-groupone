@@ -11,6 +11,10 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import Sidebar from "~/components/sidebar";
 import ResponsiveAppBar from "~/components/appbar";
+import FileUpload from "~/components/fileUpload";
+import CsvType from "~/types/csvType";
+import API_CONFIG from "~/apiConfig";
+import React from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -35,8 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ResponsiveAppBar />
-        <Sidebar />
+        <FileUpload accept={".csv"} type={CsvType.USERS} url={`${API_CONFIG.BASE_URL}/api/csv/upload`}/>
         {children}
         <ScrollRestoration />
         <Scripts />
