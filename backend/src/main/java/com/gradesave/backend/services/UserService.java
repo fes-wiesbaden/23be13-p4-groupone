@@ -32,6 +32,16 @@ public class UserService implements CrudService<User, UUID> {
         return repo.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<User> getByUsername(String name) {
+        return repo.findByUsername(name);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByUsername(String name) {
+        return repo.existsByUsername(name);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<User> getAll() {

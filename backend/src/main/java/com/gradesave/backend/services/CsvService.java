@@ -17,6 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.util.StringUtils;
 
+/**
+ * @author: Paul Geisthardt
+ * <p>
+ *   Service to add Users/Classes via a csv file
+ * </p>
+ *
+ **/
 
 @Service
 public class CsvService {
@@ -183,10 +190,26 @@ public class CsvService {
                     try {
                         User u = new User();
 
+                        String baseUsername = user.name.toLowerCase() + '.' + user.lastName.toLowerCase();
+                        String username = baseUsername;
+
+                        int counter = 1;
+                        int boundary = 10;
+                        while (userService.existsByUsername(username)) {
+                            if (counter >= boundary) {
+                                result.incrementFailed();
+                                result.addError("Row " + (i + 1) + ": failed to create unique username for " +
+                                        user.name + " " + user.lastName + "\nReached boundary of " + boundary);
+                            }
+                            username = baseUsername + counter;
+                            counter += 1;
+                        }
+
+
                         u.setFirstName(user.name);
                         u.setLastName(user.lastName);
                         u.setRole(Role.STUDENT);
-                        u.setUsername(user.name + user.lastName); // TODO: create safe username
+                        u.setUsername(username);
 
                         User saved = userService.create(u);
 

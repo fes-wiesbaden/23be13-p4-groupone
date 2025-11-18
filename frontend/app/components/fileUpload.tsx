@@ -1,3 +1,8 @@
+/*
+    @author Paul Geisthardt
+
+    Creates file upload component
+ */
 import * as React from 'react';
 import Paper from '@mui/material/Paper';
 import {useState} from 'react';
