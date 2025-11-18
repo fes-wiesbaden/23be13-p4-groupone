@@ -141,52 +141,46 @@ function DrawerMenu({items, open, navigate}: { items: MenuItem[]; open: boolean;
         <List>
             {items.map((item) => (
                 <ListItem key={item.text} disablePadding sx={{display: "block"}}>
-                    <ListItemButton
-                        onClick={() => navigate(item.path)}
-                        sx={[
-                            {
-                                minHeight: 48,
-                                px: 2.5,
-                            },
-                            open
-                                ? {
-                                    justifyContent: "initial",
-                                }
-                                : {
-                                    justifyContent: "center",
-                                },
-                        ]}
+                    <Tooltip 
+                        title={ !open ? (<span style={{ fontSize: '1rem'}}>
+                        {item.text}</span>) : ('')}
+                        placement="right"
                     >
-                        <ListItemIcon
+                        <ListItemButton
+                            onClick={() => navigate(item.path)}
                             sx={[
                                 {
-                                    minWidth: 0,
-                                    justifyContent: "center",
+                                    minHeight: 48,
+                                    px: 2.5,
                                 },
                                 open
-                                    ? {
-                                        mr: 3,
-                                    }
-                                    : {
-                                        mr: "auto",
-                                    },
+                                    ? { justifyContent: "initial" }
+                                    : { justifyContent: "center" }
                             ]}
                         >
-                            {item.icon}
-                        </ListItemIcon>
-                        <ListItemText
-                            primary={item.text}
-                            sx={[
-                                open
-                                    ? {
-                                        opacity: 1,
-                                    }
-                                    : {
-                                        opacity: 0,
+                            <ListItemIcon
+                                sx={[
+                                    {
+                                        minWidth: 0,
+                                        justifyContent: "center",
                                     },
-                            ]}
-                        />
-                    </ListItemButton>
+                                    open
+                                        ? { mr: 3 }
+                                        : { mr: "auto" }
+                                ]}
+                            >
+                                {item.icon}
+                            </ListItemIcon>
+                            <ListItemText
+                                primary={item.text}
+                                sx={[
+                                    open
+                                        ? { opacity: 1 }
+                                        : { opacity: 0 }
+                                ]}
+                            />
+                        </ListItemButton>
+                    </Tooltip>
                 </ListItem>
             ))}
         </List>
