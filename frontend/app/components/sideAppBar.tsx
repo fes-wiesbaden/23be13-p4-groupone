@@ -154,12 +154,8 @@ function DrawerMenu({items, open, navigate}: { items: MenuItem[]; open: boolean;
                                     px: 2.5,
                                 },
                                 open
-                                    ? {
-                                        justifyContent: "initial",
-                                    }
-                                    : {
-                                        justifyContent: "center",
-                                    },
+                                    ? { justifyContent: "initial" }
+                                    : { justifyContent: "center" }
                             ]}
                         >
                             <ListItemIcon
@@ -169,12 +165,8 @@ function DrawerMenu({items, open, navigate}: { items: MenuItem[]; open: boolean;
                                         justifyContent: "center",
                                     },
                                     open
-                                        ? {
-                                            mr: 3,
-                                        }
-                                        : {
-                                            mr: "auto",
-                                        },
+                                        ? { mr: 3 }
+                                        : { mr: "auto" }
                                 ]}
                             >
                                 {item.icon}
@@ -183,12 +175,8 @@ function DrawerMenu({items, open, navigate}: { items: MenuItem[]; open: boolean;
                                 primary={item.text}
                                 sx={[
                                     open
-                                        ? {
-                                            opacity: 1,
-                                        }
-                                        : {
-                                            opacity: 0,
-                                        },
+                                        ? { opacity: 1 }
+                                        : { opacity: 0 }
                                 ]}
                             />
                         </ListItemButton>
