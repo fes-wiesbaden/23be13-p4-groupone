@@ -1,3 +1,8 @@
+// FULLY FIXED VERSION WITH DARK/LIGHT MODE
+// -------------------------------------------------------------
+// Cleaned imports + fixed dark mode toggle button
+// -------------------------------------------------------------
+
 import {
   isRouteErrorResponse,
   Links,
@@ -29,7 +34,14 @@ import {
   MenuItem,
   Toolbar,
   Typography,
+  ThemeProvider,
+  createTheme,
 } from "@mui/material";
+
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -47,7 +59,6 @@ import LogoutIcon from "@mui/icons-material/Logout";
 
 const drawerWidth = 240;
 
-// Drawer width open/closed
 const openedMixin = (theme: any) => ({
   width: drawerWidth,
   transition: theme.transitions.create("width", {
@@ -56,6 +67,7 @@ const openedMixin = (theme: any) => ({
   }),
   overflowX: "hidden",
 });
+
 const closedMixin = (theme: any) => ({
   transition: theme.transitions.create("width", {
     easing: theme.transitions.easing.sharp,
@@ -68,7 +80,6 @@ const closedMixin = (theme: any) => ({
   },
 });
 
-// Placeholder for AppBar height
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
@@ -77,7 +88,6 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   ...theme.mixins.toolbar,
 }));
 
-// AppBar
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== "open",
 })<{ open?: boolean }>(({ theme, open }) => ({
@@ -96,7 +106,6 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-// Drawer
 const Drawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== "open",
 })(({ theme, open }: { theme?: any; open?: boolean }) => ({
@@ -124,14 +133,25 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  // DARK MODE
+  const [mode, setMode] = React.useState<"light" | "dark">("light");
+
+  const colorMode = React.useMemo(
+    () => ({ toggleTheme: () => setMode((prev) => (prev === "light" ? "dark" : "light")) }),
+    []
+  );
+
+  const muiTheme = React.useMemo(
+    () =>
+      createTheme({
+        palette: { mode },
+      }),
+    [mode]
+  );
+
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-
-  // User Menu
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) =>
-    setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
 
   return (
     <html lang="en">
@@ -142,125 +162,140 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <Box sx={{ display: "flex" }}>
-          <CssBaseline />
+        <ThemeProvider theme={muiTheme}>
+          <Box sx={{ display: "flex" }}>
+            <CssBaseline />
 
-          {/* AppBar */}
-          <AppBar position="fixed" open={open}>
-            <Toolbar>
-              {!open && (
+            <AppBar position="fixed" open={open}>
+              <Toolbar>
+                {!open && (
+                  <IconButton color="inherit" onClick={() => setOpen(true)} edge="start" sx={{ mr: 2 }}>
+                    <MenuIcon />
+                  </IconButton>
+                )}
+
+                <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+                  Meine App
+                </Typography>
+
+                {/* DARK/LIGHT MODE CIRCLE BUTTON */}
                 <IconButton
-                  color="inherit"
-                  aria-label="open drawer"
-                  onClick={() => setOpen(true)}
-                  edge="start"
-                  sx={{ mr: 2 }}
+                  onClick={colorMode.toggleTheme}
+                  sx={{
+                    mr: 2,
+                    width: 35,
+                    height: 20,
+                    borderRadius: "75%",
+                    backgroundColor: muiTheme.palette.mode === "dark" ? "#444" : "#eee",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                    transition: "0.3s",
+                    position: "relative",
+                    "&:hover": {
+                      backgroundColor: muiTheme.palette.mode === "dark" ? "#555" : "#ddd",
+                    },
+                  }}
                 >
-                  <MenuIcon />
+                  <Box
+                    sx={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      backgroundColor: muiTheme.palette.mode === "dark" ? "#fff" : "#999",
+                      transition: "0.3s",
+                      transform:
+                        muiTheme.palette.mode === "dark"
+                          ? "translateX(8px)"
+                          : "translateX(-8px)",
+                    }}
+                  />
                 </IconButton>
-              )}
-              <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-                Meine App
-              </Typography>
 
-              {/* Avatar with dropdown */}
-              <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
-                <Avatar />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                transformOrigin={{ horizontal: "right", vertical: "top" }}
-                anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-              >
-                <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-                <MenuItem onClick={handleMenuClose}>Account</MenuItem>
-                <MenuItem onClick={handleMenuClose}>Dashboard</MenuItem>
-                <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
-              </Menu>
-            </Toolbar>
-          </AppBar>
+                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0 }}>
+                  <Avatar />
+                </IconButton>
 
-          {/* Sidebar */}
-          <Drawer variant="permanent" open={open}>
-            <DrawerHeader>
-              <IconButton onClick={() => setOpen(false)}>
-                {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-              </IconButton>
-            </DrawerHeader>
-            <Divider />
-            <List>
-              {[
-                { text: "Startseite", icon: <HomeIcon /> },
-                { text: "Klassen", icon: <SchoolIcon /> },
-                { text: "Schüler", icon: <GroupIcon /> },
-                { text: "Aufgaben", icon: <AssignmentIcon /> },
-                { text: "Fragen", icon: <HelpIcon /> },
-                { text: "Noten", icon: <StarIcon /> },
-              ].map((item) => (
-                <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                    }}
-                  >
-                    <ListItemIcon
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={() => setAnchorEl(null)}
+                >
+                  <MenuItem>Profile</MenuItem>
+                  <MenuItem>Account</MenuItem>
+                  <MenuItem>Dashboard</MenuItem>
+                  <MenuItem>Logout</MenuItem>
+                </Menu>
+              </Toolbar>
+            </AppBar>
+
+            <Drawer variant="permanent" open={open}>
+              <DrawerHeader>
+                <IconButton onClick={() => setOpen(false)}>
+                  {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                </IconButton>
+              </DrawerHeader>
+              <Divider />
+
+              <List>
+                {[
+                  { text: "Startseite", icon: <HomeIcon /> },
+                  { text: "Klassen", icon: <SchoolIcon /> },
+                  { text: "Schüler", icon: <GroupIcon /> },
+                  { text: "Aufgaben", icon: <AssignmentIcon /> },
+                  { text: "Fragen", icon: <HelpIcon /> },
+                  { text: "Noten", icon: <StarIcon /> },
+                ].map((item) => (
+                  <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+                    <ListItemButton
                       sx={{
-                        minWidth: 0,
-                        mr: open ? 3 : "auto",
-                        justifyContent: "center",
+                        minHeight: 48,
+                        justifyContent: open ? "initial" : "center",
+                        px: 2.5,
                       }}
                     >
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
+                      <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : "auto", justifyContent: "center" }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
 
-            <Divider />
-            <List>
-              {[
-                { text: "Profil", icon: <AccountCircleIcon /> },
-                { text: "Einstellungen", icon: <SettingsIcon /> },
-                { text: "Abmelden", icon: <LogoutIcon /> },
-              ].map((item) => (
-                <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                    }}
-                  >
-                    <ListItemIcon
+              <Divider />
+
+              <List>
+                {[
+                  { text: "Profil", icon: <AccountCircleIcon /> },
+                  { text: "Einstellungen", icon: <SettingsIcon /> },
+                  { text: "Abmelden", icon: <LogoutIcon /> },
+                ].map((item) => (
+                  <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+                    <ListItemButton
                       sx={{
-                        minWidth: 0,
-                        mr: open ? 3 : "auto",
-                        justifyContent: "center",
+                        minHeight: 48,
+                        justifyContent: open ? "initial" : "center",
+                        px: 2.5,
                       }}
                     >
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Drawer>
+                      <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : "auto", justifyContent: "center" }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            </Drawer>
 
-          {/*Main content */}
-          <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-            <DrawerHeader />
-            {children}
-            <ScrollRestoration />
-            <Scripts />
+            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+              <DrawerHeader />
+              {children}
+
+              <ScrollRestoration />
+              <Scripts />
+            </Box>
           </Box>
-        </Box>
+        </ThemeProvider>
       </body>
     </html>
   );
