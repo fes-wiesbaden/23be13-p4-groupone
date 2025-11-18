@@ -13,6 +13,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/*
+ * @author: Noah Bach, Daniel Hess
+ * <p>
+ * Service for managing Course entities. Provides basic CRUD and query operations.
+ * </p>
+ * Updated by Daniel Hess
+ */
+
 @Service
 @Transactional
 public class CourseService {

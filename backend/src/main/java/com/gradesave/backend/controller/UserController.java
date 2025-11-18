@@ -15,6 +15,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * @author Daniel Hess
+ *
+ *         Controller for handling User REST endpoints.
+ *         Provides endpoints to create, retrieve, update, and delete users.
+ *
+ *         Implemented by Daniel Hess
+ */
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -25,8 +34,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest req) {
         User entity = new User();
         entity.setUsername(req.username());

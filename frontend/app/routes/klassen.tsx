@@ -16,6 +16,17 @@ import {
   TextField,
 } from "@mui/material";
 
+/**
+ * @author Noah Bach
+ * @author Daniel Hess
+ *
+ * UI for the Klassen (courses) administration.
+ *
+ * - Displays a table of classes.
+ * - Allows creating, editing and deleting classes.
+ * - Fetches courses from `/api/klassen`.
+ */
+
 interface CourseRow extends DataRow {
   id: string;
   courseName: string;

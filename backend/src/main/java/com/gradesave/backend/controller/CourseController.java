@@ -23,6 +23,16 @@ import com.gradesave.backend.services.UserService;
 
 import jakarta.validation.Valid;
 
+/**
+ * @author: Noah Bach, Daniel Hess
+ *          <p>
+ *          Controller for handling Course ("Klassen") REST endpoints.
+ *          Provides endpoints to create, retrieve, update, and delete courses.
+ *          </p>
+ *          Create, List, Delete function from Noah Bach rest updated by Daniel
+ *          Hess
+ **/
+
 @RestController
 @RequestMapping("/api/klassen")
 public class CourseController {
@@ -54,8 +64,6 @@ public class CourseController {
         }
     }
 
-
-
     @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {
         List<Course> courses = courseService.getAll();
@@ -63,7 +71,8 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Course> updateCourse(@PathVariable UUID id, @Valid @RequestBody com.gradesave.backend.dto.UpdateCourseRequest req) {
+    public ResponseEntity<Course> updateCourse(@PathVariable UUID id,
+            @Valid @RequestBody com.gradesave.backend.dto.UpdateCourseRequest req) {
         if (!userService.exists(req.teacherId())) {
             return ResponseEntity.badRequest().build();
         }

@@ -6,6 +6,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * @author: Noah Bach, Daniel Hess
+ *          <p>
+ *          Creates course table
+ *          </p>
+ *          was protoyped by Noah Bach and finally implemented by Daniel Hess
+ */
+
 @Entity
 @Table(name = "course")
 public class Course {
