@@ -141,7 +141,7 @@ function DrawerMenu({items, open, navigate}: { items: MenuItem[]; open: boolean;
         <List>
             {items.map((item) => (
                 <ListItem key={item.text} disablePadding sx={{display: "block"}}>
-                    <Tooltip 
+                    <Tooltip
                         title={ !open ? (<span style={{ fontSize: '1rem'}}>
                         {item.text}</span>) : ('')}
                         placement="right"
@@ -377,6 +377,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
                 component="main"
                 sx={{
                     flexGrow: 1,
+                    minWidth: 0,
                 }}>
                 <Toolbar />
                 {children}
