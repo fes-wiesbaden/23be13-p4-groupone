@@ -2,7 +2,6 @@ package com.gradesave.backend.services;
 
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
-import com.gradesave.backend.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,12 +16,14 @@ import java.util.UUID;
 @Transactional
 public class UserService implements CrudService<User, UUID> {
 
-    private final UserRepository repo;
+    private final com.gradesave.backend.repositories.UserRepository repo;
     private final PasswordEncoder encoder;
+    private final CourseService courseService;
 
-    public UserService(UserRepository repo, PasswordEncoder encoder) {
+    public UserService(com.gradesave.backend.repositories.UserRepository repo, PasswordEncoder encoder, CourseService courseService) {
         this.repo = repo;
         this.encoder = encoder;
+        this.courseService = courseService;
     }
 
     @Override
@@ -71,9 +72,12 @@ public class UserService implements CrudService<User, UUID> {
 
     @Override
     public void deleteById(UUID id) {
-        if (!repo.existsById(id)) {
+        if (!repo.existsById(id))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id);
-        }
+
+        if (!courseService.removeUserFromAllCourses(id))
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to remove User from all courses");
+
         repo.deleteById(id);
     }
 

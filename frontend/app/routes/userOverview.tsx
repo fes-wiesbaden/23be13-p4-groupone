@@ -20,6 +20,8 @@ import DataGridWithAdd, {
 } from "../components/dataTableWithAddButton";
 import { useCallback, useEffect, useState } from "react";
 import API_CONFIG from "~/apiConfig";
+import FileUpload from "~/components/fileUpload";
+import CsvType from "~/types/csvType";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
 
@@ -210,6 +212,7 @@ export default function UsersPage() {
 
   return (
     <>
+      <FileUpload accept={".csv"} type={CsvType.USERS} url={`${API_CONFIG.BASE_URL}/api/csv/upload`} upload_name={"Hochladen der CSV"} select_name={"Wählen sie eine Nutzer CSV aus"}/>
       <DataGridWithAdd<UserRow>
         columns={columns}
         rows={rows}

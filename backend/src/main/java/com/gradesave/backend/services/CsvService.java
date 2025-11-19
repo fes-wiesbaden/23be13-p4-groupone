@@ -1,8 +1,8 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.models.Course;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
-import jdk.jshell.spi.ExecutionControl;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -13,8 +13,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.util.StringUtils;
 
 /**
@@ -28,9 +31,13 @@ import org.springframework.util.StringUtils;
 @Service
 public class CsvService {
     private final UserService userService;
+    private final CourseService courseService;
+    private final SecureRandom secureRandom;
 
-    public CsvService(UserService userService) {
+    public CsvService(UserService userService, CourseService courseService, SecureRandom secureRandom) {
         this.userService = userService;
+        this.courseService = courseService;
+        this.secureRandom = secureRandom;
     }
 
     public static abstract class CsvData {
@@ -56,7 +63,6 @@ public class CsvService {
 
     public enum CsvType {
         USERS,
-        CLASSES
     }
 
     public static class FileMetadata {
@@ -67,6 +73,7 @@ public class CsvService {
         public String name;
         public String lastName;
         public String className;
+        public Role role;
     }
 
     // vllt brauchen wir?
@@ -90,11 +97,21 @@ public class CsvService {
         return delimiter;
     }
 
+    public static class Creation {
+        public String defaultPassword;
+        public String name;
+        public String lastName;
+        public String className;
+        public String userName;
+    }
+
     public static class CsvResult {
         private boolean success;
         private int processed;
         private int failed;
         private final List<String> errors = new ArrayList<>();
+        private final List<String> warnings = new ArrayList<>();
+        private final List<Creation> creations = new ArrayList<>();
 
         public boolean isSuccess() {
             return success;
@@ -123,9 +140,25 @@ public class CsvService {
         public void addError(String error) {
             this.errors.add(error);
         }
+
+        public List<Creation> getCreations() {
+            return creations;
+        }
+
+        public void addCreation(Creation c) {
+            this.creations.add(c);
+        }
+
+        public List<String> getWarnings() {
+            return warnings;
+        }
+
+        public void addWarning(String warning) {
+            this.warnings.add(warning);
+        }
     }
 
-    public CsvData parse(MultipartFile file, FileMetadata metadata) throws IOException {
+    public CsvData parse(MultipartFile file, FileMetadata metadata, CsvResult result) throws IOException {
         if (metadata == null || metadata.type == null) {
             throw new IOException("Missing Metadata");
         }
@@ -150,23 +183,47 @@ public class CsvService {
                 case USERS: {
                     List<UserDto> users = new ArrayList<>();
                     for (CSVRecord record: parser) {
+                        int rowNumber = (int)record.getRecordNumber();
+                        if (record.size() < 3) {
+                            result.incrementFailed();
+                            result.addError("To few fields in line " + rowNumber + ",got " + record.size() + ", need at least 3: 'name', 'lastname' 'className'");
+                            continue;
+                        }
                         String name = record.get("name");
                         String lastName = record.get("lastName");
                         String className = record.get("className");
-
-                        if (name != null && !name.isEmpty() && lastName != null && !lastName.isEmpty() && className != null && !className.isEmpty()) {
-                            UserDto dto = new UserDto();
-                            dto.name = name;
-                            dto.lastName = lastName;
-                            dto.className = className;
-                            users.add(dto);
+                        String roleString = "";
+                        if (record.size() > 3) {
+                            roleString = record.isMapped("role") ? record.get("role").toLowerCase() : "";
                         }
+                        Role role;
+                        if (roleString.equals("student")) {
+                            role = Role.STUDENT;
+                        } else if (roleString.equals("teacher")) {
+                            role = Role.TEACHER;
+                        } else if (roleString.isEmpty()) {
+                            result.addWarning("Row " + rowNumber + " is empty, defaulting to role `STUDENT`");
+                            role = Role.STUDENT;
+                        } else {
+                            // TOOD: add warning
+                            result.addWarning("Row " + rowNumber + ": unkown role `" + roleString + "`, defaulting to role `STUDENT`");
+                            role = Role.STUDENT;
+                        }
+
+                        if (name == null || name.isEmpty() || lastName == null || lastName.isEmpty() || className == null || className.isEmpty()) {
+                            result.incrementFailed();
+                            result.addError("Row " + rowNumber + ": missing mandatory fields.");
+                            continue;
+                        }
+
+                        UserDto dto = new UserDto();
+                        dto.name = name;
+                        dto.lastName = lastName;
+                        dto.className = className;
+                        dto.role = role;
+                        users.add(dto);
                     }
                     return new UserData(users);
-                }
-
-                case CLASSES: {
-                    throw new ExecutionControl.NotImplementedException("TODO: parse CLASSES");
                 }
 
                 default: {
@@ -178,8 +235,20 @@ public class CsvService {
         }
     }
 
-    public CsvResult execute(CsvData data) {
-        CsvResult result = new CsvResult();
+    private String createDefaultPassword() {
+        String PASSWORD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
+        int passwordLength = 20;
+        StringBuilder sb = new StringBuilder(passwordLength);
+
+        for (int i = 0; i < passwordLength; ++i) {
+            int index = secureRandom.nextInt(PASSWORD_CHARS.length());
+            sb.append(PASSWORD_CHARS.charAt(index));
+        }
+
+        return sb.toString();
+    }
+
+    public void execute(CsvData data, CsvResult result) {
 
         switch (data.type) {
             case USERS: {
@@ -208,18 +277,56 @@ public class CsvService {
 
                         u.setFirstName(user.name);
                         u.setLastName(user.lastName);
-                        u.setRole(Role.STUDENT);
+                        u.setRole(user.role);
                         u.setUsername(username);
+
+                        String initPassword = createDefaultPassword();
+                        u.setPassword(initPassword);
 
                         User saved = userService.create(u);
 
-                        if (saved != null) {
-                            result.incrementProcessed();
-                        } else {
+
+                        if (saved == null) {
                             result.incrementFailed();
                             result.addError("Row " + (i + 1) + ": failed to save user " +
                                     user.name + " " + user.lastName);
+                            continue;
                         }
+
+                        Creation creation = new Creation();
+                        creation.defaultPassword = initPassword;
+                        creation.name = u.getFirstName();
+                        creation.lastName = u.getLastName();
+                        creation.userName = u.getUsername();
+
+                        Optional<Course> course = courseService.getByName(user.className);
+                        Course classCourse;
+                        if (course.isEmpty()) {
+                            Course newCourse = new Course();
+                            newCourse.setCourseName(user.className);
+                            courseService.create(newCourse);
+                            Optional<Course> testCourse = courseService.getByName(user.className);
+                            if (testCourse.isEmpty()) {
+                                result.incrementFailed();
+                                result.addError("Failed to create Course: " + user.className);
+                                result.addCreation(creation);
+                                continue;
+                            }
+                            classCourse = testCourse.get();
+                        } else {
+                            classCourse = course.get();
+                        }
+
+                        if (!courseService.addStudent(classCourse, u)) {
+                            result.incrementFailed();
+                            result.addError("Row " + (i + 1) + ": failed add user to course " +
+                                    user.name + " " + user.lastName + ": " + user.className);
+                        } else {
+                            result.incrementProcessed();
+                            creation.className = user.className;
+                        }
+
+                        result.addCreation(creation);
                     } catch (Exception e) {
                         result.incrementFailed();
                         result.addError("Row " + (i + 1) + ": " + e.getMessage());
@@ -229,16 +336,11 @@ public class CsvService {
                 break;
             }
 
-            case CLASSES: {
-                throw new AssertionError("TODO: execute CLASSES");
-            }
-
             default: {
                 throw new AssertionError("Unknown Ast type");
             }
         }
 
         result.setSuccess(result.getFailed() == 0);
-        return result;
     }
 }

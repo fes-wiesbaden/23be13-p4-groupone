@@ -35,12 +35,13 @@ public class CsvController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CSV file");
         }
 
-        CsvService.CsvData data = csvService.parse(file, metadata);
+        CsvService.CsvResult result = new CsvService.CsvResult();
+        CsvService.CsvData data = csvService.parse(file, metadata, result);
         if (data == null) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to parse CSV file");
         }
 
-        CsvService.CsvResult result = csvService.execute(data);
+        csvService.execute(data, result);
 
         if (!result.isSuccess()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);

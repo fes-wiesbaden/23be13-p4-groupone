@@ -3,9 +3,6 @@ import {isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration,} 
 import type {Route} from "./+types/root";
 import "./app.css";
 import SideAppBar from "~/components/sideAppBar";
-import FileUpload from "~/components/fileUpload";
-import CsvType from "~/types/csvType";
-import API_CONFIG from "~/apiConfig";
 import React from "react";
 
 export const links: Route.LinksFunction = () => [
@@ -32,7 +29,6 @@ export function Layout({children}: { children: React.ReactNode }) {
         </head>
         <body>
         <SideAppBar>
-            <FileUpload accept={".csv"} type={CsvType.USERS} url={`${API_CONFIG.BASE_URL}/api/csv/upload`}/>
             {children}
         </SideAppBar>
         <ScrollRestoration/>
