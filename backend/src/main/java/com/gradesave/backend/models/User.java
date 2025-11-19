@@ -1,15 +1,29 @@
 package com.gradesave.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
+/**
+ * @author: Daniel Hess
+ * <p>
+ * Creates user table
+ * </p>
+ *
+ **/
+
+
 @Entity
-@Table(name = "users")
+@Table(name = "\"user\"")
 public class User {
+
     @Id
     @GeneratedValue
     private UUID id;
@@ -30,6 +44,14 @@ public class User {
     @NotNull(message = "Role is required")
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotBlank(message = "password is required")
+    private String password;
+
+    @ManyToMany(mappedBy = "users")
+    @JsonIgnore
+    private Set<Course> courses = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -69,5 +91,21 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Set<Course> getCourses() {
+        return courses;
+    }
+
+    public void setCourses(Set<Course> courses) {
+        this.courses = courses;
     }
 }

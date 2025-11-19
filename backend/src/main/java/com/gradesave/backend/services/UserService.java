@@ -1,8 +1,10 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,13 +18,16 @@ import java.util.UUID;
 public class UserService implements CrudService<User, UUID> {
 
     private final UserRepository repo;
+    private final PasswordEncoder encoder;
 
-    public UserService(UserRepository repo) {
+    public UserService(UserRepository repo, PasswordEncoder encoder) {
         this.repo = repo;
+        this.encoder = encoder;
     }
 
     @Override
     public User create(User entity) {
+        entity.setPassword(encoder.encode(entity.getPassword()));
         return repo.save(entity);
     }
 
@@ -50,21 +55,25 @@ public class UserService implements CrudService<User, UUID> {
 
     @Override
     public User update(UUID id, User patch) {
-        var existing = repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
+        User existing = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
 
         existing.setUsername(patch.getUsername());
         existing.setFirstName(patch.getFirstName());
         existing.setLastName(patch.getLastName());
         existing.setRole(patch.getRole());
 
+        if (patch.getPassword() != null && !patch.getPassword().isBlank()) {
+            existing.setPassword(encoder.encode(patch.getPassword()));
+        }
+
         return repo.save(existing);
     }
 
-
     @Override
     public void deleteById(UUID id) {
-        if (!repo.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id);
+        if (!repo.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id);
+        }
         repo.deleteById(id);
     }
 
@@ -78,5 +87,9 @@ public class UserService implements CrudService<User, UUID> {
     @Transactional(readOnly = true)
     public long count() {
         return repo.count();
+    }
+
+    public List<User> GetUsersByRole(Role role){
+        return repo.findByRole(role);
     }
 }

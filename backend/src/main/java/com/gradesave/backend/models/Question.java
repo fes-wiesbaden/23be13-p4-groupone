@@ -1,27 +1,41 @@
-// created by Michael Holl on 07.09.2025
 package com.gradesave.backend.models;
 
-import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * @author: Michael Holl
  * <p>
- *    Creates question and question_subject table
+ * Creates question and question_subject table
  * </p>
  *
- **/
+ *
+ */
 @Entity
 @Table(name = "question")
 public class Question {
+
     @Id
     @GeneratedValue
-    private Long id;
+    private UUID id;
 
     @NotBlank(message = "text is required")
     @Size(max = 1000, message = "text must not exceed 1000 characters")
@@ -39,11 +53,15 @@ public class Question {
     )
     private Set<Subject> subjects = new HashSet<>();
 
-    public Long getId() {
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<ProjectQuestion> projectQuestions = new HashSet<>();
+
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -70,4 +88,13 @@ public class Question {
     public void setSubjects(Set<Subject> subjects) {
         this.subjects = subjects;
     }
+
+    public Set<ProjectQuestion> getProjectQuestions() {
+        return projectQuestions;
+    }
+
+    public void setProjectQuestions(Set<ProjectQuestion> projectQuestions) {
+        this.projectQuestions = projectQuestions;
+    }
+
 }

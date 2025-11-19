@@ -1,15 +1,28 @@
 package com.gradesave.backend.controller;
 
+import com.gradesave.backend.dto.CreateUserRequest;
+import com.gradesave.backend.dto.UpdateUserRequest;
+import com.gradesave.backend.dto.UserDto;
+import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+
+/**
+ * @author Daniel Hess
+ *
+ *         Controller for handling User REST endpoints.
+ *         Provides endpoints to create, retrieve, update, and delete users.
+ *
+ *         Implemented by Daniel Hess
+ */
 
 @RestController
 @RequestMapping("/api/users")
@@ -21,39 +34,43 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
-        try {
-            User createdUser = userService.create(user);
-            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest req) {
+        User entity = new User();
+        entity.setUsername(req.username());
+        entity.setFirstName(req.firstName());
+        entity.setLastName(req.lastName());
+        entity.setRole(req.role());
+        entity.setPassword(req.password());
+
+        User saved = userService.create(entity);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
     }
 
-
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
-        Optional<User> user = userService.getById(id);
-        return user.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UserDto> getUserById(@PathVariable UUID id) {
+        return userService.getById(id)
+                .map(u -> ResponseEntity.ok(toDto(u)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAll();
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<UserDto> users = userService.getAll().stream().map(this::toDto).toList();
         return ResponseEntity.ok(users);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable UUID id, @Valid @RequestBody User user) {
-        try {
-            User updatedUser = userService.update(id, user);
-            return ResponseEntity.ok(updatedUser);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @Valid @RequestBody UpdateUserRequest req) {
+        User patch = new User();
+        patch.setUsername(req.username());
+        patch.setFirstName(req.firstName());
+        patch.setLastName(req.lastName());
+        patch.setRole(req.role());
+        patch.setPassword(req.password()); // may be null/blank => keep existing
+
+        User updated = userService.update(id, patch);
+        return ResponseEntity.ok(toDto(updated));
     }
 
     @DeleteMapping("/{id}")
@@ -64,13 +81,21 @@ public class UserController {
 
     @GetMapping("/{id}/exists")
     public ResponseEntity<Boolean> userExists(@PathVariable UUID id) {
-        boolean exists = userService.exists(id);
-        return ResponseEntity.ok(exists);
+        return ResponseEntity.ok(userService.exists(id));
     }
 
     @GetMapping("/count")
     public ResponseEntity<Long> getUserCount() {
-        long count = userService.count();
-        return ResponseEntity.ok(count);
+        return ResponseEntity.ok(userService.count());
+    }
+
+    @GetMapping(params = "role")
+    public ResponseEntity<List<UserDto>> getAllUsersByRole(@RequestParam Role role) {
+        List<UserDto> users = userService.GetUsersByRole(role).stream().map(this::toDto).toList();
+        return ResponseEntity.ok(users);
+    }
+
+    private UserDto toDto(User u) {
+        return new UserDto(u.getId(), u.getUsername(), u.getFirstName(), u.getLastName(), u.getRole());
     }
 }

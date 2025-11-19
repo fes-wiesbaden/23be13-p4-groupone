@@ -1,26 +1,30 @@
 package com.gradesave.backend.models;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author: Michael Holl
  * <p>
- *    Creates subject table
+ * Creates subject table
  * </p>
  *
- **/
+ *
+ */
 @Entity
 @Table(name = "subject")
 public class Subject {
+
     @Id
     @GeneratedValue
-    private Long id;
+    private UUID id;
 
     @NotBlank(message = "name is required")
     @Size(max = 100, message = "name must not exceed 100 characters")
@@ -33,12 +37,18 @@ public class Subject {
     @JsonIgnore
     private Set<Question> questions = new HashSet<>();
 
+    @Column(name = "is_learning_field")
+    private boolean learningField;
 
-    public Long getId() {
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<ProjectSubject> projectSubjects = new HashSet<>();
+
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -64,5 +74,21 @@ public class Subject {
 
     public void setQuestions(Set<Question> questions) {
         this.questions = questions;
+    }
+
+    public Set<ProjectSubject> getProjectSubjects() {
+        return projectSubjects;
+    }
+
+    public void setProjectSubjects(Set<ProjectSubject> projectSubjects) {
+        this.projectSubjects = projectSubjects;
+    }
+
+    public boolean isLearningField() {
+        return learningField;
+    }
+
+    public void setLearningField(boolean learningField) {
+        this.learningField = learningField;
     }
 }

@@ -11,18 +11,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
  * @author: Michael Holl
  * <p>
- *   Business logic for subjects
+ * Business logic for subjects
  * </p>
  *
- **/
+ *
+ */
 @Service
 @Transactional
-public class QuestionService implements CrudService<Question, Long>{
+public class QuestionService implements CrudService<Question, UUID>{
     private final SubjectRepository subjectRepository;
     private final QuestionRepository questionRepository;
 
@@ -34,7 +36,7 @@ public class QuestionService implements CrudService<Question, Long>{
     @Transactional
     @Override
     public Question create(Question question) {
-        Set<Long> subjectIds = question.getSubjects().stream()
+        Set<UUID> subjectIds = question.getSubjects().stream()
                 .map(Subject::getId)
                 .collect(Collectors.toSet());
 
@@ -50,7 +52,7 @@ public class QuestionService implements CrudService<Question, Long>{
     }
 
     @Override
-    public Optional<Question> getById(Long aLong) {
+    public Optional<Question> getById(UUID Id) {
         return Optional.empty();
     }
 
@@ -60,17 +62,17 @@ public class QuestionService implements CrudService<Question, Long>{
     }
 
     @Override
-    public Question update(Long aLong, Question entity) {
+    public Question update(UUID id, Question entity) {
         return null;
     }
 
     @Override
-    public void deleteById(Long aLong) {
+    public void deleteById(UUID id) {
 
     }
 
     @Override
-    public boolean exists(Long aLong) {
+    public boolean exists(UUID id) {
         return false;
     }
 

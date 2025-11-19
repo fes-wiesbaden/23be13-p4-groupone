@@ -2,7 +2,7 @@ services:
 
   db:
     image: postgres:17.6-alpine
-    restart: always
+    restart: on-failure
     env_file:
       - .env
     ports:
@@ -18,7 +18,7 @@ services:
       - db
     env_file:
       - .env
-    restart: always
+    restart: on-failure
 
   frontend:
     build: ./frontend
@@ -26,7 +26,7 @@ services:
       - "3000:3000"
     depends_on:
       - backend
-    restart: always
+    restart: on-failure
 
 volumes:
   pgdata:
