@@ -35,9 +35,6 @@ export default function FormDialog() {
 
   return (
     <React.Fragment>
-      <Button variant="outlined" onClick={handleClickOpen}>
-        Dialog
-      </Button>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Spalte hinzufügen</DialogTitle>
         <br/>

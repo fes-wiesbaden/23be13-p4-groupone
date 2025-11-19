@@ -37,9 +37,6 @@ export default function FormDialog() {
 
   return (
     <React.Fragment>
-      <Button variant="outlined" onClick={handleClickOpen}>
-        Löschen
-      </Button>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Spalte löschen</DialogTitle>
         <br/>
