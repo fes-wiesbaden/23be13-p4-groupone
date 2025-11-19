@@ -17,8 +17,9 @@ import java.util.UUID;
  * Creates user table
  * </p>
  *
- *
- */
+ **/
+
+
 @Entity
 @Table(name = "\"user\"")
 public class User {

@@ -22,7 +22,13 @@ import jakarta.validation.constraints.Size;
  * </p>
  *
  *
+ * @author: Noah Bach, Daniel Hess
+ *          <p>
+ *          Creates course table
+ *          </p>
+ *          was protoyped by Noah Bach and finally implemented by Daniel Hess
  */
+
 @Entity
 @Table(name = "course")
 public class Course {
@@ -33,7 +39,7 @@ public class Course {
 
     @NotBlank(message = "name is required")
     @Size(max = 100, message = "name must not exceed 100 characters")
-    String name;
+    private String courseName;
 
     @ManyToOne
     @JoinColumn(name = "class_teacher_id", nullable = false)
@@ -55,12 +61,12 @@ public class Course {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getCourseName() {
+        return courseName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCourseName(String name) {
+        this.courseName = name;
     }
 
     public User getClassTeacher() {

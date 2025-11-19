@@ -3,6 +3,7 @@ package com.gradesave.backend.controller;
 import com.gradesave.backend.dto.CreateUserRequest;
 import com.gradesave.backend.dto.UpdateUserRequest;
 import com.gradesave.backend.dto.UserDto;
+import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.services.UserService;
 import jakarta.validation.Valid;
@@ -14,6 +15,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * @author Daniel Hess
+ *
+ *         Controller for handling User REST endpoints.
+ *         Provides endpoints to create, retrieve, update, and delete users.
+ *
+ *         Implemented by Daniel Hess
+ */
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -24,8 +34,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest req) {
         User entity = new User();
         entity.setUsername(req.username());
@@ -78,6 +87,12 @@ public class UserController {
     @GetMapping("/count")
     public ResponseEntity<Long> getUserCount() {
         return ResponseEntity.ok(userService.count());
+    }
+
+    @GetMapping(params = "role")
+    public ResponseEntity<List<UserDto>> getAllUsersByRole(@RequestParam Role role) {
+        List<UserDto> users = userService.GetUsersByRole(role).stream().map(this::toDto).toList();
+        return ResponseEntity.ok(users);
     }
 
     private UserDto toDto(User u) {

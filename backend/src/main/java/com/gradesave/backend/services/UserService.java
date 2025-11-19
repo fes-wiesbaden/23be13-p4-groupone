@@ -1,5 +1,6 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -76,5 +77,9 @@ public class UserService implements CrudService<User, UUID> {
     @Transactional(readOnly = true)
     public long count() {
         return repo.count();
+    }
+
+    public List<User> GetUsersByRole(Role role){
+        return repo.findByRole(role);
     }
 }
