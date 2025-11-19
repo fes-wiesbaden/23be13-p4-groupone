@@ -1,5 +1,6 @@
 package com.gradesave.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +14,7 @@ import java.util.UUID;
 /**
  * @author: Daniel Hess
  * <p>
- *    Creates user table
+ * Creates user table
  * </p>
  *
  **/
@@ -22,6 +23,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "\"user\"")
 public class User {
+
     @Id
     @GeneratedValue
     private UUID id;
@@ -47,6 +49,7 @@ public class User {
     private String password;
 
     @ManyToMany(mappedBy = "users")
+    @JsonIgnore
     private Set<Course> courses = new HashSet<>();
 
     public UUID getId() {

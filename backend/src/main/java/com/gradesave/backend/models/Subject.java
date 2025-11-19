@@ -5,13 +5,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -46,6 +40,10 @@ public class Subject {
     @Column(name = "is_learning_field")
     private boolean learningField;
 
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<ProjectSubject> projectSubjects = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -76,6 +74,14 @@ public class Subject {
 
     public void setQuestions(Set<Question> questions) {
         this.questions = questions;
+    }
+
+    public Set<ProjectSubject> getProjectSubjects() {
+        return projectSubjects;
+    }
+
+    public void setProjectSubjects(Set<ProjectSubject> projectSubjects) {
+        this.projectSubjects = projectSubjects;
     }
 
     public boolean isLearningField() {

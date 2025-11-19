@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -50,6 +53,10 @@ public class Question {
     )
     private Set<Subject> subjects = new HashSet<>();
 
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<ProjectQuestion> projectQuestions = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -81,4 +88,13 @@ public class Question {
     public void setSubjects(Set<Subject> subjects) {
         this.subjects = subjects;
     }
+
+    public Set<ProjectQuestion> getProjectQuestions() {
+        return projectQuestions;
+    }
+
+    public void setProjectQuestions(Set<ProjectQuestion> projectQuestions) {
+        this.projectQuestions = projectQuestions;
+    }
+
 }

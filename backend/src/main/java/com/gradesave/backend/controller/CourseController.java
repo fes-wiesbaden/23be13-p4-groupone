@@ -1,8 +1,10 @@
 package com.gradesave.backend.controller;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import com.gradesave.backend.models.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,6 +33,8 @@ import jakarta.validation.Valid;
  *          </p>
  *          Create, List, Delete function from Noah Bach rest updated by Daniel
  *          Hess
+ *
+ *          DTO changes by Paul Geisthardt
  **/
 
 @RestController
@@ -48,11 +52,14 @@ public class CourseController {
 
     @PostMapping
     public ResponseEntity<Course> createCourse(@Valid @RequestBody CreateCourseRequest req) {
-        if (!userService.exists(req.teacherId())) {
+        Optional<User> teacher = userService.getById(req.teacherId());
+        if (teacher.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
         try {
-            Course course = new Course(req.courseName(), req.teacherId());
+            Course course = new Course();
+            course.setCourseName(req.courseName());
+            course.setClassTeacher(teacher.get());
             Course createdCourse = courseService.create(course);
             return new ResponseEntity<>(createdCourse, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {

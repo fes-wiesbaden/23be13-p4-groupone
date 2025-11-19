@@ -2,6 +2,7 @@ package com.gradesave.backend.services;
 
 import com.gradesave.backend.models.Course;
 import com.gradesave.backend.dto.UpdateCourseRequest;
+import com.gradesave.backend.models.User;
 import com.gradesave.backend.repositories.CourseRepository;
 
 import org.springframework.http.HttpStatus;
@@ -26,9 +27,11 @@ import java.util.UUID;
 public class CourseService {
 
     private final CourseRepository repo;
+    private final UserService userService;
 
-    public CourseService(CourseRepository repo) {
+    public CourseService(CourseRepository repo, UserService userService) {
         this.repo = repo;
+        this.userService = userService;
     }
 
     public Course create(Course entity) {
@@ -48,10 +51,14 @@ public class CourseService {
     public Course update(UUID id, UpdateCourseRequest req) {
         var existing = repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id));
-        existing.setCourseName(req.courseName());
-        if (req.teacherId() != null) {
-            existing.setTeacherId(req.teacherId());
+
+        Optional<User> teacher = userService.getById(req.teacherId());
+        if (teacher.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher not found: " + req.teacherId());
         }
+
+        existing.setCourseName(req.courseName());
+        existing.setClassTeacher(teacher.get());
 
         return repo.save(existing);
     }
