@@ -175,7 +175,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
 
                 <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-                  Meine App
+                  Logo
                 </Typography>
 
                 {/* DARK/LIGHT MODE CIRCLE BUTTON */}
