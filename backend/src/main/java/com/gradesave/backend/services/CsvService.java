@@ -197,17 +197,17 @@ public class CsvService {
                             roleString = record.isMapped("role") ? record.get("role").toLowerCase() : "";
                         }
                         Role role;
-                        if (roleString.equals("student")) {
-                            role = Role.STUDENT;
-                        } else if (roleString.equals("teacher")) {
-                            role = Role.TEACHER;
-                        } else if (roleString.isEmpty()) {
-                            result.addWarning("Row " + rowNumber + " is empty, defaulting to role `STUDENT`");
-                            role = Role.STUDENT;
-                        } else {
-                            // TOOD: add warning
-                            result.addWarning("Row " + rowNumber + ": unkown role `" + roleString + "`, defaulting to role `STUDENT`");
-                            role = Role.STUDENT;
+                        switch (roleString) {
+                            case "student" -> role = Role.STUDENT;
+                            case "teacher" -> role = Role.TEACHER;
+                            case "" -> {
+                                result.addWarning("Row " + rowNumber + " is empty, defaulting to role `STUDENT`");
+                                role = Role.STUDENT;
+                            }
+                            default -> {
+                                result.addWarning("Row " + rowNumber + ": unkown role `" + roleString + "`, defaulting to role `STUDENT`");
+                                role = Role.STUDENT;
+                            }
                         }
 
                         if (name == null || name.isEmpty() || lastName == null || lastName.isEmpty() || className == null || className.isEmpty()) {
@@ -269,6 +269,7 @@ public class CsvService {
                                 result.incrementFailed();
                                 result.addError("Row " + (i + 1) + ": failed to create unique username for " +
                                         user.name + " " + user.lastName + "\nReached boundary of " + boundary);
+                                continue;
                             }
                             username = baseUsername + counter;
                             counter += 1;
