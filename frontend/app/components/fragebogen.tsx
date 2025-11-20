@@ -26,26 +26,34 @@ const columns: GridColDef[] = [
     {field: 'question', headerName: 'Frage', flex: 1},
     {
         field: 'type',
-        headerName: 'Antwort',
         renderCell: (params) => {
             console.log(params);
             switch (params.value) {
                 case 'text':
-                    return <TextField 
+                    return <TextField
                         fullWidth
                         id={params.id + "answer"}
                         label="Antwort"
                         type="text"
                     />;
                 case 'grade':
-                    var Names: string[] = ["Jimbo James", "Big Badinky Bones", "The Cartel"]
-                    return <GradeAnswerOptions 
+                    var Names: string[] = ["Jimbo James", "Big Badinky Bones", "The Cartel"];
+                    return <GradeAnswerOptions
                         names={Names}
                         questionId={params.id as number}
                     />;
                 default:
                     return null;
             }
+        },
+        renderHeader: (params) => {
+            var Names: string[] = ["Jimbo James", "Big Badinky Bones", "The Cartel"];
+            var spans = Names.map((name) =>
+                <span style={{flexGrow: 1}}>
+                    {name}
+                </span>
+            );
+            return <>{spans}</>;
         },
         flex: 2
     }
@@ -62,7 +70,11 @@ export default function FragebogenTable({
         <DataGrid
             rows={mockRowData}
             columns={columns}
-            // pagination
+            sx={{
+                '& .MuiDataGrid-columnHeaderTitleContainerContent': {
+                    width: "100%"
+                }
+            }}
         ></DataGrid>
     </form>;
 }
@@ -75,15 +87,13 @@ export function GradeAnswerOptions({
     questionId: number
 }){
     const spans = names.map((name, index) => (
-        <FormControl style={{flexGrow: 1}}>
-            <InputLabel id={questionId + "answer" + index + "label"}>
-                {name}'s Note
-            </InputLabel>
+        <FormControl style={{flex: 1}}>
             <Select
-                labelId={questionId + "answer" + index + "label"}
                 id={questionId + "answer" + index}
-                label={name}
+                defaultValue={255}
             >
+                <MenuItem value={255} // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
+                >Note wählen</MenuItem>
                 <MenuItem value={1}>1</MenuItem>
                 <MenuItem value={2}>2</MenuItem>
                 <MenuItem value={3}>3</MenuItem>
