@@ -253,6 +253,7 @@ public class CsvService {
         switch (data.type) {
             case USERS: {
                 UserData userData = (UserData) data;
+                forLoop:
                 for (int i = 0; i < userData.users.size(); ++i) {
                     UserDto user = userData.users.get(i);
 
@@ -269,7 +270,7 @@ public class CsvService {
                                 result.incrementFailed();
                                 result.addError("Row " + (i + 1) + ": failed to create unique username for " +
                                         user.name + " " + user.lastName + "\nReached boundary of " + boundary);
-                                continue;
+                                continue forLoop;
                             }
                             username = baseUsername + counter;
                             counter += 1;
