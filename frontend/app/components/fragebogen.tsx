@@ -1,74 +1,71 @@
 import React from "react";
 import {
     DataGrid,
-    type GridColDef,
-    type GridRenderCellParams,
+    type GridColDef
 } from "@mui/x-data-grid";
 import { Button, FormControl, InputLabel, MenuItem, Select, Switch, TextField } from "@mui/material";
-// import DataTableWithAdd, {
-//   type DataRow,
-// } from "../components/dataTableWithAddButton";
 
-
-interface Row {
+export interface FragebogenRow {
     id: number;
     question: string;
     type: 'text' | 'grade';
 }
 
+export default function FragebogenTable({
+  onSubmit,
+  rows: rowData,
+  studentNames
+}: {
+  onSubmit: React.FormEventHandler<HTMLFormElement>;
+  rows: FragebogenRow[];
+  studentNames: string[];
+}) {
+    // TODO: sortieren, dass Textfragen zum Schluss
 const mockRowData: Row[] = [
     {id: 1, question: "do your teammates wear wigs?", type: 'grade'},
     {id: 2, question: "will your teammates wear wigs?", type: 'grade'},
     {id: 3, question: "when will they wear wigs?", type: 'text'},
 ];
 
-const columns: GridColDef[] = [
-    {field: 'question', headerName: 'Frage', flex: 1},
-    {
-        field: 'type',
-        renderCell: (params) => {
-            console.log(params);
-            switch (params.value) {
-                case 'text':
-                    return <TextField
-                        fullWidth
-                        id={params.id + "answer"}
-                        label="Antwort"
-                        type="text"
-                    />;
-                case 'grade':
-                    var Names: string[] = ["Jimbo James", "Big Badinky Bones", "The Cartel"];
-                    return <GradeAnswerOptions
-                        names={Names}
-                        questionId={params.id as number}
-                    />;
-                default:
-                    return null;
-            }
-        },
-        renderHeader: (params) => {
-            var Names: string[] = ["Jimbo James", "Big Badinky Bones", "The Cartel"];
-            var spans = Names.map((name) =>
-                <span style={{flexGrow: 1}}>
-                    {name}
-                </span>
-            );
-            return <>{spans}</>;
-        },
-        flex: 2
-    }
-]
-
-export default function FragebogenTable({
-  onSubmit,
-}: {
-  onSubmit: React.FormEventHandler<HTMLFormElement>;
-}) {
+    const columns: GridColDef[] = [
+        {field: 'question', headerName: 'Frage', flex: 1},
+        {
+            field: 'type',
+            renderCell: (params) => {
+                console.log(params);
+                switch (params.value) {
+                    case 'text':
+                        return <TextField
+                            fullWidth
+                            id={params.id + "answer"}
+                            label="Antwort"
+                            type="text"
+                        />;
+                    case 'grade':
+                        return <GradeAnswerOptions
+                            names={studentNames}
+                            questionId={params.id as number}
+                        />;
+                    default:
+                        return null;
+                }
+            },
+            renderHeader: () => {
+                var spans = studentNames.map((name) =>
+                    <span style={{flexGrow: 1}}>
+                        {name}
+                    </span>
+                );
+                return <>{spans}</>;
+            },
+            flex: 2
+        }
+    ];
     return <form
         onSubmit={onSubmit}
     >
         <DataGrid
-            rows={mockRowData}
+            rows={rowData}
             columns={columns}
             sx={{
                 '& .MuiDataGrid-columnHeaderTitleContainerContent': {
@@ -79,14 +76,14 @@ export default function FragebogenTable({
     </form>;
 }
 
-export function GradeAnswerOptions({
+function GradeAnswerOptions({ // TODO: statt string array eine anzahl
     names,
     questionId
 }: {
     names: string[],
     questionId: number
 }){
-    const spans = names.map((name, index) => (
+    const spans = names.map((name, index) => ( // TODO: eine zeile am anfang immer wo nur "Du" steht
         <FormControl style={{flex: 1}}>
             <Select
                 id={questionId + "answer" + index}
