@@ -20,13 +20,7 @@ export default function FragebogenTable({
   rows: FragebogenRow[];
   studentNames: string[];
 }) {
-    // TODO: sortieren, dass Textfragen zum Schluss
-const mockRowData: Row[] = [
-    {id: 1, question: "do your teammates wear wigs?", type: 'grade'},
-    {id: 2, question: "will your teammates wear wigs?", type: 'grade'},
-    {id: 3, question: "when will they wear wigs?", type: 'text'},
-];
-
+    rowData = SortQuestions(rowData);
     const columns: GridColDef[] = [
         {field: 'question', headerName: 'Frage', flex: 1},
         {
@@ -101,4 +95,13 @@ function GradeAnswerOptions({ // TODO: statt string array eine anzahl
         </FormControl>
     ));
     return <div style={{display: "flex"}}>{spans}</div>;
+}
+
+function SortQuestions(questions: FragebogenRow[]): FragebogenRow[] {
+    var returnQuestions: FragebogenRow[] = [];
+    var textQuestions: FragebogenRow[] = [];
+    for (var i = 0; i < questions.length; i++)
+        (questions[i].type == 'grade') ? returnQuestions.push(questions[i]) : textQuestions.push(questions[i]);
+    return returnQuestions.concat(textQuestions);
+
 }
