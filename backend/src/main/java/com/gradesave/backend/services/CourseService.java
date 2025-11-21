@@ -5,6 +5,7 @@ import com.gradesave.backend.dto.UpdateCourseRequest;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.repositories.CourseRepository;
 
+import com.gradesave.backend.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +28,11 @@ import java.util.UUID;
 public class CourseService {
 
     private final CourseRepository repo;
-    private final UserService userService;
+    private final UserRepository userRepo;
 
-    public CourseService(CourseRepository repo, UserService userService) {
+    public CourseService(CourseRepository repo, UserRepository userRepo) {
         this.repo = repo;
-        this.userService = userService;
+        this.userRepo = userRepo;
     }
 
     public Course create(Course entity) {
@@ -52,7 +53,7 @@ public class CourseService {
         var existing = repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id));
 
-        Optional<User> teacher = userService.getById(req.teacherId());
+        Optional<User> teacher = userRepo.findById(req.teacherId());
         if (teacher.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher not found: " + req.teacherId());
         }
@@ -63,10 +64,22 @@ public class CourseService {
         return repo.save(existing);
     }
 
+    public boolean addStudent(Course course, User student) {
+        if (!userRepo.existsById(student.getId())) return false;
+        if (!repo.existsById(course.getId())) return false;
+
+        course.getUsers().add(student);
+        return true;
+    }
+
     public void deleteById(UUID id) {
         if (!repo.existsById(id))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id);
         repo.deleteById(id);
+    }
+
+    public Optional<Course> getByName(String name) {
+        return repo.findByCourseName(name);
     }
 
     @Transactional(readOnly = true)
@@ -77,5 +90,23 @@ public class CourseService {
     @Transactional(readOnly = true)
     public long count() {
         return repo.count();
+    }
+
+    public boolean removeUserFromAllCourses(UUID userId) {
+        Optional<User> userTemp = userRepo.findById(userId);
+        if (userTemp.isEmpty()) return false;
+
+        User user = userTemp.get();
+        List<Course> courses = repo.findAllByUserId(userId);
+
+        boolean removed = true;
+        for (Course course : courses) {
+            if (!course.getUsers().remove(user))
+                removed = false;
+
+            repo.save(course);
+        }
+
+        return removed;
     }
 }
