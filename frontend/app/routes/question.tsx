@@ -60,6 +60,8 @@ export default function Question() {
   const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editQuestion, setEditQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,19 +90,40 @@ export default function Question() {
   }, []);
 
   const handleAddClick = () => setOpenDialog(true);
-
+  
   const handleCloseDialog = () => {
     setSelectedSubjects([]);
     setOpenDialog(false);
   };
-
-  const handleEditClick = async (row: QuestionRow) => {
+  
+    const handleCloseEditDialog = () => {
+    setSelectedSubjects([]);
+    setOpenEditDialog(false);
+  };
+  
+  const handleEditClick = (row: QuestionRow) => {
     const question = row.original;
-    // TODO: Build Logic To Edit Row
+  
+    setEditQuestion(question);
+    setSelectedSubjects(question.subjects);
+    setOpenEditDialog(true);
   };
 
   const handleDeleteClick = async (id: string) => {
-    // TODO: Build Logic To Delete Row
+    try {
+      await fetch(`${API_CONFIG.BASE_URL}/api/question/${id}`, {
+        method: "DELETE",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+      });
+
+      const resQuestions = await fetch(
+        `${API_CONFIG.BASE_URL}/api/question/findAll`
+      );
+      const questionsData = await resQuestions.json();
+      setAllQuestions(questionsData);
+
+    } catch (err) {
+      console.error("Error deleting question:", err);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -129,6 +152,38 @@ export default function Question() {
       console.error("Error sending form to Backend:", err);
     }
     handleCloseDialog();
+  };
+
+  const handleEditSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const formJson = Object.fromEntries((formData as any).entries());
+
+    const payload = {
+      text: formJson.question,
+      type: formJson.type.toUpperCase(),
+      subjects: selectedSubjects.map((s) => ({ id: s.id })),
+    };
+
+    try {
+      await fetch(
+        `${API_CONFIG.BASE_URL}/api/question/${formData.get("id")}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const resQuestions = await fetch(
+        `${API_CONFIG.BASE_URL}/api/question/findAll`
+      );
+      const questionsData = await resQuestions.json();
+      setAllQuestions(questionsData);
+    } catch (err) {
+      console.error("Error updating question:", err);
+    }
+    handleCloseEditDialog();
   };
 
   return (
@@ -198,6 +253,69 @@ export default function Question() {
           <Button onClick={handleCloseDialog}>Abbrechen</Button>
           <Button type="submit" form="newQuestionForm">
             Hinzufügen
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openEditDialog}
+        onClose={handleCloseEditDialog}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Bearbeiten</DialogTitle>
+        <DialogContent>
+          <form onSubmit={handleEditSubmit} id="editQuestionForm">
+            <TextField
+              autoFocus
+              required
+              maxRows={4}
+              margin="dense"
+              id="questionText"
+              name="question"
+              label="Frage"
+              type="text"
+              fullWidth
+              multiline
+              defaultValue={editQuestion?.text || ""}
+            />
+            {/* blendet die Question ID aus */}
+            <input 
+              id="id"
+              name="id"
+              defaultValue={editQuestion?.id || ""}
+              style={{display:"none"}}
+            />
+            <Autocomplete
+              multiple
+              options={subjectsList}
+              value={selectedSubjects}
+              onChange={(event, newValue) => setSelectedSubjects(newValue)}
+              getOptionLabel={(option) => option.name}
+              renderInput={(params) => (
+                <TextField {...params} label="Fächer" variant="standard" />
+              )}
+            />
+
+            <FormControl variant="standard" fullWidth margin="dense" required>
+              <InputLabel id="type-label">Typ</InputLabel>
+              <Select
+                labelId="type-label"
+                id="type"
+                name="type"
+                defaultValue={editQuestion?.type || "TEXT"}
+              >
+                <MenuItem value="TEXT">Text</MenuItem>
+                <MenuItem value="GRADE">Note</MenuItem>
+              </Select>
+            </FormControl>
+          </form>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog}>Abbrechen</Button>
+          <Button type="submit" form="editQuestionForm">
+            Speichern
           </Button>
         </DialogActions>
       </Dialog>
