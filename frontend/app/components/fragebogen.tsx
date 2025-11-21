@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type JSX } from "react";
 import {
     DataGrid,
     type GridColDef
@@ -21,6 +21,7 @@ export default function FragebogenTable({
   studentNames: string[];
 }) {
     rowData = SortQuestions(rowData);
+    studentNames = ["Du"].concat(studentNames);
     const columns: GridColDef[] = [
         {field: 'question', headerName: 'Frage', flex: 1},
         {
@@ -31,13 +32,13 @@ export default function FragebogenTable({
                     case 'text':
                         return <TextField
                             fullWidth
-                            id={params.id + "answer"}
+                            name={params.id + "answer"}
                             label="Antwort"
                             type="text"
                         />;
                     case 'grade':
                         return <GradeAnswerOptions
-                            names={studentNames}
+                            amount={studentNames.length}
                             questionId={params.id as number}
                         />;
                     default:
@@ -70,31 +71,33 @@ export default function FragebogenTable({
     </form>;
 }
 
-function GradeAnswerOptions({ // TODO: statt string array eine anzahl
-    names,
+function GradeAnswerOptions({
+    amount,
     questionId
 }: {
-    names: string[],
+    amount: number,
     questionId: number
 }){
-    const spans = names.map((name, index) => ( // TODO: eine zeile am anfang immer wo nur "Du" steht
-        <FormControl style={{flex: 1}}>
-            <Select
-                id={questionId + "answer" + index}
-                defaultValue={255}
-            >
-                <MenuItem value={255} // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
-                >Note wählen</MenuItem>
-                <MenuItem value={1}>1</MenuItem>
-                <MenuItem value={2}>2</MenuItem>
-                <MenuItem value={3}>3</MenuItem>
-                <MenuItem value={4}>4</MenuItem>
-                <MenuItem value={5}>5</MenuItem>
-                <MenuItem value={6}>6</MenuItem>
-            </Select>
-        </FormControl>
-    ));
-    return <div style={{display: "flex"}}>{spans}</div>;
+    var formControls: JSX.Element[] = [];
+    for (var index = 0; index < amount; index++)
+        formControls.push(
+            <FormControl style={{flex: 1}}>
+                <Select
+                    name={questionId + "answer" + index}
+                    defaultValue={255}
+                >
+                    <MenuItem value={255} // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
+                    >Note wählen</MenuItem>
+                    <MenuItem value={1}>1</MenuItem>
+                    <MenuItem value={2}>2</MenuItem>
+                    <MenuItem value={3}>3</MenuItem>
+                    <MenuItem value={4}>4</MenuItem>
+                    <MenuItem value={5}>5</MenuItem>
+                    <MenuItem value={6}>6</MenuItem>
+                </Select>
+            </FormControl>
+        );
+    return <div style={{display: "flex"}}>{formControls}</div>;
 }
 
 function SortQuestions(questions: FragebogenRow[]): FragebogenRow[] {
