@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import java.util.UUID;
+
+
 /**
  * @author: Michael Holl
  * <p>
@@ -35,5 +38,14 @@ public class QuestionController {
     @GetMapping("/findAll")
     public List<Question> getAllQuestions() {
         return questionService.getAll();
+    }
+    
+    @PutMapping("/{id}")
+    public Question updateQuestion(@PathVariable UUID id, @RequestBody Question question) {
+        return questionService.update(id, question);
+    }
+    @DeleteMapping("/{id}")
+    public void deleteQuestion(@PathVariable UUID id) {
+        questionService.deleteById(id);
     }
 }
