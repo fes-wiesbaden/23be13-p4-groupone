@@ -36,6 +36,7 @@ interface DataGridWithAddProps<TRow extends DataRow = DataRow> {
     onAddClick: () => void;
     onEditClick: (row: TRow) => void | Promise<void>;
     onDeleteClick: (id: TRow["id"]) => void | Promise<void>;
+    onRowClick?: (id: TRow) => void | Promise<void>;
 }
 
 export default function DataGridWithAdd<TRow extends DataRow>({
@@ -44,6 +45,7 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                                             onAddClick,
                                             onEditClick,
                                             onDeleteClick,
+                                            onRowClick
                                         }: DataGridWithAddProps<TRow>) {
     const actionCol: GridColDef<TRow> = {
         field: "actions",
@@ -53,12 +55,21 @@ export default function DataGridWithAdd<TRow extends DataRow>({
         filterable: false,
         renderCell: (params: GridRenderCellParams<TRow, unknown>) => (
             <Stack direction="row" spacing={1} sx={{height: "100%", alignItems: "center"}}>
-                <IconButton size="small" onClick={() => onEditClick(params.row)} color="primary">
+                <IconButton
+                    size="small"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onEditClick(params.row)
+                    }}
+                    color="primary">
                     <EditIcon/>
                 </IconButton>
                 <IconButton
                     size="small"
-                    onClick={() => onDeleteClick(params.row.id)}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onDeleteClick(params.row.id)
+                    }}
                     color="error"
                 >
                     <DeleteIcon/>
@@ -107,6 +118,10 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                     disableRowSelectionOnClick
                     autoHeight
                     localeText={deDE.components.MuiDataGrid.defaultProps?.localeText}
+
+                    onRowClick={(params) => {
+                        onRowClick?.(params.row)
+                    }}
                 />
             </div>
         </ThemeProvider>

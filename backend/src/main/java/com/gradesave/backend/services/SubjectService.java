@@ -56,6 +56,17 @@ public class SubjectService implements CrudService<Subject, UUID> {
     }
 
     @Override
+    public boolean deleteIfExists(UUID uuid) {
+        Optional<Subject> subject = this.getById(uuid);
+        if (subject.isEmpty())
+            return false;
+
+        subjectRepository.delete(subject.get());
+
+        return true;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public boolean exists(UUID id) {
         return subjectRepository.existsById(id);

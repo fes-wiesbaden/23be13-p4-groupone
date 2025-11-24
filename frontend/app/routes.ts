@@ -6,5 +6,7 @@ export default [
   route("fragen", "routes/question.tsx"),
   route("klassen", "routes/klassen.tsx"),
   route("Lernbereich", "routes/subject.tsx"),
+  route("Projekte", "routes/projects.tsx"),
+  route("Projekte/:projectId", "routes/projectDetail.tsx")
   // route("test", "routes/test.tsx"), add routes like this
 ] satisfies RouteConfig;
