@@ -26,6 +26,7 @@ interface ProjectResponse {
     teacherName: string;
 
     groupsAmount: number;
+    unassignedStudentsAmount: number;
 
     projectStart: ProjectStartDate,
 }
@@ -36,6 +37,7 @@ interface ProjectRow extends DataRow {
     className: string,
     groupsAmount: number,
     projectStart: string,
+    unassignedStudentsAmount: number;
     original: ProjectResponse
 }
 
@@ -50,7 +52,8 @@ const columns = [
     { label: "Klassenlehrer", key: "classTeacherName" },
     { label: "Klasse", key: "className" },
     { label: "Gruppenanzahl", key: "groupsAmount" },
-    { label: "Projekt Start Datum", key: "projectStart"}
+    { label: "Start Datum", key: "projectStart"},
+    { label: "Nicht zugewiesen Schüler", key: "unassignedStudentsAmount"}
 ];
 
 function mapProjectsToRows(data: ProjectResponse[]): ProjectRow[] {
@@ -59,8 +62,9 @@ function mapProjectsToRows(data: ProjectResponse[]): ProjectRow[] {
         projectName: p.projectName,
         classTeacherName: p.teacherName,
         className: p.courseName,
-        groupsAmount: p.groupsAmount ? p.groupsAmount : "nicht initialisiert",
+        groupsAmount: p.groupsAmount ? p.groupsAmount : 0,
         projectStart: `${p.projectStart.day}.${p.projectStart.month}.${p.projectStart.year}`,
+        unassignedStudentsAmount: p.unassignedStudentsAmount,
         original: p
     }));
 }
@@ -73,22 +77,11 @@ export default function Projects () {
         message: string;
         retry?: (() => void);
     }>(null);
-    const [openDialog, setOpenDialog] = useState(false);
-    const [courses, setCourses] = useState<CourseDto[]>([]);
-    const [newProject, setNewProject] = useState({
-        projectName: "",
-        courseId: "",
-        projectStart: new Date().toISOString().substring(0, 10)
-    });
 
     const makeRetry = (fn: () => void) => () => {
         setError(null);
         setLoading(true);
         fn();
-    };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setNewProject({ ...newProject, [e.target.name]: e.target.value });
     };
 
     const fetchProjects = async () => {
@@ -112,24 +105,6 @@ export default function Projects () {
         fetchProjects();
     }, []);
 
-    const fetchCourses = async () => {
-        try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/all/bare`);
-            const coursesDto = await res.json();
-
-            setCourses(coursesDto)
-        } catch (err) {
-            console.error("Failed to fetch projects:", err);
-            // setError({
-            //     message: "failed to fetch courses",
-            // });
-        }
-    }
-
-    useEffect(() => {
-        fetchCourses();
-    }, []);
-
     const rows = mapProjectsToRows(projects);
 
     if (loading) return <p>Loading projects...</p>;
@@ -146,71 +121,29 @@ export default function Projects () {
 
 
     const handleAddClick = () => {
-        fetchCourses()
-        setOpenDialog(true);
+        navigate(`/projekte/new`)
     }
 
-    const handleCloseDialog = () => setOpenDialog(false);
-
-    const handleEditClick = () => {
-
+    const handleEditClick = (row: ProjectRow) => {
+        navigate(`/projekte/${row.original.projectId}`)
     }
 
-    const handleDeleteClick = () => {
-
-    }
-
-    const handleRowClick = (row: ProjectRow) => {
-        navigate(`/projekte/${row.original.projectId}`);
-    }
-
-    const handleCreateAndGo = async () => {
-        if (!newProject.projectName || !newProject.projectStart || !newProject.courseId) {
-            alert("Bitte alle Pflichtfelder ausfüllen")
-            return;
-        }
-
-        const [year, month, day] = newProject.projectStart.split("-").map(Number);
-        const startDate: ProjectStartDate = {
-            year,
-            month,
-            day
-        }
-
-        const payload = {
-            projectName: newProject.projectName,
-            courseId: newProject.courseId,
-            projectStart: startDate
-        };
-
+    const handleDeleteClick = async (id: string) => {
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/create`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/delete/${id}`, {
+                method: "DELETE"
+            })
 
             if (!res.ok) {
-                setError({
-                    message: "failed to create project",
-                    retry: makeRetry(handleCreateAndGo)
-                })
-                return;
+                alert("Failed to delete project")
+                return
             }
 
-            const created = await res.json();
-
-            console.log(created)
-
-            navigate(`/projekte/${created.projectSummary.projectId}`)
-
-        } catch (err) {
-            console.error(err);
-            setError({
-                message: "failed to create project",
-                retry: makeRetry(handleCreateAndGo)
-            })
+            setProjects(prevState => prevState.filter(p => p.projectId !== id))
+        } catch (err: any) {
+            alert(`Failed to delete project: ${err.message}`)
         }
+
     }
 
     return (
@@ -221,68 +154,7 @@ export default function Projects () {
                 onAddClick={handleAddClick}
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteClick}
-                onRowClick={handleRowClick}
             />
-            <Dialog
-                open={openDialog}
-                onClose={handleCloseDialog}
-                fullWidth
-                maxWidth="md"
-            >
-                <DialogTitle>Neues Projekt</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        required
-                        maxRows={4}
-                        margin="dense"
-                        name="projectName"
-                        label="Projekt Name"
-                        value ={newProject.projectName}
-                        onChange={handleInputChange}
-                        type="text"
-                        fullWidth
-                        multiline
-                    />
-
-                    <TextField
-                        select
-                        label="Klasse"
-                        name="courseId"
-                        value={newProject.courseId}
-                        margin="dense"
-                        onChange={handleInputChange}
-                        fullWidth
-                        required
-                    >
-                        <MenuItem value="">-- Bitte wählen --</MenuItem>
-                        {courses.map((c) => (
-                            <MenuItem key={c.id} value={c.id}>
-                                {c.courseName} | {c.classTeacherName}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-
-                    <TextField
-                        required
-                        label="Projekt Start"
-                        name="projectStart"
-                        type="date"
-                        value={newProject.projectStart}
-                        onChange={handleInputChange}
-                        fullWidth
-                        margin="dense"
-                    />
-
-                </DialogContent>
-
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Abbrechen</Button>
-                    <Button type="submit" onClick={handleCreateAndGo}>
-                        Hinzufügen
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </>
     );
 }

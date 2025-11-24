@@ -1,9 +1,6 @@
 package com.gradesave.backend.controller;
 
-import com.gradesave.backend.dto.group.GroupAddStudentDTO;
-import com.gradesave.backend.dto.group.GroupCreateDTO;
-import com.gradesave.backend.dto.group.GroupCreationFromCourseRequestDTO;
-import com.gradesave.backend.dto.group.GroupMembersDTO;
+import com.gradesave.backend.dto.group.*;
 import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.Course;
 import com.gradesave.backend.models.Group;
@@ -76,7 +73,7 @@ public class GroupController {
     }
 
     @PostMapping("create/fromClass")
-    public ResponseEntity<List<Group>> createGroupsFromClass(@Valid @RequestBody GroupCreationFromCourseRequestDTO req) {
+    public ResponseEntity<List<GroupMembersDTO>> createGroupsFromClass(@Valid @RequestBody GroupCreationFromCourseRequestDTO req) {
         Optional<Course> courseOpt = courseService.getById(req.courseId());
         if (courseOpt.isEmpty())
             return ResponseEntity.badRequest().build();
@@ -87,12 +84,14 @@ public class GroupController {
 
         Project project = projectOpt.get();
 
+        groupService.deleteGroupsByProject(project.getId());
+
         Course course = courseOpt.get();
         List<User> users = new ArrayList<>(course.getUsers());
         Collections.shuffle(users);
 
         List<Group> groups = new ArrayList<>();
-        for (int i = 0; i < req.groupAmount(); ++i) {
+        for (int i = 1; i <= req.groupAmount(); ++i) {
             Group group = new Group();
             group.setProject(project);
             group.setName("Group " + i);
@@ -107,10 +106,87 @@ public class GroupController {
             groupIndex = (groupIndex + 1) % req.groupAmount();
         }
 
-        groupService.createGroups(groups);
+        List<Group> createdGroups = groupService.createGroups(groups);
 
-        return ResponseEntity.ok(groups);
+        List<GroupMembersDTO> response = createdGroups.stream()
+                .map(g -> new GroupMembersDTO(
+                        g.getId(),
+                        g.getName(),
+                        g.getUsers().stream()
+                                .map(u -> new StudentDTO(u.getId(), u.getUsername(), u.getFirstName(), u.getLastName()))
+                                .toArray(StudentDTO[]::new)
+                ))
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 
-//    @PostMapping("create/fromUsers")
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deleteGroup(@Valid @PathVariable UUID id) {
+        Optional<Group> groupOpt = groupService.getById(id);
+        if (groupOpt.isEmpty())
+            return ResponseEntity.badRequest().build();
+
+        Group group = groupOpt.get();
+        group.getUsers().clear();
+        Group updated = groupService.update(id, group);
+
+        if (!groupService.deleteIfExists(updated.getId()))
+            return ResponseEntity.internalServerError().build();
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("remove")
+    public ResponseEntity<GroupMembersDTO> removeStudent(@Valid @RequestBody RemoveStudentDTO req) {
+        Optional<Group> groupOpt = groupService.getById(req.groupId());
+        if (groupOpt.isEmpty())
+            return ResponseEntity.badRequest().build();
+
+        Group group = groupOpt.get();
+
+        Optional<User> userOpt = userService.getById(req.studentId());
+        if (userOpt.isEmpty())
+            return ResponseEntity.badRequest().build();
+
+        User user = userOpt.get();
+
+        if (!group.getUsers().contains(user)) {
+            return ResponseEntity.ok(
+                    new GroupMembersDTO(
+                            group.getId(),
+                            group.getName(),
+                            group.getUsers()
+                                    .stream()
+                                    .map(s -> new StudentDTO(
+                                            s.getId(),
+                                            s.getUsername(),
+                                            s.getFirstName(),
+                                            s.getLastName()
+                                    ))
+                                    .toArray(StudentDTO[]::new)
+                    )
+            );
+        }
+
+        group.getUsers().remove(user);
+
+        Group updated = groupService.update(req.groupId(), group);
+
+        return ResponseEntity.ok(
+                new GroupMembersDTO(
+                        updated.getId(),
+                        updated.getName(),
+                        updated.getUsers()
+                                .stream()
+                                .map(s -> new StudentDTO(
+                                        s.getId(),
+                                        s.getUsername(),
+                                        s.getFirstName(),
+                                        s.getLastName()
+                                ))
+                                .toArray(StudentDTO[]::new)
+                )
+        );
+    }
 }

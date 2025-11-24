@@ -9,11 +9,13 @@ public record ProjectDetailDTO(
         UUID projectId,
         String projectName,
 
-        UUID classId,
-        String className,
+        UUID courseId,
+        String courseName,
 
         UUID teacherId,
         String teacherName,
+
+        ProjectStartDateDTO projectStartDate,
 
         GroupMembersDTO[] groups
 ) { }

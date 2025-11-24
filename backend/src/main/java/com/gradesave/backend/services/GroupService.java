@@ -75,11 +75,21 @@ public class GroupService implements CrudService<Group, UUID> {
         return repo.count();
     }
 
-    public void createGroups(List<Group> groups) {
-        repo.saveAll(groups);
+    public List<Group> createGroups(List<Group> groups) {
+        return repo.saveAll(groups);
     }
 
     public boolean existsUserInProject(UUID userId, UUID projectId) {
         return repo.existsUserInProject(userId, projectId);
+    }
+
+    public void deleteGroupsByProject(UUID projectId) {
+        List<Group> groups = repo.findAllByProjectId(projectId);
+
+        for (Group g : groups) {
+            g.getUsers().clear();
+        }
+
+        repo.deleteAll(groups);
     }
 }

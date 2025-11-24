@@ -7,6 +7,6 @@ export default [
   route("klassen", "routes/klassen.tsx"),
   route("Lernbereich", "routes/subject.tsx"),
   route("Projekte", "routes/projects.tsx"),
-  route("Projekte/:projectId", "routes/projectDetail.tsx")
+  route("Projekte/:projectId", "routes/createOrEditProject.tsx")
   // route("test", "routes/test.tsx"), add routes like this
 ] satisfies RouteConfig;

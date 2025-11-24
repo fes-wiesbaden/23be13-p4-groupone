@@ -1,5 +1,6 @@
 package com.gradesave.backend.repositories;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.gradesave.backend.models.Group;
@@ -26,4 +27,6 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
             AND g.project.id = :projectId
     """)
     boolean existsUserInProject(UUID userId, UUID projectId);
+
+    List<Group> findAllByProjectId(UUID projectId);
 }

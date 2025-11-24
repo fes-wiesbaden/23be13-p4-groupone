@@ -1,34 +1,51 @@
 package com.gradesave.backend.controller;
 
+import com.gradesave.backend.dto.group.GroupCreateWithMembersDTO;
 import com.gradesave.backend.dto.group.GroupMembersDTO;
 import com.gradesave.backend.dto.project.*;
 import com.gradesave.backend.dto.user.StudentDTO;
-import com.gradesave.backend.models.Course;
-import com.gradesave.backend.models.Group;
-import com.gradesave.backend.models.Project;
-import com.gradesave.backend.models.User;
+import com.gradesave.backend.models.*;
 import com.gradesave.backend.services.CourseService;
+import com.gradesave.backend.services.GroupService;
 import com.gradesave.backend.services.ProjectService;
+import com.gradesave.backend.services.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("api/project")
 public class ProjectController {
     private final ProjectService projectService;
     private final CourseService courseService;
+    private final UserService userService;
+    private final GroupService groupService;
 
-    public ProjectController(ProjectService projectService, CourseService courseService) {
+    public ProjectController(ProjectService projectService, CourseService courseService, UserService userService, GroupService groupService) {
         this.projectService = projectService;
         this.courseService = courseService;
+        this.userService = userService;
+        this.groupService = groupService;
+    }
+
+    private Integer getUnassignedStudentsAmount(Project project) {
+        Course course= project.getCourse();
+        long totalStudents = course.getUsers().stream()
+                .filter(u -> u.getRole() == Role.STUDENT)
+                .count();
+
+        long assignedStudents = project.getGroups().stream()
+                .flatMap(g -> g.getUsers().stream())
+                .map(User::getId)
+                .distinct()
+                .count();
+
+        return (int) (totalStudents - assignedStudents);
     }
 
     @PostMapping("create")
@@ -56,20 +73,23 @@ public class ProjectController {
         ProjectSummaryDTO projectSummaryDTO = new ProjectSummaryDTO(
                 project.getId(),
                 project.getName(),
+                projectCourse.getId(),
+                projectCourse.getCourseName(),
+                teacher.getId(),
+                teacher.getFirstName() + " " + teacher.getLastName(),
+                project.getGroups().size(),
+                getUnassignedStudentsAmount(project),
                 new ProjectStartDateDTO(
                         project.getProjectStart().getYear(),
                         project.getProjectStart().getMonthValue(),
                         project.getProjectStart().getDayOfMonth()
-                ),
-                projectCourse.getId(),
-                projectCourse.getCourseName(),
-                teacher.getFirstName() + " " + teacher.getLastName()
+                )
         );
 
         return ResponseEntity.status(201).body(new CreateProjectResponseDTO(projectSummaryDTO));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("delete/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
         if (!projectService.deleteIfExists(id)) {
             return ResponseEntity.notFound().build();
@@ -94,6 +114,11 @@ public class ProjectController {
                 project.getCourse().getCourseName(),
                 project.getCourse().getClassTeacher().getId(),
                 project.getCourse().getClassTeacher().getFirstName() + " " + project.getCourse().getClassTeacher().getLastName(),
+                new ProjectStartDateDTO(
+                        project.getProjectStart().getYear(),
+                        project.getProjectStart().getMonthValue(),
+                        project.getProjectStart().getDayOfMonth()
+                ),
                 project.getGroups().stream()
                         .map(g -> new GroupMembersDTO(
                                 g.getId(),
@@ -125,17 +150,65 @@ public class ProjectController {
                 .map(p -> new ProjectSummaryDTO(
                         p.getId(),
                         p.getName(),
+                        p.getCourse().getId(),
+                        p.getCourse().getCourseName(),
+                        p.getCourse().getClassTeacher().getId(),
+                        p.getCourse().getClassTeacher().getFirstName() + " " + p.getCourse().getClassTeacher().getLastName(),
+                        p.getGroups().size(),
+                        getUnassignedStudentsAmount(p),
                         new ProjectStartDateDTO(
                                 p.getProjectStart().getYear(),
                                 p.getProjectStart().getMonthValue(),
                                 p.getProjectStart().getDayOfMonth()
-                        ),
-                        p.getCourse().getId(),
-                        p.getCourse().getCourseName(),
-                        p.getCourse().getClassTeacher().getFirstName() + " " + p.getCourse().getClassTeacher().getLastName()
+                        )
                 ))
                 .toArray(ProjectSummaryDTO[]::new);
 
+        return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("create/full")
+    public ResponseEntity<CreateProjectResponseSimpleDTO> createProjectFull(@RequestBody CreateProjectFullDTO req) {
+        Optional<Course> courseOpt = courseService.getById(req.courseId());
+        if (courseOpt.isEmpty())
+            return ResponseEntity.badRequest().build();
+
+        Course course = courseOpt.get();
+
+        Project project = new Project();
+        project.setProjectStart(LocalDate.of(req.projectStartDate().year(), req.projectStartDate().month(), req.projectStartDate().day()));
+        project.setName(req.projectName());
+        project.setCourse(course);
+        Project createdProject = projectService.create(project);
+
+        for (GroupCreateWithMembersDTO groupDto : req.groups()) {
+            Group group = new Group();
+            group.setProject(createdProject);
+            group.setName(groupDto.groupName());
+
+            Set<User> students = new HashSet<>();
+
+            for (UUID studentId : groupDto.memberIds()) {
+                Optional<User> userOpt = userService.getById(studentId);
+                if (userOpt.isEmpty())
+                    continue; // maybe catch and report error but for now skip
+
+                User user = userOpt.get();
+                if (user.getRole() != Role.STUDENT)
+                    continue; // maybe catch and report error but for now skip
+
+                if (user.getCourses().stream().noneMatch(c -> c.getId().equals(req.courseId())))
+                    continue; // maybe catch and report error but for now skip
+
+                students.add(user);
+            }
+
+            group.setUsers(students);
+
+            groupService.create(group);
+        }
+
+        CreateProjectResponseSimpleDTO dto = new CreateProjectResponseSimpleDTO(createdProject.getId());
         return ResponseEntity.ok(dto);
     }
 }
