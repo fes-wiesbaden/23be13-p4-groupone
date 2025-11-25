@@ -16,6 +16,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * @author: Paul Geisthardt
+ * <p>
+ * Controller for handling Groups
+ * </p>
+ **/
+
 @RestController
 @RequestMapping("api/group")
 public class GroupController {

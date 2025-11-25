@@ -10,6 +10,13 @@ import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
 import DeleteIcon from "@mui/icons-material/Delete";
 
+/**
+ * @author Paul Geisthardt
+ *
+ * Editing/Creating projects and assigning groups/students
+ *
+ */
+
 interface Student {
     studentId: string;
     username: string;
@@ -258,7 +265,7 @@ export default function createOrEditProject() {
 
     const handleProjectStartDateChange = (value: string) => {
         if (!value) return;
-        
+
         const [year, month, day] = value.split("-").map(Number);
 
         const dateObj: ProjectStartDate = { year, month, day };

@@ -18,6 +18,13 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.*;
 
+/**
+ * @author: Paul Geisthardt
+ * <p>
+ * Controller for handling Projects
+ * </p>
+ **/
+
 @RestController
 @RequestMapping("api/project")
 public class ProjectController {

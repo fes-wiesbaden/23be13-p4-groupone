@@ -9,6 +9,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * @author: Paul Geisthardt
+ * <p>
+ * ProjectService
+ * </p>
+ */
+
 @Service
 @Transactional
 public class ProjectService implements CrudService<Project, UUID> {

@@ -10,6 +10,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * @author: Paul Geisthardt
+ * <p>
+ * GroupService
+ * </p>
+ */
+
 @Service
 @Transactional
 public class GroupService implements CrudService<Group, UUID> {

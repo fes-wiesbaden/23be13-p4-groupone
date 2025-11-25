@@ -1,13 +1,17 @@
 import {
     Button,
-    Dialog, DialogActions,
-    DialogContent,
-    DialogTitle, MenuItem, TextField,
 } from "@mui/material";
 import DataTableWithAdd, {type DataRow} from "~/components/dataTableWithAddButton";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router"
 import API_CONFIG from "~/apiConfig";
+
+/**
+ * @author Paul Geisthardt
+ *
+ * Overview of Projects
+ *
+ */
 
 interface ProjectStartDate {
     year: number,
