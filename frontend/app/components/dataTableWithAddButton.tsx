@@ -6,10 +6,11 @@ import {
 } from "@mui/x-data-grid";
 import {deDE} from "@mui/x-data-grid/locales";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
-import {Stack, IconButton} from "@mui/material";
+import {Stack, IconButton, Tooltip, Button} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
+import Typography from "@mui/material/Typography";
 
 /**
  * @author: Michael Holl
@@ -55,25 +56,29 @@ export default function DataGridWithAdd<TRow extends DataRow>({
         filterable: false,
         renderCell: (params: GridRenderCellParams<TRow, unknown>) => (
             <Stack direction="row" spacing={1} sx={{height: "100%", alignItems: "center"}}>
-                <IconButton
-                    size="small"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        onEditClick(params.row)
-                    }}
-                    color="primary">
-                    <EditIcon/>
-                </IconButton>
-                <IconButton
-                    size="small"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        onDeleteClick(params.row.id)
-                    }}
-                    color="error"
-                >
-                    <DeleteIcon/>
-                </IconButton>
+                <Tooltip title={<span style={{ fontSize: "1rem" }}>Bearbeiten</span>}>
+                    <IconButton
+                        size="small"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onEditClick(params.row)
+                        }}
+                        color="primary">
+                        <EditIcon/>
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title={<span style={{ fontSize: "1rem" }}>Löschen</span>}>
+                    <IconButton
+                        size="small"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onDeleteClick(params.row.id)
+                        }}
+                        color="error"
+                    >
+                        <DeleteIcon/>
+                    </IconButton>
+                </Tooltip>
             </Stack>
         ),
     };
@@ -106,10 +111,16 @@ export default function DataGridWithAdd<TRow extends DataRow>({
     return (
         <ThemeProvider theme={theme}>
             <div style={{width: "100%"}}>
-                <Stack direction="row" justifyContent="flex-end" sx={{mb: 1}}>
-                    <IconButton onClick={onAddClick} aria-label="add">
-                        <AddIcon/>
-                    </IconButton>
+                <Stack direction="row" justifyContent="flex-end" sx={{mb: 1}}  alignItems="center" spacing={1} px={2} py={1}>
+                    <Button
+                        onClick={onAddClick}
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        size="small"
+                    >
+                        Hinzufügen
+                    </Button>
                 </Stack>
                 <DataGrid
                     rows={rows}
