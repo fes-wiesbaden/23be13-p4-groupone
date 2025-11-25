@@ -12,6 +12,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * @author: Michael Holl
@@ -32,6 +33,9 @@ public class Group {
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
+    @NotBlank
+    private String name;
 
     @ManyToMany
     @JoinTable(
@@ -65,4 +69,11 @@ public class Group {
         this.users = users;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

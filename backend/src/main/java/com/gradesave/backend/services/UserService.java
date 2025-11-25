@@ -82,6 +82,19 @@ public class UserService implements CrudService<User, UUID> {
     }
 
     @Override
+    public boolean deleteIfExists(UUID uuid) {
+
+        Optional<User> user = this.getById(uuid);
+        if (user.isEmpty())
+            return false;
+
+        repo.delete(user.get());
+
+        return true;
+
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public boolean exists(UUID id) {
         return repo.existsById(id);

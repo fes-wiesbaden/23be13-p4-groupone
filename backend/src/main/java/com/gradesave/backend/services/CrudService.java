@@ -9,6 +9,7 @@ public interface CrudService<T, ID> {
     List<T> getAll();
     T update(ID id, T entity);
     void deleteById(ID id);
+    boolean deleteIfExists(ID id);
     boolean exists(ID id);
     long count();
 }

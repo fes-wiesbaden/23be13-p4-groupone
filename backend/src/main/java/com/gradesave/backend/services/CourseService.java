@@ -35,6 +35,10 @@ public class CourseService {
         this.userRepo = userRepo;
     }
 
+    public Optional<Course> getByIdTest(UUID id) {
+        return repo.findByIdTest(id);
+    }
+
     public Course create(Course entity) {
         return repo.save(entity);
     }

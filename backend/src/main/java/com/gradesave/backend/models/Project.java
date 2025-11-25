@@ -7,16 +7,9 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -39,10 +32,10 @@ public class Project {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @NotBlank
     private String name;
 
-    @NotBlank(message = "projectStart is required")
-    @Size(max = 100, message = "projectStart must not exceed 100 characters")
+    @NotNull(message = "projectStart is required")
     @Column(name = "project_start")
     private LocalDate projectStart;
 
@@ -53,6 +46,9 @@ public class Project {
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<ProjectSubject> projectSubjects = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Group> groups = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -78,19 +74,11 @@ public class Project {
         this.name = name;
     }
 
-    public void setId(String name) {
-        this.name = name;
-    }
-
     public LocalDate getProjectStart() {
         return projectStart;
     }
 
     public void setProjectStart(LocalDate projectStart) {
-        this.projectStart = projectStart;
-    }
-
-    public void setId(LocalDate projectStart) {
         this.projectStart = projectStart;
     }
 
@@ -110,4 +98,11 @@ public class Project {
         this.projectSubjects = projectSubjects;
     }
 
+    public Set<Group> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Set<Group> groups) {
+        this.groups = groups;
+    }
 }
