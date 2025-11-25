@@ -42,7 +42,7 @@ public class Course {
     private String courseName;
 
     @ManyToOne
-    @JoinColumn(name = "class_teacher_id", nullable = false)
+    @JoinColumn(name = "class_teacher_id", nullable = true)
     private User classTeacher;
 
     @ManyToMany
