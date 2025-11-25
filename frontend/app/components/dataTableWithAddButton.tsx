@@ -6,10 +6,11 @@ import {
 } from "@mui/x-data-grid";
 import {deDE} from "@mui/x-data-grid/locales";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
-import {Stack, IconButton, Tooltip} from "@mui/material";
+import {Stack, IconButton, Tooltip, Button} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
+import Typography from "@mui/material/Typography";
 
 /**
  * @author: Michael Holl
@@ -99,11 +100,16 @@ export default function DataGridWithAdd<TRow extends DataRow>({
     return (
         <ThemeProvider theme={theme}>
             <div style={{width: "100%"}}>
-                <Stack direction="row" justifyContent="flex-end" sx={{mb: 1}}  alignItems="center" spacing={1}>
-                    <span style={{ fontSize: "0.9rem" }}>Hinzufügen</span>
-                    <IconButton onClick={onAddClick} aria-label="add">
-                        <AddIcon/>
-                    </IconButton>
+                <Stack direction="row" justifyContent="flex-end" sx={{mb: 1}}  alignItems="center" spacing={1} px={2} py={1}>
+                    <Button
+                        onClick={onAddClick}
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        size="small"
+                    >
+                        Hinzufügen
+                    </Button>
                 </Stack>
                 <DataGrid
                     rows={rows}
