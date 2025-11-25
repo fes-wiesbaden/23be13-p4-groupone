@@ -1,5 +1,5 @@
 import {useParams} from "react-router-dom";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router"
 import API_CONFIG from "~/apiConfig";
 import Typography from "@mui/material/Typography";
@@ -136,6 +136,18 @@ function GroupCard({
     )
 }
 
+const useDebounce = (callback: (...args: any[]) => void, delay: number) => {
+    const timer = useRef<NodeJS.Timeout | null>(null);
+
+    return (...args: any[]) => {
+        if (timer.current) clearTimeout(timer.current);
+
+        timer.current = setTimeout(() => {
+            callback(...args);
+        }, delay);
+    };
+};
+
 export default function createOrEditProject() {
     let { projectId } = useParams<{ projectId: string }>();
 
@@ -167,10 +179,8 @@ export default function createOrEditProject() {
     const fetchProject = async () => {
         setLoading(true)
         try {
-            console.log(`Fetcing ${projectId}`)
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {method: "GET",});
             const data: ProjectDetailResponse = await res.json();
-            console.log(data)
             setProject(data);
 
             const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${data.courseId}/students`);
@@ -182,10 +192,9 @@ export default function createOrEditProject() {
 
             const unassigned = students.filter(s => !assignedIds.has(s.studentId))
 
-            console.log(unassigned)
             setUnassignedStudents(unassigned)
         } catch (err: any) {
-            console.log(err);
+            console.error(err);
             setError(`Failed to Fetch Project: ${err.message}`)
         } finally {
             setLoading(false)
@@ -220,15 +229,52 @@ export default function createOrEditProject() {
         }
     }, [])
 
+    const debouncedSendToBackend = useDebounce(async (value: string) => {
+        const payload = {
+            projectName: value
+        }
+        try {
+            await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+        } catch (err) {
+            console.error("Error updating backend", err);
+        }
+    }, 500);
+
     if (loading) return <>Loading ...</>
 
-    const handleProjectNameChange = (value: string) => {
+    const handleProjectNameChange = async (value: string) => {
         if (isEdit) {
+
             setProject(prevState =>
                 prevState
                     ? { ...prevState, projectName: value }
                     : prevState
             )
+
+            debouncedSendToBackend(value);
+            try {
+                const payload = {
+                    projectName: value,
+                }
+
+                const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                })
+
+                if (!res.ok) {
+                    console.error("Failed to change Project Name")
+                    return
+                }
+            } catch (err: any) {
+                console.error(`Failed to change Project Name: ${err.message}`)
+                return;
+            }
         } else {
             setProjectCreateDetails(prevState =>
                 prevState
@@ -385,7 +431,6 @@ export default function createOrEditProject() {
             }
             const updated: ProjectDetailGroup = await res.json();
 
-            console.log(updated)
             setProject(prevState =>
                 prevState
                     ? { ...prevState,
@@ -621,6 +666,7 @@ export default function createOrEditProject() {
                     name="courseId"
                     value={isEdit ? project?.courseId : projectCreateDetails.courseId}
                     onChange={e => handleProjectClassChange(e.target.value)}
+                    disabled={isEdit}
                     sx={{ flex: "1 1 200px" }}
                 >
                     <MenuItem value="">-- Bitte wählen --</MenuItem>
@@ -679,7 +725,7 @@ export default function createOrEditProject() {
                     overflow="auto"
                 >
                     <Typography variant="h6" py={2}>
-                        Groups
+                        Gruppen
                     </Typography>
 
                     <Box

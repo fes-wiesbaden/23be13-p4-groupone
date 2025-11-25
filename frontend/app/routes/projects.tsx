@@ -133,6 +133,8 @@ export default function Projects () {
     }
 
     const handleDeleteClick = async (id: string) => {
+        if (!confirm("Willst du diese Projekt wirklich löschen?")) return
+
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/delete/${id}`, {
                 method: "DELETE"

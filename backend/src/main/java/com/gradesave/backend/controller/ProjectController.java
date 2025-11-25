@@ -96,6 +96,24 @@ public class ProjectController {
         return ResponseEntity.status(201).body(new CreateProjectResponseDTO(projectSummaryDTO));
     }
 
+    @PatchMapping("{id}")
+    public ResponseEntity<Void> updateProject(@PathVariable UUID id, @Valid @RequestBody UpdateProjectDTO req) {
+        Optional<Project> projectOpt = projectService.getById(id);
+
+        if (projectOpt.isEmpty())
+            return ResponseEntity.badRequest().build();
+
+        Project project = projectOpt.get();
+
+        if (req.projectName() != null && !req.projectName().isBlank()) {
+            project.setName(req.projectName());
+        }
+
+        Project updatedProject = projectService.update(id, project);
+
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("delete/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
         if (!projectService.deleteIfExists(id)) {
