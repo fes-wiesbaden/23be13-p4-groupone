@@ -6,7 +6,7 @@ import {
 } from "@mui/x-data-grid";
 import {deDE} from "@mui/x-data-grid/locales";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
-import {Stack, IconButton} from "@mui/material";
+import {Stack, IconButton, Tooltip} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -53,16 +53,20 @@ export default function DataGridWithAdd<TRow extends DataRow>({
         filterable: false,
         renderCell: (params: GridRenderCellParams<TRow, unknown>) => (
             <Stack direction="row" spacing={1} sx={{height: "100%", alignItems: "center"}}>
-                <IconButton size="small" onClick={() => onEditClick(params.row)} color="primary">
-                    <EditIcon/>
-                </IconButton>
-                <IconButton
-                    size="small"
-                    onClick={() => onDeleteClick(params.row.id)}
-                    color="error"
-                >
-                    <DeleteIcon/>
-                </IconButton>
+                <Tooltip title={<span style={{ fontSize: "1rem" }}>Bearbeiten</span>}>
+                    <IconButton size="small" onClick={() => onEditClick(params.row)} color="primary">
+                        <EditIcon/>
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title={<span style={{ fontSize: "1rem" }}>Löschen</span>}>
+                    <IconButton
+                        size="small"
+                        onClick={() => onDeleteClick(params.row.id)}
+                        color="error"
+                    >
+                        <DeleteIcon/>
+                    </IconButton>
+                </Tooltip>
             </Stack>
         ),
     };
@@ -95,7 +99,8 @@ export default function DataGridWithAdd<TRow extends DataRow>({
     return (
         <ThemeProvider theme={theme}>
             <div style={{width: "100%"}}>
-                <Stack direction="row" justifyContent="flex-end" sx={{mb: 1}}>
+                <Stack direction="row" justifyContent="flex-end" sx={{mb: 1}}  alignItems="center" spacing={1}>
+                    <span style={{ fontSize: "0.9rem" }}>Hinzufügen</span>
                     <IconButton onClick={onAddClick} aria-label="add">
                         <AddIcon/>
                     </IconButton>
