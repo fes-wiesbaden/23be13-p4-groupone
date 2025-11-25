@@ -44,7 +44,6 @@ const SingleFileUploader = (props: FileUploadProps) => {
 
     const handleUpload = async () => {
         if (!file) return;
-        console.log('Uploading file...');
 
         const metadata = { type: type };
 
@@ -63,7 +62,6 @@ const SingleFileUploader = (props: FileUploadProps) => {
 
             const data = await result.json();
 
-            console.log(data);
         } catch (error) {
             console.error(error);
         }
