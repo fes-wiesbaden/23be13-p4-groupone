@@ -5,6 +5,7 @@ export default [
   route("user", "routes/userOverview.tsx"),
   route("fragen", "routes/question.tsx"),
   route("klassen", "routes/klassen.tsx"),
+  route("klassen/:courseId", "routes/createOrEditCourse.tsx"),
   route("Lernbereich", "routes/subject.tsx"),
   route("Projekte", "routes/projects.tsx"),
   route("Projekte/:projectId", "routes/createOrEditProject.tsx")

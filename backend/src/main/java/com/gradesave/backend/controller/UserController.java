@@ -3,6 +3,8 @@ package com.gradesave.backend.controller;
 import com.gradesave.backend.dto.CreateUserRequest;
 import com.gradesave.backend.dto.UpdateUserRequest;
 import com.gradesave.backend.dto.UserDto;
+import com.gradesave.backend.dto.user.StudentDTO;
+import com.gradesave.backend.dto.user.TeacherDTO;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.services.UserService;
@@ -93,6 +95,21 @@ public class UserController {
     public ResponseEntity<List<UserDto>> getAllUsersByRole(@RequestParam Role role) {
         List<UserDto> users = userService.GetUsersByRole(role).stream().map(this::toDto).toList();
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("teachers")
+    public ResponseEntity<TeacherDTO[]> getAllTeachers() {
+        return ResponseEntity.ok(userService.GetUsersByRole(Role.TEACHER).stream().map(TeacherDTO::fromEntity).toArray(TeacherDTO[]::new));
+    }
+
+    @GetMapping("free/students")
+    public ResponseEntity<List<StudentDTO>> getAllUnassignedStudents() {
+        List<User> users = userService.getUnassignedStudents();
+        List<StudentDTO> dtos = users.stream()
+                .map(StudentDTO::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(dtos);
     }
 
     private UserDto toDto(User u) {

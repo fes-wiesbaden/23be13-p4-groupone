@@ -1,5 +1,6 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.dto.UserDto;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import org.springframework.http.HttpStatus;
@@ -108,5 +109,13 @@ public class UserService implements CrudService<User, UUID> {
 
     public List<User> GetUsersByRole(Role role){
         return repo.findByRole(role);
+    }
+
+    public List<User> getUnassignedStudents() {
+        return repo.findUnassignedStudents();
+    }
+
+    public List<User> getUsersByIds(UUID[] uuids) {
+        return repo.findAllById(List.of(uuids));
     }
 }
