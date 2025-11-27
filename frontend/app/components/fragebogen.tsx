@@ -1,3 +1,9 @@
+/**
+ * @author: Naoh Bach
+ * Component that returns a form of a "Fragebogen" for students to fill out
+ *
+ **/
+
 import React, { type JSX } from "react";
 import {
     DataGrid,
@@ -6,9 +12,14 @@ import {
 import { Button, FormControl, InputLabel, MenuItem, Select, Switch, TextField } from "@mui/material";
 
 export interface FragebogenRow {
-    id: number;
+    id: string;
     question: string;
     type: 'text' | 'grade';
+}
+
+interface SortedQuestions {
+    gradeQuestions: FragebogenRow[];
+    textQuestions: FragebogenRow[];
 }
 
 export default function FragebogenTable({
@@ -20,91 +31,106 @@ export default function FragebogenTable({
   rows: FragebogenRow[];
   studentNames: string[];
 }) {
-    rowData = SortQuestions(rowData);
-    studentNames = ["Du"].concat(studentNames);
-    const columns: GridColDef[] = [
-        {field: 'question', headerName: 'Frage', flex: 1},
+    const sortedRows: SortedQuestions = SortQuestions(rowData)
+    const noGradeSelectedDefaultValue = 255; // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
+    studentNames = ["Selbsteinschätzung"].concat(studentNames);
+    let columns: GridColDef[] = [
         {
-            field: 'type',
-            renderCell: (params) => {
-                console.log(params);
-                switch (params.value) {
-                    case 'text':
-                        return <TextField
-                            fullWidth
-                            name={params.id + "answer"}
-                            label="Antwort"
-                            type="text"
-                        />;
-                    case 'grade':
-                        return <GradeAnswerOptions
-                            amount={studentNames.length}
-                            questionId={params.id as number}
-                        />;
-                    default:
-                        return null;
-                }
-            },
-            renderHeader: () => {
-                var spans = studentNames.map((name) =>
-                    <span style={{flexGrow: 1}}>
-                        {name}
-                    </span>
-                );
-                return <>{spans}</>;
-            },
-            flex: 2
+            field: 'question',
+            headerName: 'Frage',
+            width: 200,
+            disableColumnMenu: true,
+            disableReorder: true,
+            flex: 0.5
         }
     ];
+    columns = columns.concat(studentNames.map((name, index) => ({
+        field: name,
+        headerName: name,
+        display: 'flex',
+        renderCell: (params) => {
+            switch (params.row.type){
+                case 'text':
+                    return <>this shouldn't be here</>
+                case 'grade':
+                    return <FormControl style={{flex: 1}}>
+                        <Select
+                            name={params.id + "answer" + index}
+                            defaultValue={noGradeSelectedDefaultValue}
+                        >
+                            <MenuItem value={noGradeSelectedDefaultValue}
+                            >Note wählen</MenuItem>
+                            <MenuItem value={1}>1</MenuItem>
+                            <MenuItem value={2}>2</MenuItem>
+                            <MenuItem value={3}>3</MenuItem>
+                            <MenuItem value={4}>4</MenuItem>
+                            <MenuItem value={5}>5</MenuItem>
+                            <MenuItem value={6}>6</MenuItem>
+                        </Select>
+                    </FormControl>
+                default:
+                    return <>default</>
+            }
+        },
+        flex: 1 / studentNames.length,
+        disableColumnMenu: true,
+        disableReorder: true
+    })))
     return <form
         onSubmit={onSubmit}
     >
         <DataGrid
-            rows={rowData}
+            rows={sortedRows.gradeQuestions}
             columns={columns}
-            sx={{
-                '& .MuiDataGrid-columnHeaderTitleContainerContent': {
-                    width: "100%"
-                }
-            }}
-        ></DataGrid>
+            getRowHeight={() => "auto"}
+        />
+        <TextQuestions
+            questions={sortedRows.textQuestions}
+        />
+
     </form>;
 }
 
-function GradeAnswerOptions({
-    amount,
-    questionId
+function TextQuestions({
+    questions
 }: {
-    amount: number,
-    questionId: number
+    questions: FragebogenRow[]
 }){
-    var formControls: JSX.Element[] = [];
-    for (var index = 0; index < amount; index++)
-        formControls.push(
-            <FormControl style={{flex: 1}}>
-                <Select
-                    name={questionId + "answer" + index}
-                    defaultValue={255}
-                >
-                    <MenuItem value={255} // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
-                    >Note wählen</MenuItem>
-                    <MenuItem value={1}>1</MenuItem>
-                    <MenuItem value={2}>2</MenuItem>
-                    <MenuItem value={3}>3</MenuItem>
-                    <MenuItem value={4}>4</MenuItem>
-                    <MenuItem value={5}>5</MenuItem>
-                    <MenuItem value={6}>6</MenuItem>
-                </Select>
-            </FormControl>
-        );
-    return <div style={{display: "flex"}}>{formControls}</div>;
+    let fields: JSX.Element[] = questions.map((q) => 
+        <TextQuestionField
+            text={q.question}
+            questionId={q.id}
+        />
+    );
+
+    return <>{fields}</>
 }
 
-function SortQuestions(questions: FragebogenRow[]): FragebogenRow[] {
-    var returnQuestions: FragebogenRow[] = [];
-    var textQuestions: FragebogenRow[] = [];
-    for (var i = 0; i < questions.length; i++)
-        (questions[i].type == 'grade') ? returnQuestions.push(questions[i]) : textQuestions.push(questions[i]);
-    return returnQuestions.concat(textQuestions);
+function TextQuestionField({
+    text: questionText,
+    questionId
+}: {
+    text: string
+    questionId: string
+}){
+    return <>
+        <div style={{marginTop: "1em"}}>
+            {questionText}
+        </div>
+        <TextField 
+            fullWidth
+            placeholder="Antwort eingeben..."
+            name={questionId + "answer"}
+        />
+    </>
+}
 
+function SortQuestions(questions: FragebogenRow[]): SortedQuestions{
+    let returnObject: SortedQuestions = {
+        gradeQuestions: [],
+        textQuestions: []
+    }
+    for (let q of questions)
+        (q.type == 'grade' ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
+    return returnObject;
 }
