@@ -733,9 +733,9 @@ export default function CreateOrEditCourse() {
                                         onClick={() => {
                                             setTeacherError("");
                                             if (isEdit) {
-                                                fetchCourse
+                                                fetchCourse()
                                             } else {
-                                                fetchTeachers
+                                                fetchTeachers()
                                             }
                                         }}
                                         variant="outlined">
@@ -931,7 +931,7 @@ export default function CreateOrEditCourse() {
                                     </Box>
                                 )}
 
-                                {loadingTeachers && (
+                                {loadingStudents && (
                                     <Typography color="text.secondary" mb={3}>
                                         Lade Freie Schüler...
                                     </Typography>
