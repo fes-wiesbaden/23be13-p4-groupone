@@ -114,7 +114,7 @@ public class UserService implements CrudService<User, UUID> {
         return repo.findUnassignedStudents();
     }
 
-    public List<User> getUsersByIds(UUID[] uuids) {
-        return repo.findAllById(List.of(uuids));
+    public List<User> getUsersByIds(List<UUID> uuids) {
+        return repo.findAllById(uuids);
     }
 }

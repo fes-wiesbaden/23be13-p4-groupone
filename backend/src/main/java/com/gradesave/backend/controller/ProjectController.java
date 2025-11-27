@@ -2,6 +2,7 @@ package com.gradesave.backend.controller;
 
 import com.gradesave.backend.dto.group.GroupCreateWithMembersDTO;
 import com.gradesave.backend.dto.group.GroupMembersDTO;
+import com.gradesave.backend.dto.group.ProjectDetailGroupDTO;
 import com.gradesave.backend.dto.project.*;
 import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.*;
@@ -137,8 +138,8 @@ public class ProjectController {
                 project.getName(),
                 project.getCourse().getId(),
                 project.getCourse().getCourseName(),
-                project.getCourse().getClassTeacher().getId(),
-                project.getCourse().getClassTeacher().getFirstName() + " " + project.getCourse().getClassTeacher().getLastName(),
+                project.getCourse().getClassTeacher() != null ? project.getCourse().getClassTeacher().getId() : null,
+                project.getCourse().getClassTeacher() != null ? project.getCourse().getClassTeacher().getFirstName() + " " + project.getCourse().getClassTeacher().getLastName() : "No Class Teacher",
                 new ProjectStartDateDTO(
                         project.getProjectStart().getYear(),
                         project.getProjectStart().getMonthValue(),
@@ -177,8 +178,8 @@ public class ProjectController {
                         p.getName(),
                         p.getCourse().getId(),
                         p.getCourse().getCourseName(),
-                        p.getCourse().getClassTeacher().getId(),
-                        p.getCourse().getClassTeacher().getFirstName() + " " + p.getCourse().getClassTeacher().getLastName(),
+                        p.getCourse().getClassTeacher() != null ? p.getCourse().getClassTeacher().getId() : null,
+                        p.getCourse().getClassTeacher() != null ? p.getCourse().getClassTeacher().getFirstName() + " " + p.getCourse().getClassTeacher().getLastName() : "No Class Teacher",
                         p.getGroups().size(),
                         getUnassignedStudentsAmount(p),
                         new ProjectStartDateDTO(
@@ -235,5 +236,74 @@ public class ProjectController {
 
         CreateProjectResponseSimpleDTO dto = new CreateProjectResponseSimpleDTO(createdProject.getId());
         return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping("{id}/full")
+    public ResponseEntity<Void> updateProjectFull(@PathVariable UUID id, @Valid @RequestBody ProjectPutFullRequestDTO req) {
+        Optional<Project> projectOpt = projectService.getById(id);
+        if (projectOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Project project = projectOpt.get();
+
+        project.setName(req.projectName());
+        project.setProjectStart(req.projectStartDate().toLocalDate());
+
+        Map<UUID, Group> existingGroupsMap = new HashMap<>();
+        for (Group group : project.getGroups()) {
+            existingGroupsMap.put(group.getId(), group);
+        }
+
+        Set<UUID> requestedGroupIds = new HashSet<>();
+        Set<Group> updatedGroups = new HashSet<>();
+
+        for (ProjectDetailGroupDTO groupDto : req.groups()) {
+            requestedGroupIds.add(groupDto.groupId());
+
+            Group group;
+            if (existingGroupsMap.containsKey(groupDto.groupId())) {
+                group = existingGroupsMap.get(groupDto.groupId());
+                group.setName(groupDto.groupName());
+            } else {
+                group = new Group();
+                group.setName(groupDto.groupName());
+                group.setProject(project);
+            }
+
+            Set<User> members = new HashSet<>();
+            for (var memberDto : groupDto.members()) {
+                Optional<User> userOpt = userService.getById(memberDto.studentId());
+                if (userOpt.isEmpty()) continue;
+
+                User user = userOpt.get();
+
+                if (user.getRole() != Role.STUDENT) continue;
+                if (user.getCourses().stream().noneMatch(c -> c.getId().equals(project.getCourse().getId())))
+                    continue;
+
+                members.add(user);
+            }
+            group.setUsers(members);
+
+            if (!existingGroupsMap.containsKey(groupDto.groupId())) {
+                group = groupService.create(group);
+            } else {
+                group = groupService.update(groupDto.groupId(), group);
+            }
+            
+            updatedGroups.add(group);
+        }
+
+        for (UUID existingGroupId : existingGroupsMap.keySet()) {
+            if (!requestedGroupIds.contains(existingGroupId)) {
+                groupService.deleteById(existingGroupId);
+            }
+        }
+
+        project.getGroups().clear();
+        project.getGroups().addAll(updatedGroups);
+        projectService.update(id, project);
+
+        return ResponseEntity.ok().build();
     }
 }

@@ -17,14 +17,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
 
-interface User {
-    id: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    role: Role;
-}
-
 interface Student {
     studentId: string;
     username: string;
@@ -47,23 +39,6 @@ interface CourseDetailResponse {
     students: Student[]
 }
 
-type CoursePatchRequest = {
-    classTeacherId?: string,
-    courseName?: string,
-}
-
-const useDebounce = (callback: (...args: any[]) => void, delay: number) => {
-    const timer = useRef<NodeJS.Timeout | null>(null);
-
-    return (...args: any[]) => {
-        if (timer.current) clearTimeout(timer.current);
-
-        timer.current = setTimeout(() => {
-            callback(...args);
-        }, delay);
-    };
-};
-
 type RetryError = {
     message: string,
     retryMethod: () => Promise<void> | void;
@@ -74,6 +49,13 @@ type CourseCreateDetails = {
     classTeacherId?: string,
     teacherIds: string[],
     studentIds: string[]
+}
+
+type CoursePutRequest = {
+    courseName: string,
+    classTeacherId?: string,
+    teacherIds: string[],
+    studentIds: string[],
 }
 
 
@@ -96,9 +78,6 @@ function UserCard({
     mode,
     disabled = false
 }: UserCardProps) {
-    const isStudent = 'studentId' in user;
-    const isTeacher = 'teacherId' in user;
-
     const fullName = `${user.firstName} ${user.lastName}`;
 
     if (mode === 'assigned') {
@@ -175,6 +154,9 @@ export default function CreateOrEditCourse() {
     let {courseId} = useParams<{ courseId: string }>();
 
     const [course, setCourse] = useState<CourseDetailResponse | null>(null);
+    const [originalCourse, setOriginalCourse] = useState<CourseDetailResponse | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
     const [allTeachers, setAllTeachers] = useState<Teacher[]>([]);
     const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
     const [teacherError, setTeacherError] = useState<string | null>(null)
@@ -208,21 +190,7 @@ export default function CreateOrEditCourse() {
     const isEdit = !(courseId === "new");
     const navigate = useNavigate();
 
-    const debouncedSendToBackend = useDebounce(async (field: keyof CoursePatchRequest, value: string) => {
 
-        const payload: Partial<CoursePatchRequest> = { };
-        payload[field] = value;
-
-        try {
-            await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${courseId}`, {
-                method: "PATCH",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(payload),
-            });
-        } catch (err) {
-            console.error("Error updating backend", err);
-        }
-    }, 500);
 
 
     const handleCourseNameChange = async (value: string) => {
@@ -232,8 +200,6 @@ export default function CreateOrEditCourse() {
                     ? {...prevState, courseName: value}
                     : prevState
             );
-
-            debouncedSendToBackend("courseName", value);
         } else {
             setCourseCreateDetails(prevState =>
                 prevState
@@ -266,8 +232,6 @@ export default function CreateOrEditCourse() {
                     teachers: updatedTeachers
                 };
             });
-
-            debouncedSendToBackend("classTeacherId", value)
         } else {
             setCourseCreateDetails(prevState => {
                 if (!prevState) return prevState;
@@ -292,6 +256,7 @@ export default function CreateOrEditCourse() {
         }
     }
 
+
     const fetchCourse = async () => {
         if (!isEdit) return;
 
@@ -311,6 +276,7 @@ export default function CreateOrEditCourse() {
 
             const course: CourseDetailResponse = await res.json();
             setCourse(course);
+            setOriginalCourse(JSON.parse(JSON.stringify(course)));
         } catch (err: any) {
             setRetryError({
                 message: `Failed to Load Course: ${err.message}`,
@@ -377,17 +343,6 @@ export default function CreateOrEditCourse() {
         if (isEdit) {
             setRemovingTeacher(teacherId);
             try {
-                const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${courseId}/teachers/remove`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ teacherId })
-                });
-
-                if (!res.ok) {
-                    alert("Fehler beim Entfernen des Lehrers");
-                    return;
-                }
-
                 setCourse(prevState => {
                     if (!prevState) return prevState;
 
@@ -397,8 +352,6 @@ export default function CreateOrEditCourse() {
                         classTeacher: prevState.classTeacher?.teacherId === teacherId ? undefined : prevState.classTeacher
                     };
                 });
-            } catch (err: any) {
-                alert(`Fehler: ${err.message}`);
             } finally {
                 setRemovingTeacher(null);
             }
@@ -415,30 +368,19 @@ export default function CreateOrEditCourse() {
         if (isEdit) {
             setAssigningTeacher(teacherId);
             try {
-                const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${courseId}/teachers/add`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ teacherId })
-                });
-
-                if (!res.ok) {
-                    alert("Fehler beim Hinzufügen des Lehrers");
-                    return;
-                }
-
                 setCourse(prevState => {
                     if (!prevState) return prevState;
 
                     const teacher = allTeachers.find(t => t.teacherId === teacherId)
                     if (!teacher) return prevState;
 
+                    if (prevState.teachers.some(t => t.teacherId === teacherId)) return prevState;
+
                     return {
                         ...prevState,
                         teachers: [...prevState.teachers, teacher]
                     }
                 });
-            } catch (err: any) {
-                alert(`Fehler: ${err.message}`);
             } finally {
                 setAssigningTeacher(null);
             }
@@ -454,17 +396,6 @@ export default function CreateOrEditCourse() {
         if (isEdit) {
             setRemovingStudent(studentId);
             try {
-                const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${courseId}/students/remove`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ studentId })
-                });
-
-                if (!res.ok) {
-                    alert("Fehler beim Entfernen des Schülers");
-                    return;
-                }
-
                 setCourse(prevState =>
                     prevState
                         ? {
@@ -478,8 +409,6 @@ export default function CreateOrEditCourse() {
                 if (student) {
                     setAvailableStudents(prev => [...prev, student]);
                 }
-            } catch (err: any) {
-                alert(`Fehler: ${err.message}`);
             } finally {
                 setRemovingStudent(null);
             }
@@ -495,22 +424,13 @@ export default function CreateOrEditCourse() {
         if (isEdit) {
             setAssigningStudent(studentId);
             try {
-                const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${courseId}/students/add`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ studentId })
-                });
-
-                if (!res.ok) {
-                    alert("Fehler beim Hinzufügen des Schülers");
-                    return;
-                }
-
                 setCourse(prevState => {
                     if (!prevState) return prevState;
 
                     const student = availableStudents.find(s => s.studentId === studentId);
                     if (!student) return prevState;
+
+                    if (prevState.students.some(s => s.studentId === studentId)) return prevState;
 
                     return {
                         ...prevState,
@@ -519,8 +439,6 @@ export default function CreateOrEditCourse() {
                 });
 
                 setAvailableStudents(prev => prev.filter(s => s.studentId !== studentId));
-            } catch (err: any) {
-                alert(`Fehler: ${err.message}`);
             } finally {
                 setAssigningStudent(null);
             }
@@ -554,6 +472,42 @@ export default function CreateOrEditCourse() {
         } finally {
             setCreatingCourse(false)
         }
+    }
+
+    const handleSaveChanges = async () => {
+        if (!isEdit || !course) return;
+        setSaving(true);
+        setSaveError(null);
+
+        try {
+            const payload: CoursePutRequest = {
+                classTeacherId: course.classTeacher?.teacherId ?? "",
+                courseName: course.courseName,
+                teacherIds: course.teachers.map(t => t.teacherId),
+                studentIds: course.students.map(s => s.studentId)
+            }
+
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${courseId}/full`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload),
+            })
+
+            if (!res.ok) {
+                setSaveError(`Fehler beim Speicher: ${res.status}`)
+                return
+            }
+
+            setOriginalCourse(course);
+        } catch (err: any) {
+            setSaveError(`Fehler beim Speichern: ${err.message}`)
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    const resetChanges = () => {
+        setCourse(originalCourse);
     }
 
     if (loadingCourse) return <>Loading ...</>
@@ -655,8 +609,45 @@ export default function CreateOrEditCourse() {
                     ))}
                 </TextField>
             </Box>
+            {isEdit ? (
+                <Box mt={4} display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
+                    {saveError && (
+                        <Box
+                            mb={2}
+                            p={2}
+                            sx={{
+                                backgroundColor: '#ffebee',
+                                borderRadius: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 1
+                            }}
+                        >
+                            <Typography color="error" gutterBottom>
+                                {saveError}
+                            </Typography>
+                        </Box>
+                    )}
 
-            {!isEdit && (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={resetChanges}
+                        disabled={saving}
+                    >
+                        Zurücksetzten
+                    </Button>
+
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSaveChanges}
+                        disabled={saving}
+                    >
+                        {saving ? 'Speichern...' : 'Speichern'}
+                    </Button>
+                </Box>
+            ) : (
                 <Box mt={4} display="flex" justifyContent="flex-end">
                     {creationError && (
                         <Box

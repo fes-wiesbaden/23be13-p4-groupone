@@ -2,6 +2,7 @@ package com.gradesave.backend.services;
 
 import com.gradesave.backend.models.Project;
 import com.gradesave.backend.repositories.ProjectRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +43,18 @@ public class ProjectService implements CrudService<Project, UUID> {
 
     @Override
     public Project update(UUID uuid, Project entity) {
-        return null;
+        Optional<Project> existingOpt = repo.findById(uuid);
+
+        if (existingOpt.isEmpty())
+            throw new EntityNotFoundException("Project not found: " + uuid);
+
+        Project existing = existingOpt.get();
+
+        existing.setName(entity.getName());
+        existing.setProjectStart(entity.getProjectStart());
+        existing.setGroups(entity.getGroups());
+
+        return repo.save(existing);
     }
 
     @Override

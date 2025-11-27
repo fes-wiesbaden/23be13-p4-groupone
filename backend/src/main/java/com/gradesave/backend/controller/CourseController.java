@@ -1,6 +1,7 @@
 package com.gradesave.backend.controller;
 
 import com.gradesave.backend.dto.CreateCourseRequest;
+import com.gradesave.backend.dto.UpdateCourseRequest;
 import com.gradesave.backend.dto.course.*;
 import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.Course;
@@ -71,7 +72,7 @@ public class CourseController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Course> updateCourse(@PathVariable UUID id,
-                                               @Valid @RequestBody com.gradesave.backend.dto.UpdateCourseRequest req) {
+                                               @Valid @RequestBody UpdateCourseRequest req) {
         if (req.teacherId() != null) {
             if (!userService.exists(req.teacherId())) {
                 return ResponseEntity.badRequest().build();
@@ -85,6 +86,53 @@ public class CourseController {
             log.warn("IllegalArgumentException when updating course with id {}: {}", id, e.getMessage(), e);
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PutMapping("{id}/full")
+    public ResponseEntity<Void> putFullCourse(@PathVariable UUID id, @Valid @RequestBody CoursePutFullRequestDTO req) {
+        Optional<Course> courseOpt = courseService.getById(id);
+        if (courseOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Course course = courseOpt.get();
+
+        course.setCourseName(req.courseName());
+
+        User classTeacher = null;
+
+        System.out.println(req.classTeacherId());
+        System.out.println(req.teacherIds());
+
+        if (req.classTeacherId() != null && !req.classTeacherId().isEmpty()) {
+            try {
+                UUID classTeacherId = UUID.fromString(req.classTeacherId());
+                Optional<User> classTeacherOpt = userService.getById(classTeacherId);
+                if (classTeacherOpt.isEmpty() || classTeacherOpt.get().getRole() != Role.TEACHER)
+                    return ResponseEntity.badRequest().build();
+
+                classTeacher = classTeacherOpt.get();
+                course.setClassTeacher(classTeacher);
+            } catch (IllegalArgumentException e) {
+                course.setClassTeacher(null);
+            }
+        } else {
+            course.setClassTeacher(null);
+        }
+
+
+        List<User> teachers = userService.getUsersByIds(req.teacherIds());
+        List<User> students = userService.getUsersByIds(req.studentIds());
+
+        course.getUsers().clear();
+        course.getUsers().addAll(teachers);
+        course.getUsers().addAll(students);
+
+        if (classTeacher != null) {
+            course.getUsers().add(classTeacher);
+        }
+
+        courseService.create(course);
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("{id}")
@@ -255,8 +303,8 @@ public class CourseController {
         Course course = new Course();
         course.setCourseName(req.courseName());
 
-        List<User> students = userService.getUsersByIds(req.studentIds());
-        List<User> teachers = userService.getUsersByIds(req.teacherIds());
+        List<User> students = userService.getUsersByIds(List.of(req.studentIds()));
+        List<User> teachers = userService.getUsersByIds(List.of(req.teacherIds()));
 
         course.getUsers().addAll(students);
         course.getUsers().addAll(teachers);
