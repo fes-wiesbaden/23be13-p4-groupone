@@ -99,7 +99,6 @@ function UserCard({
     const isStudent = 'studentId' in user;
     const isTeacher = 'teacherId' in user;
 
-    const userId = isStudent ? user.studentId : isTeacher ? user.teacherId : '';
     const fullName = `${user.firstName} ${user.lastName}`;
 
     if (mode === 'assigned') {
@@ -172,7 +171,7 @@ function UserCard({
     );
 }
 
-export default function createOrEditCourse() {
+export default function CreateOrEditCourse() {
     let {courseId} = useParams<{ courseId: string }>();
 
     const [course, setCourse] = useState<CourseDetailResponse | null>(null);
@@ -567,7 +566,7 @@ export default function createOrEditCourse() {
                 <Button
                     onClick={async () => {
                         setRetryError({message: "", retryMethod: () => {}})
-                        retryError.retryMethod
+                        await retryError.retryMethod()
                     }}
                     variant="contained"
                 >
@@ -802,7 +801,7 @@ export default function createOrEditCourse() {
                                         onClick={() => {
                                             setStudentError("");
                                             if (isEdit) {
-                                                fetchCourse
+                                                fetchCourse()
                                             } else {
                                                 fetchStudents()
                                             }
@@ -836,10 +835,6 @@ export default function createOrEditCourse() {
                             ))}
                         </AccordionDetails>
                     </Accordion>
-                    {/*<Typography variant="h6" py={2}>*/}
-                    {/*    Zugeordnete Lehrer*/}
-                    {/*</Typography>*/}
-
                 </Box>
 
                 <Divider orientation="vertical" flexItem/>

@@ -91,7 +91,7 @@ public class CourseController {
     public ResponseEntity<Void> patchCourse(@PathVariable UUID id, @Valid @RequestBody CoursePatchRequestDTO req) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         courseService.patchCourse(courseOpt.get(), req);
 
@@ -114,7 +114,7 @@ public class CourseController {
 
         Optional<User> teacherOpt = userService.getById(req.teacherId());
         if (teacherOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         User teacher = teacherOpt.get();
         if (teacher.getRole() != Role.TEACHER)
@@ -132,13 +132,13 @@ public class CourseController {
     public ResponseEntity<Void> removeTeacher(@PathVariable UUID id, @Valid @RequestBody TeacherAddRemoveToGroupDTO req) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         Course course = courseOpt.get();
 
         Optional<User> teacherOpt = userService.getById(req.teacherId());
         if (teacherOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         User teacher = teacherOpt.get();
         if (teacher.getRole() != Role.TEACHER)
@@ -156,13 +156,13 @@ public class CourseController {
     public ResponseEntity<Void> addStudent(@PathVariable UUID id, @Valid @RequestBody StudentAddRemoveToGroupDTO req) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         Course course = courseOpt.get();
 
         Optional<User> studentOpt = userService.getById(req.studentId());
         if (studentOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         User student = studentOpt.get();
         if (student.getRole() != Role.STUDENT)
@@ -180,13 +180,13 @@ public class CourseController {
     public ResponseEntity<Void> removeStudent(@PathVariable UUID id, @Valid @RequestBody StudentAddRemoveToGroupDTO req) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         Course course = courseOpt.get();
 
         Optional<User> studentOpt = userService.getById(req.studentId());
         if (studentOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         User student = studentOpt.get();
         if (student.getRole() != Role.STUDENT)
@@ -243,7 +243,7 @@ public class CourseController {
     public ResponseEntity<CourseDetailResponseDTO> getCourseDetail(@Valid @PathVariable UUID id) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
 
         Course course = courseOpt.get();
 

@@ -8,7 +8,3 @@ public record CoursePatchRequestDTO(
 ) {
 
 }
-//type CoursePatchRequest = {
-//        classTeacherId?: string,
-//courseName?: string,
-//        }

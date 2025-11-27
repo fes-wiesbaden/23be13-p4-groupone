@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -194,7 +193,7 @@ public class CsvService {
                         int rowNumber = (int)record.getRecordNumber();
                         if (record.size() < 2) {
                             result.incrementFailed();
-                            result.addError("To few fields in line " + rowNumber + ",got " + record.size() + ", need at least 2: 'name', 'lastname'");
+                            result.addError("Too few fields in line " + rowNumber + ",got " + record.size() + ", need at least 2: 'name', 'lastname'");
                             continue;
                         }
                         String name = record.get("name");
@@ -310,7 +309,6 @@ public class CsvService {
                         creation.userName = u.getUsername();
                         creation.className = null;
 
-                        System.out.println(user.className);
 
                         if (user.className != null && !user.className.isBlank()) {
                             Optional<Course> course = courseService.getByName(user.className);
@@ -343,7 +341,6 @@ public class CsvService {
 
                         result.addCreation(creation);
                     } catch (Exception e) {
-                        e.printStackTrace();
                         result.incrementFailed();
                         result.addError("Row " + (i + 1) + ": " + e.getMessage());
                     }

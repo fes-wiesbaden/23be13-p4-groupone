@@ -122,7 +122,6 @@ public class CourseService {
     }
 
     public void patchCourse(Course course, @Valid CoursePatchRequestDTO req) {
-        System.out.println(req.classTeacherId());
         if (req.classTeacherId() != null) {
             if (req.classTeacherId().isEmpty()) {
                 User user = course.getClassTeacher();
