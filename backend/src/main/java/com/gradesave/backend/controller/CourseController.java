@@ -100,7 +100,7 @@ public class CourseController {
                 .map(c -> new CourseBareDTO(
                         c.getId(),
                         c.getCourseName(),
-                        c.getClassTeacher().getFirstName() + " " + c.getClassTeacher().getLastName()
+                        c.getClassTeacher() != null ? c.getClassTeacher().getFirstName() + " " + c.getClassTeacher().getLastName() : "No Class teacher"
                 ))
                 .toArray(CourseBareDTO[]::new);
 

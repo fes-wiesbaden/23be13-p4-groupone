@@ -180,6 +180,10 @@ export default function createOrEditProject() {
         setLoading(true)
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {method: "GET",});
+            if (!res.ok) {
+                return
+            }
+
             const data: ProjectDetailResponse = await res.json();
             setProject(data);
 
