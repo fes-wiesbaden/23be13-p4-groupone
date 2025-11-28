@@ -1,5 +1,5 @@
 import {useParams} from "react-router-dom";
-import {useEffect, useState, useRef} from "react";
+import {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
 import Typography from "@mui/material/Typography";
 import {AccordionDetails, AccordionSummary, Box, Button, MenuItem, TextField} from "@mui/material";
@@ -193,7 +193,7 @@ export default function CreateOrEditCourse() {
 
 
 
-    const handleCourseNameChange = async (value: string) => {
+    const handleCourseNameChange = (value: string) => {
         if (isEdit) {
             setCourse(prevState =>
                 prevState
@@ -209,7 +209,7 @@ export default function CreateOrEditCourse() {
         }
     }
 
-    const handleClassTeacherChange = async (value: string) => {
+    const handleClassTeacherChange = (value: string) => {
         if (isEdit) {
             const newClassTeacher = allTeachers.find(t => t.teacherId === value);
 
@@ -339,7 +339,7 @@ export default function CreateOrEditCourse() {
         }
     }, []);
 
-    const handleRemoveTeacher = async (teacherId: string) => {
+    const handleRemoveTeacher = (teacherId: string) => {
         if (isEdit) {
             setRemovingTeacher(teacherId);
             try {
@@ -364,7 +364,7 @@ export default function CreateOrEditCourse() {
         }
     };
 
-    const handleAddTeacher = async (teacherId: string) => {
+    const handleAddTeacher = (teacherId: string) => {
         if (isEdit) {
             setAssigningTeacher(teacherId);
             try {
@@ -392,7 +392,7 @@ export default function CreateOrEditCourse() {
         }
     };
 
-    const handleRemoveStudent = async (studentId: string) => {
+    const handleRemoveStudent = (studentId: string) => {
         if (isEdit) {
             setRemovingStudent(studentId);
             try {
@@ -420,7 +420,7 @@ export default function CreateOrEditCourse() {
         }
     };
 
-    const handleAddStudent = async (studentId: string) => {
+    const handleAddStudent = (studentId: string) => {
         if (isEdit) {
             setAssigningStudent(studentId);
             try {
@@ -475,7 +475,7 @@ export default function CreateOrEditCourse() {
     }
 
     const handleSaveChanges = async () => {
-        if (!isEdit || !course) return;
+        if (!isEdit || !course || !originalCourse) return;
         setSaving(true);
         setSaveError(null);
 
@@ -635,7 +635,7 @@ export default function CreateOrEditCourse() {
                         onClick={resetChanges}
                         disabled={saving}
                     >
-                        Zurücksetzten
+                        Zurücksetzen
                     </Button>
 
                     <Button

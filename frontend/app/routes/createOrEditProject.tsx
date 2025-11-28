@@ -406,7 +406,9 @@ export default function createOrEditProject() {
         if (!project || !isEdit) return;
 
         const newGroup: ProjectDetailGroup = {
-            groupId: typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : String(Date.now()),
+            groupId: typeof crypto !== 'undefined' && (crypto as any).randomUUID
+                ? (crypto as any).randomUUID()
+                : String(Date.now()) + '-' + Math.random().toString(16).slice(2),
             groupName: `Gruppe ${project.groups.length + 1}`,
             members: []
         };
@@ -490,7 +492,7 @@ export default function createOrEditProject() {
     }
 
     const resetChanges = () => {
-        setProject(originalProject)
+        setProject(originalProject ? JSON.parse(JSON.stringify(originalProject)) : null)
     }
 
     const handleCreateRandomGroups = async () => {
@@ -508,7 +510,7 @@ export default function createOrEditProject() {
                 const shuffled = [...students].sort(() => Math.random() - 0.5);
 
                 const newGroups: ProjectDetailGroup[] = Array.from({ length: groupAmount }, (_, i) => ({
-                    groupId: typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : String(Date.now()) + i,
+                    groupId: typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : String(Date.now()) + '-' + i + '-' + Math.random() + i,
                     groupName: `Gruppe ${i + 1}`,
                     members: []
                 }));

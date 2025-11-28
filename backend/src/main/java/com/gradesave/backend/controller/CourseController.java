@@ -100,9 +100,6 @@ public class CourseController {
 
         User classTeacher = null;
 
-        System.out.println(req.classTeacherId());
-        System.out.println(req.teacherIds());
-
         if (req.classTeacherId() != null && !req.classTeacherId().isEmpty()) {
             try {
                 UUID classTeacherId = UUID.fromString(req.classTeacherId());
