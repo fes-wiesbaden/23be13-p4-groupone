@@ -158,6 +158,13 @@ public class CsvService {
         }
     }
 
+    private String getOptional(CSVRecord record, CSVParser parser, String header) {
+        if (!record.isMapped(header)) return null;
+        Integer idx = parser.getHeaderMap().get(header);
+        if (idx == null || idx >= record.size()) return null;
+        return record.get(idx);
+    }
+
     public CsvData parse(MultipartFile file, FileMetadata metadata, CsvResult result) throws IOException {
         if (metadata == null || metadata.type == null) {
             throw new IOException("Missing Metadata");
@@ -184,18 +191,18 @@ public class CsvService {
                     List<UserDto> users = new ArrayList<>();
                     for (CSVRecord record: parser) {
                         int rowNumber = (int)record.getRecordNumber();
-                        if (record.size() < 3) {
+                        if (record.size() < 2) {
                             result.incrementFailed();
-                            result.addError("To few fields in line " + rowNumber + ",got " + record.size() + ", need at least 3: 'name', 'lastname' 'className'");
+                            result.addError("Too few fields in line " + rowNumber + ",got " + record.size() + ", need at least 2: 'name', 'lastname'");
                             continue;
                         }
                         String name = record.get("name");
-                        String lastName = record.get("lastName");
-                        String className = record.get("className");
-                        String roleString = "";
-                        if (record.size() > 3) {
-                            roleString = record.isMapped("role") ? record.get("role").toLowerCase() : "";
-                        }
+                        String lastName = record.get("lastname");
+
+                        String className = getOptional(record, parser, "classname");
+                        String roleString = getOptional(record, parser, "role");
+                        if (roleString == null)
+                            roleString = "";
                         Role role;
                         switch (roleString) {
                             case "student" -> role = Role.STUDENT;
@@ -210,7 +217,7 @@ public class CsvService {
                             }
                         }
 
-                        if (name == null || name.isEmpty() || lastName == null || lastName.isEmpty() || className == null || className.isEmpty()) {
+                        if (name == null || name.isEmpty() || lastName == null || lastName.isEmpty()) {
                             result.incrementFailed();
                             result.addError("Row " + rowNumber + ": missing mandatory fields.");
                             continue;
@@ -231,7 +238,7 @@ public class CsvService {
                 }
             }
         } catch (Exception e) {
-            throw new IOException("Failed to parse CSV: ", e);
+            throw new IOException("Failed to parse CSV: " + e.getMessage());
         }
     }
 
@@ -300,32 +307,36 @@ public class CsvService {
                         creation.name = u.getFirstName();
                         creation.lastName = u.getLastName();
                         creation.userName = u.getUsername();
+                        creation.className = null;
 
-                        Optional<Course> course = courseService.getByName(user.className);
-                        Course classCourse;
-                        if (course.isEmpty()) {
-                            Course newCourse = new Course();
-                            newCourse.setCourseName(user.className);
-                            courseService.create(newCourse);
-                            Optional<Course> testCourse = courseService.getByName(user.className);
-                            if (testCourse.isEmpty()) {
-                                result.incrementFailed();
-                                result.addError("Failed to create Course: " + user.className);
-                                result.addCreation(creation);
-                                continue;
+
+                        if (user.className != null && !user.className.isBlank()) {
+                            Optional<Course> course = courseService.getByName(user.className);
+                            Course classCourse;
+                            if (course.isEmpty()) {
+                                Course newCourse = new Course();
+                                newCourse.setCourseName(user.className);
+                                courseService.create(newCourse);
+                                Optional<Course> testCourse = courseService.getByName(user.className);
+                                if (testCourse.isEmpty()) {
+                                    result.incrementFailed();
+                                    result.addError("Failed to create Course: " + user.className);
+                                    result.addCreation(creation);
+                                    continue;
+                                }
+                                classCourse = testCourse.get();
+                            } else {
+                                classCourse = course.get();
                             }
-                            classCourse = testCourse.get();
-                        } else {
-                            classCourse = course.get();
-                        }
 
-                        if (!courseService.addStudent(classCourse, u)) {
-                            result.incrementFailed();
-                            result.addError("Row " + (i + 1) + ": failed add user to course " +
-                                    user.name + " " + user.lastName + ": " + user.className);
-                        } else {
-                            result.incrementProcessed();
-                            creation.className = user.className;
+                            if (!courseService.addStudent(classCourse, u)) {
+                                result.incrementFailed();
+                                result.addError("Row " + (i + 1) + ": failed add user to course " +
+                                        user.name + " " + user.lastName + ": " + user.className);
+                            } else {
+                                result.incrementProcessed();
+                                creation.className = user.className;
+                            }
                         }
 
                         result.addCreation(creation);

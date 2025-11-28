@@ -1,5 +1,5 @@
 import {useParams} from "react-router-dom";
-import React, {useEffect, useState, useRef } from "react";
+import React, {useEffect, useState } from "react";
 import { useNavigate } from "react-router"
 import API_CONFIG from "~/apiConfig";
 import Typography from "@mui/material/Typography";
@@ -64,6 +64,12 @@ interface GroupCardProps {
     onDeleteGroup: (groupId: string) => void;
     onRemoveStudent: (groupId: string, studentId: string) => void;
     onAssignStudent: (groupId: string, student: Student) => void;
+}
+
+type ProjectPutRequest = {
+    projectName: string,
+    projectStartDate: ProjectStartDate,
+    groups: ProjectDetailGroup[]
 }
 
 function GroupCard({
@@ -136,25 +142,16 @@ function GroupCard({
     )
 }
 
-const useDebounce = (callback: (...args: any[]) => void, delay: number) => {
-    const timer = useRef<NodeJS.Timeout | null>(null);
-
-    return (...args: any[]) => {
-        if (timer.current) clearTimeout(timer.current);
-
-        timer.current = setTimeout(() => {
-            callback(...args);
-        }, delay);
-    };
-};
-
 export default function createOrEditProject() {
     let { projectId } = useParams<{ projectId: string }>();
 
     const [project, setProject] = useState<ProjectDetailResponse | null>(null)
+    const [originalProject, setOriginalProject] = useState<ProjectDetailResponse | null>(null)
     const [unassignedStudents, setUnassignedStudents] = useState<Student[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string |null>(null)
+    const [saving, setSaving] = useState(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
     const [courses, setCourses] = useState<CourseDto[]>([]);
     const [draftGroups, setDraftGroups] = useState<ProjectDetailGroup[]>([]);
     const [draftUnassignedStudents, setDraftUnassignedStudents] = useState<Student[]>([]);
@@ -182,6 +179,7 @@ export default function createOrEditProject() {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {method: "GET",});
             const data: ProjectDetailResponse = await res.json();
             setProject(data);
+            setOriginalProject(JSON.parse(JSON.stringify(data)));
 
             const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${data.courseId}/students`);
             const students: Student[] = await studentRes.json();
@@ -229,52 +227,15 @@ export default function createOrEditProject() {
         }
     }, [])
 
-    const debouncedSendToBackend = useDebounce(async (value: string) => {
-        const payload = {
-            projectName: value
-        }
-        try {
-            await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-        } catch (err) {
-            console.error("Error updating backend", err);
-        }
-    }, 500);
-
     if (loading) return <>Loading ...</>
 
-    const handleProjectNameChange = async (value: string) => {
+    const handleProjectNameChange = (value: string) => {
         if (isEdit) {
-
             setProject(prevState =>
                 prevState
                     ? { ...prevState, projectName: value }
                     : prevState
             )
-
-            debouncedSendToBackend(value);
-            try {
-                const payload = {
-                    projectName: value,
-                }
-
-                const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                })
-
-                if (!res.ok) {
-                    console.error("Failed to change Project Name")
-                    return
-                }
-            } catch (err: any) {
-                console.error(`Failed to change Project Name: ${err.message}`)
-                return;
-            }
         } else {
             setProjectCreateDetails(prevState =>
                 prevState
@@ -381,156 +342,82 @@ export default function createOrEditProject() {
     }
 
 
-    const handleDeleteGroup = async (groupId: string) => {
+    const handleDeleteGroup = (groupId: string) => {
         if (!groupId.trim() || !isEdit) return;
 
-        try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/group/${groupId}`, {
-                method: "DELETE",
-            })
+        const removedGroup = project?.groups.find(g => g.groupId === groupId);
+        const freedStudents = removedGroup ? removedGroup.members : [];
 
-            if (!res.ok) {
-                alert("Failed to delete group");
-                return;
-            }
+        setProject(prevState =>
+            prevState
+                ? { ...prevState, groups: prevState.groups.filter(g => g.groupId !== groupId) }
+                : prevState
+        )
 
-            const removedGroup = project?.groups.find(g => g.groupId === groupId);
-            const freedStudents = removedGroup ? removedGroup.members : [];
-
-            setProject(prevState =>
-                prevState
-                    ? { ...prevState, groups: prevState.groups.filter(g => g.groupId !== groupId) }
-                    : prevState
-            )
-
-            setUnassignedStudents(prevState => [...prevState, ...freedStudents])
-        } catch (err: any) {
-            alert(`Failed to delete group: ${err.message}`)
-        }
+        setUnassignedStudents(prevState => [...prevState, ...freedStudents])
     }
 
-    const handleAssignStudent = async (groupId: string, student: Student) => {
+    const handleAssignStudent = (groupId: string, student: Student) => {
         if (!groupId.trim() || !student || !isEdit) return;
 
+        setProject(prevState =>
+            prevState
+                ? { ...prevState,
+                    groups: prevState.groups.map(g =>
+                        g.groupId === groupId
+                            ? { ...g, members: [...g.members, student] }
+                            : g
+                    )
+                }
+                : prevState
+        );
 
-        const payload = {
-            groupId: groupId,
-            studentId: student.studentId
-        }
-
-        try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/group/add`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                alert("failed to add student to group")
-                return;
-            }
-            const updated: ProjectDetailGroup = await res.json();
-
-            setProject(prevState =>
-                prevState
-                    ? { ...prevState,
-                        groups: prevState.groups.map(g =>
-                            g.groupId === updated.groupId ? updated : g
-                        )
-                    }
-                    : prevState
-            );
-
-            setUnassignedStudents(prevState =>
-                prevState.filter(s => s.studentId != student.studentId)
-            )
-        } catch (err: any) {
-            alert(`Failed to add student to group: ${err.message}`)
-        }
+        setUnassignedStudents(prevState =>
+            prevState.filter(s => s.studentId !== student.studentId)
+        )
     }
 
-    const handleRemoveStudent = async (groupId: string, studentId: string) => {
+    const handleRemoveStudent = (groupId: string, studentId: string) => {
         if (!groupId.trim() || !studentId.trim() || !isEdit) return;
 
-        const payload = {
-            groupId,
-            studentId
-        };
+        const student = project?.groups
+            .find(g => g.groupId === groupId)
+            ?.members.find(s => s.studentId === studentId);
 
-        try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/group/remove`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            })
-
-            if (!res.ok) {
-                alert("Fehler beim entfernen")
-                return
-            }
-
-            const updatedGroup: ProjectDetailGroup = await res.json();
-
-            setProject(prevState =>
-                prevState
-                    ? {
-                        ...prevState,
-                        groups: prevState.groups.map(g =>
-                            g.groupId === updatedGroup.groupId ? updatedGroup : g
-                        )
-                    }
-                    : prevState
-            )
-
-            const removed = updatedGroup.members.length <
-                project?.groups.find(g => g.groupId === groupId)?.members.length!;
-
-            if (removed) {
-                const student = project?.groups
-                    .find(g => g.groupId === groupId)
-                    ?.members.find(s => s.studentId === studentId);
-
-                if (student) {
-                    setUnassignedStudents(prev => [...prev, student]);
+        setProject(prevState =>
+            prevState
+                ? {
+                    ...prevState,
+                    groups: prevState.groups.map(g =>
+                        g.groupId === groupId
+                            ? { ...g, members: g.members.filter(m => m.studentId !== studentId) }
+                            : g
+                    )
                 }
-            }
-        } catch(err: any) {
-            alert(`Error: ${err.message}`)
+                : prevState
+        )
+
+        if (student) {
+            setUnassignedStudents(prev => [...prev, student]);
         }
     }
 
-    const handleAddGroup = async () => {
+    const handleAddGroup = () => {
         if (!project || !isEdit) return;
 
-        const payload = {
+        const newGroup: ProjectDetailGroup = {
+            groupId: typeof crypto !== 'undefined' && (crypto as any).randomUUID
+                ? (crypto as any).randomUUID()
+                : String(Date.now()) + '-' + Math.random().toString(16).slice(2),
             groupName: `Gruppe ${project.groups.length + 1}`,
-            projectId: project.projectId
-        }
+            members: []
+        };
 
-        try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/group/create`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                alert("failed to create group")
-                return;
-            }
-
-            const created: ProjectDetailGroup = await res.json();
-
-            setProject(prevState =>
-                prevState
-                    ? { ...prevState, groups: [...prevState.groups, created ] }
-                    : prevState
-            )
-
-        } catch (err: any) {
-            console.error(err);
-            alert(`failed to create group: ${err.message}`)
-        }
+        setProject(prevState =>
+            prevState
+                ? { ...prevState, groups: [...prevState.groups, newGroup ] }
+                : prevState
+        )
     }
 
     const leftGroups = isEdit ? (project?.groups ?? []) : draftGroups;
@@ -573,6 +460,41 @@ export default function createOrEditProject() {
         }
     }
 
+    const handleSaveChanges = async () => {
+        if (!isEdit || !project) return;
+        setSaving(true);
+        setSaveError(null);
+
+        try {
+            const payload: ProjectPutRequest = {
+                projectName: project.projectName,
+                projectStartDate: project.projectStartDate,
+                groups: project.groups
+            }
+
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}/full`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+
+            if (!res.ok) {
+                setSaveError(`Fehler beim Speichern: ${res.status}`)
+                return
+            }
+
+            setOriginalProject(project);
+        } catch (err: any) {
+            setSaveError(`Fehler beim Speichern: ${err.message}`)
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    const resetChanges = () => {
+        setProject(originalProject ? JSON.parse(JSON.stringify(originalProject)) : null)
+    }
+
     const handleCreateRandomGroups = async () => {
         if (!groupAmount || groupAmount < 1) return;
 
@@ -580,31 +502,29 @@ export default function createOrEditProject() {
 
         try {
             if (isEdit) {
-                if (!project?.projectId || !project?.courseId) return;
-
-                const res = await fetch(`${API_CONFIG.BASE_URL}/api/group/create/fromClass`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        courseId: project.courseId,
-                        projectId: project.projectId,
-                        groupAmount
-                    })
-                });
-
-                if (!res.ok) {
-                    alert("Failed to create random groups");
-                    return;
-                }
-
-                const groups: ProjectDetailGroup[] = await res.json();
-                setProject(prevState => prevState ? { ...prevState, groups } : prevState);
+                if (!project?.courseId) return;
 
                 const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${project.courseId}/students`);
                 const students: Student[] = await studentRes.json();
-                const assignedIds = new Set(groups.flatMap(g => g.members.map(m => m.studentId)));
-                const unassigned = students.filter(s => !assignedIds.has(s.studentId));
-                setUnassignedStudents(unassigned);
+
+                const shuffled = [...students].sort(() => Math.random() - 0.5);
+
+                const newGroups: ProjectDetailGroup[] = Array.from({ length: groupAmount }, (_, i) => ({
+                    groupId: typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : String(Date.now()) + '-' + i + '-' + Math.random() + i,
+                    groupName: `Gruppe ${i + 1}`,
+                    members: []
+                }));
+
+                let groupIndex = 0;
+                shuffled.forEach(student => {
+                    newGroups[groupIndex].members.push(student);
+                    groupIndex = (groupIndex + 1) % groupAmount;
+                });
+
+                setProject(prevState => prevState ? { ...prevState, groups: newGroups } : prevState);
+
+                const assignedIds = new Set(newGroups.flatMap(g => g.members.map(m => m.studentId)));
+                setUnassignedStudents(students.filter(s => !assignedIds.has(s.studentId)));
 
             } else {
                 if (!projectCreateDetails.courseId) return;
@@ -692,7 +612,45 @@ export default function createOrEditProject() {
                 />
             </Box>
 
-            {!isEdit && (
+            {isEdit ? (
+                <Box mt={4} display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
+                    {saveError && (
+                        <Box
+                            mb={2}
+                            p={2}
+                            sx={{
+                                backgroundColor: '#ffebee',
+                                borderRadius: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 1
+                            }}
+                        >
+                            <Typography color="error" gutterBottom>
+                                {saveError}
+                            </Typography>
+                        </Box>
+                    )}
+
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={resetChanges}
+                        disabled={saving}
+                    >
+                        Zurücksetzen
+                    </Button>
+
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSaveChanges}
+                        disabled={saving}
+                    >
+                        {saving ? 'Speichern...' : 'Speichern'}
+                    </Button>
+                </Box>
+            ) : (
                 <Box
                     mt={4}
                     display="flex"

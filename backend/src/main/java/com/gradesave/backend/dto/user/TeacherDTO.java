@@ -4,9 +4,14 @@ import com.gradesave.backend.models.User;
 
 import java.util.UUID;
 
-public record StudentDTO (UUID studentId, String username, String firstName, String lastName) {
-    public static StudentDTO fromEntity(User user) {
-        return new StudentDTO(
+public record TeacherDTO(
+        UUID teacherId,
+        String username,
+        String firstName,
+        String lastName
+) {
+    public static TeacherDTO fromEntity(User user) {
+        return new TeacherDTO(
                 user.getId(),
                 user.getUsername(),
                 user.getFirstName(),

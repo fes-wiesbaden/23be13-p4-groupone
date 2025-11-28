@@ -1,11 +1,13 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.dto.course.CoursePatchRequestDTO;
 import com.gradesave.backend.models.Course;
 import com.gradesave.backend.dto.UpdateCourseRequest;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.repositories.CourseRepository;
 
 import com.gradesave.backend.repositories.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,13 +59,18 @@ public class CourseService {
         var existing = repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id));
 
-        Optional<User> teacher = userRepo.findById(req.teacherId());
-        if (teacher.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher not found: " + req.teacherId());
+        if (req.teacherId() != null) {
+            Optional<User> teacher = userRepo.findById(req.teacherId());
+            if (teacher.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher not found: " + req.teacherId());
+            }
+
+            existing.setClassTeacher(teacher.get());
+        } else {
+            existing.setClassTeacher(null);
         }
 
         existing.setCourseName(req.courseName());
-        existing.setClassTeacher(teacher.get());
 
         return repo.save(existing);
     }
@@ -112,5 +119,34 @@ public class CourseService {
         }
 
         return removed;
+    }
+
+    public void patchCourse(Course course, @Valid CoursePatchRequestDTO req) {
+        if (req.classTeacherId() != null) {
+            if (req.classTeacherId().isEmpty()) {
+                User user = course.getClassTeacher();
+                if (user != null) {
+                    course.getUsers().remove(user);
+                    course.setClassTeacher(null);
+                }
+            } else {
+                try {
+                    UUID teacherId = UUID.fromString(req.classTeacherId());
+                    Optional<User> teacherOpt = userRepo.findById(teacherId);
+                    if (teacherOpt.isPresent()) {
+                        course.setClassTeacher(teacherOpt.get());
+                        course.getUsers().add(teacherOpt.get());
+                    }
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Invalid Teacher UUID: " + req.classTeacherId());
+                }
+            }
+        }
+
+        if (req.courseName() != null) {
+            course.setCourseName(req.courseName());
+        }
+
+        repo.save(course);
     }
 }

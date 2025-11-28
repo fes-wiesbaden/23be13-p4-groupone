@@ -5,6 +5,7 @@ import DataTableWithAdd, {type DataRow,} from "../components/dataTableWithAddBut
 import Button from "@mui/material/Button";
 import API_CONFIG from "../apiConfig";
 import {Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField,} from "@mui/material";
+import {useNavigate} from "react-router";
 
 /**
  * @author Noah Bach
@@ -66,20 +67,14 @@ export default function Klassen() {
         teacherId: "",
     });
     const [teachers, setTeachers] = useState<User[]>([]);
+    const navigate = useNavigate();
 
     async function handleEditClick(row: CourseRow) {
-        await fetchTeachers();
-        setEditRow(row);
-        setForm({courseName: row.courseName, teacherId: row.teacherId ?? ""});
-        setOpen(true);
+        navigate(`/klassen/${row.id}`);
     }
 
     async function handleAddClick() {
-        await fetchTeachers();
-        setEditRow(null);
-        setForm({courseName: "", teacherId: ""});
-        setOpen(true);
-        await fetchData();
+        navigate("/klassen/new");
     }
 
     async function handleDeleteClick(id: string) {
@@ -128,46 +123,6 @@ export default function Klassen() {
         }
     };
 
-    const onSave = async () => {
-        if (editRow) {
-            const updateRequest = {
-                courseName: form.courseName,
-                teacherId: form.teacherId,
-            };
-            const res = await fetch(
-                `${API_CONFIG.BASE_URL}/api/klassen/${editRow.id}`,
-                {
-                    method: "PUT",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(updateRequest),
-                }
-            );
-            if (res.ok) {
-                await fetchData();
-                setOpen(false);
-            } else {
-                alert("Aktualisieren fehlgeschlagen.");
-            }
-        } else {
-            const createRequest = {
-                courseName: form.courseName,
-                teacherId: form.teacherId,
-            };
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(createRequest),
-            });
-            if (res.ok) {
-                await fetchTeachers();
-                await fetchData();
-                setOpen(false);
-            } else {
-                alert("Erstellen fehlgeschlagen.");
-            }
-        }
-    };
-
     useEffect(() => {
         (async () => {
             await fetchTeachers();
@@ -183,56 +138,6 @@ export default function Klassen() {
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteClick}
             />
-
-            <Dialog
-                open={open}
-                onClose={() => setOpen(false)}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle>
-                    {editRow ? "Klasse bearbeiten" : "Klasse anlegen"}
-                </DialogTitle>
-                <DialogContent>
-                    <Stack spacing={2} sx={{mt: 1}}>
-                        <TextField
-                            label="Klasse"
-                            value={form.courseName}
-                            onChange={(e) =>
-                                setForm((f) => ({...f, courseName: e.target.value}))
-                            }
-                            required
-                        />
-                        <TextField
-                            select
-                            label="Klassenlehrer"
-                            value={form.teacherId}
-                            onChange={(e) =>
-                                setForm((f) => ({...f, teacherId: e.target.value}))
-                            }
-                            required
-                        >
-                            <MenuItem value="">-- Bitte wählen --</MenuItem>
-                            {teachers.map((t) => (
-                                <MenuItem key={t.id} value={t.id}>
-                                    {t.firstName} {t.lastName}{" "}
-                                    {t.username ? `(${t.username})` : ""}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Stack>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpen(false)}>Abbrechen</Button>
-                    <Button
-                        onClick={onSave}
-                        variant="contained"
-                        disabled={!form.courseName || !form.teacherId}
-                    >
-                        Speichern
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </>
     );
 }

@@ -1,9 +1,11 @@
 package com.gradesave.backend.controller;
 
 import com.gradesave.backend.dto.CreateCourseRequest;
-import com.gradesave.backend.dto.course.CourseBareDTO;
+import com.gradesave.backend.dto.UpdateCourseRequest;
+import com.gradesave.backend.dto.course.*;
 import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.Course;
+import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.services.CourseService;
 import com.gradesave.backend.services.UserService;
@@ -14,10 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author: Noah Bach, Daniel Hess
@@ -73,10 +72,13 @@ public class CourseController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Course> updateCourse(@PathVariable UUID id,
-                                               @Valid @RequestBody com.gradesave.backend.dto.UpdateCourseRequest req) {
-        if (!userService.exists(req.teacherId())) {
-            return ResponseEntity.badRequest().build();
+                                               @Valid @RequestBody UpdateCourseRequest req) {
+        if (req.teacherId() != null) {
+            if (!userService.exists(req.teacherId())) {
+                return ResponseEntity.badRequest().build();
+            }
         }
+
         try {
             Course updated = courseService.update(id, req);
             return ResponseEntity.ok(updated);
@@ -86,11 +88,163 @@ public class CourseController {
         }
     }
 
+    @PutMapping("{id}/full")
+    public ResponseEntity<Void> putFullCourse(@PathVariable UUID id, @Valid @RequestBody CoursePutFullRequestDTO req) {
+        Optional<Course> courseOpt = courseService.getById(id);
+        if (courseOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Course course = courseOpt.get();
+
+        course.setCourseName(req.courseName());
+
+        User classTeacher = null;
+
+        if (req.classTeacherId() != null && !req.classTeacherId().isEmpty()) {
+            try {
+                UUID classTeacherId = UUID.fromString(req.classTeacherId());
+                Optional<User> classTeacherOpt = userService.getById(classTeacherId);
+                if (classTeacherOpt.isEmpty() || classTeacherOpt.get().getRole() != Role.TEACHER)
+                    return ResponseEntity.badRequest().build();
+
+                classTeacher = classTeacherOpt.get();
+                course.setClassTeacher(classTeacher);
+            } catch (IllegalArgumentException e) {
+                course.setClassTeacher(null);
+            }
+        } else {
+            course.setClassTeacher(null);
+        }
+
+
+        List<User> teachers = userService.getUsersByIds(req.teacherIds());
+        List<User> students = userService.getUsersByIds(req.studentIds());
+
+        course.getUsers().clear();
+        course.getUsers().addAll(teachers);
+        course.getUsers().addAll(students);
+
+        if (classTeacher != null) {
+            course.getUsers().add(classTeacher);
+        }
+
+        courseService.create(course);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<Void> patchCourse(@PathVariable UUID id, @Valid @RequestBody CoursePatchRequestDTO req) {
+        Optional<Course> courseOpt = courseService.getById(id);
+        if (courseOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        courseService.patchCourse(courseOpt.get(), req);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Course> deleteCourse(@PathVariable UUID id) {
         courseService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("{id}/teachers/add")
+    public ResponseEntity<Void> addTeacher(@PathVariable UUID id, @Valid @RequestBody TeacherAddRemoveToGroupDTO req) {
+        Optional<Course> courseOpt = courseService.getById(id);
+        if (courseOpt.isEmpty())
+            return ResponseEntity.badRequest().build();
+
+        Course course = courseOpt.get();
+
+        Optional<User> teacherOpt = userService.getById(req.teacherId());
+        if (teacherOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        User teacher = teacherOpt.get();
+        if (teacher.getRole() != Role.TEACHER)
+            return ResponseEntity.badRequest().build();
+
+        if (!course.getUsers().contains(teacher)) {
+            course.getUsers().add(teacher);
+            courseService.create(course); // updates it but is bad name
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("{id}/teachers/remove")
+    public ResponseEntity<Void> removeTeacher(@PathVariable UUID id, @Valid @RequestBody TeacherAddRemoveToGroupDTO req) {
+        Optional<Course> courseOpt = courseService.getById(id);
+        if (courseOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Course course = courseOpt.get();
+
+        Optional<User> teacherOpt = userService.getById(req.teacherId());
+        if (teacherOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        User teacher = teacherOpt.get();
+        if (teacher.getRole() != Role.TEACHER)
+            return ResponseEntity.badRequest().build();
+
+        boolean removed = course.getUsers().removeIf(t -> t.getId().equals(teacher.getId()));
+
+        if (removed)
+            courseService.create(course); // updates but is bad name
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("{id}/students/add")
+    public ResponseEntity<Void> addStudent(@PathVariable UUID id, @Valid @RequestBody StudentAddRemoveToGroupDTO req) {
+        Optional<Course> courseOpt = courseService.getById(id);
+        if (courseOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Course course = courseOpt.get();
+
+        Optional<User> studentOpt = userService.getById(req.studentId());
+        if (studentOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        User student = studentOpt.get();
+        if (student.getRole() != Role.STUDENT)
+            return ResponseEntity.badRequest().build();
+
+        if (!course.getUsers().contains(student)) {
+            course.getUsers().add(student);
+            courseService.create(course); // updates it but is bad name
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("{id}/students/remove")
+    public ResponseEntity<Void> removeStudent(@PathVariable UUID id, @Valid @RequestBody StudentAddRemoveToGroupDTO req) {
+        Optional<Course> courseOpt = courseService.getById(id);
+        if (courseOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Course course = courseOpt.get();
+
+        Optional<User> studentOpt = userService.getById(req.studentId());
+        if (studentOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        User student = studentOpt.get();
+        if (student.getRole() != Role.STUDENT)
+            return ResponseEntity.badRequest().build();
+
+        boolean removed = course.getUsers().removeIf(t -> t.getId().equals(student.getId()));
+
+        if (removed)
+            courseService.create(course); // updates but is bad name
+
+        return ResponseEntity.ok().build();
+    }
+
 
     @GetMapping("/all/bare")
     public ResponseEntity<CourseBareDTO[]> getAllCoursesBare() {
@@ -100,7 +254,7 @@ public class CourseController {
                 .map(c -> new CourseBareDTO(
                         c.getId(),
                         c.getCourseName(),
-                        c.getClassTeacher().getFirstName() + " " + c.getClassTeacher().getLastName()
+                        (c.getClassTeacher() != null ? c.getClassTeacher().getFirstName() + " " + c.getClassTeacher().getLastName() : "No Teacher")
                 ))
                 .toArray(CourseBareDTO[]::new);
 
@@ -129,6 +283,35 @@ public class CourseController {
 
         return ResponseEntity.ok(students);
     }
-}
 
-//public record CourseBareDTO(org.gradle.internal.impldep.jcifs.dcerpc.UUID id, String courseName, String classTeacherName) {
+    @GetMapping("{id}")
+    public ResponseEntity<CourseDetailResponseDTO> getCourseDetail(@Valid @PathVariable UUID id) {
+        Optional<Course> courseOpt = courseService.getById(id);
+        if (courseOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Course course = courseOpt.get();
+
+        return ResponseEntity.ok(CourseDetailResponseDTO.fromEntity(course));
+    }
+
+    @PostMapping("full")
+    public ResponseEntity<Void> createFullCourse(@Valid @RequestBody CreateFullCourseDTO req) {
+        Course course = new Course();
+        course.setCourseName(req.courseName());
+
+        List<User> students = userService.getUsersByIds(List.of(req.studentIds()));
+        List<User> teachers = userService.getUsersByIds(List.of(req.teacherIds()));
+
+        course.getUsers().addAll(students);
+        course.getUsers().addAll(teachers);
+
+        if (req.classTeacherId() != null) {
+            Optional<User> classTeacher = userService.getById(req.classTeacherId());
+            classTeacher.ifPresent(course::setClassTeacher);
+        }
+
+        courseService.create(course);
+        return ResponseEntity.ok().build();
+    }
+}

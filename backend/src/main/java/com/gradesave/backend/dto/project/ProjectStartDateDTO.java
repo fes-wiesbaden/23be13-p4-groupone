@@ -1,3 +1,9 @@
 package com.gradesave.backend.dto.project;
 
-public record ProjectStartDateDTO(int year, int month, int day) { }
+import java.time.LocalDate;
+
+public record ProjectStartDateDTO(int year, int month, int day) {
+    public LocalDate toLocalDate() {
+        return LocalDate.of(year, month, day);
+    }
+}

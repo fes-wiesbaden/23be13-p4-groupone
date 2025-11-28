@@ -16,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByUsername(String username);
 
     List<User> findByRole(Role role);
+
+    @Query("select u from User u where u.role = com.gradesave.backend.models.Role.STUDENT and u.courses is empty")
+    List<User> findUnassignedStudents();
 }

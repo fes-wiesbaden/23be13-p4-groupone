@@ -6,5 +6,5 @@ import java.util.UUID;
 
 public record UpdateCourseRequest(
         @NotBlank String courseName,
-        @NotNull UUID teacherId
+        UUID teacherId
 ) {}

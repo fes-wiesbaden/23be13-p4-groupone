@@ -109,4 +109,12 @@ public class UserService implements CrudService<User, UUID> {
     public List<User> GetUsersByRole(Role role){
         return repo.findByRole(role);
     }
+
+    public List<User> getUnassignedStudents() {
+        return repo.findUnassignedStudents();
+    }
+
+    public List<User> getUsersByIds(List<UUID> uuids) {
+        return repo.findAllById(uuids);
+    }
 }
