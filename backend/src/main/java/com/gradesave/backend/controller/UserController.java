@@ -1,8 +1,8 @@
 package com.gradesave.backend.controller;
 
-import com.gradesave.backend.dto.CreateUserRequest;
-import com.gradesave.backend.dto.UpdateUserRequest;
-import com.gradesave.backend.dto.UserDto;
+import com.gradesave.backend.dto.user.CreateUserRequest;
+import com.gradesave.backend.dto.user.UpdateUserRequest;
+import com.gradesave.backend.dto.user.UserDto;
 import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.dto.user.TeacherDTO;
 import com.gradesave.backend.models.Role;

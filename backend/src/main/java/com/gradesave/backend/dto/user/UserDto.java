@@ -1,4 +1,4 @@
-package com.gradesave.backend.dto;
+package com.gradesave.backend.dto.user;
 
 import com.gradesave.backend.models.Role;
 

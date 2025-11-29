@@ -262,7 +262,7 @@ export default function CreateOrEditCourse() {
 
         setLoadingCourse(true)
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${courseId}`, {
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/${courseId}`, {
                 method: "GET"
             });
 
@@ -455,7 +455,7 @@ export default function CreateOrEditCourse() {
 
         setCreatingCourse(true)
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/full`, {
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/full`, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(courseCreateDetails),
@@ -487,7 +487,7 @@ export default function CreateOrEditCourse() {
                 studentIds: course.students.map(s => s.studentId)
             }
 
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${courseId}/full`, {
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/${courseId}/full`, {
                 method: "PUT",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(payload),

@@ -11,11 +11,11 @@ import {useNavigate} from "react-router";
  * @author Noah Bach
  * @author Daniel Hess
  *
- * UI for the Klassen (courses) administration.
+ * UI for courses administration.
  *
  * - Displays a table of classes.
  * - Allows creating, editing and deleting classes.
- * - Fetches courses from `/api/klassen`.
+ * - Fetches courses from `/api/course`.
  *
  * @editetd Paul Geisthardt
  * - change dto
@@ -62,11 +62,6 @@ export default function Klassen() {
     const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
     const [editRow, setEditRow] = useState<CourseRow | null>(null);
     const [open, setOpen] = useState(false);
-    const [form, setForm] = useState({
-        courseName: "",
-        teacherId: "",
-    });
-    const [teachers, setTeachers] = useState<User[]>([]);
     const navigate = useNavigate();
 
     async function handleEditClick(row: CourseRow) {
@@ -78,7 +73,7 @@ export default function Klassen() {
     }
 
     async function handleDeleteClick(id: string) {
-        if (!window.confirm("willst du diese klasse wirklich löschen?")) {
+        if (!window.confirm("Soll diese Klasse wirklich gelöscht werden?")) {
             return;
         }
 
@@ -88,7 +83,7 @@ export default function Klassen() {
 
     const fetchData = async () => {
         try {
-            const resCourses = await fetch(`${API_CONFIG.BASE_URL}/api/klassen`);
+            const resCourses = await fetch(`${API_CONFIG.BASE_URL}/api/course`);
             const coursesData = await resCourses.json();
 
             const mapped: CourseRow[] = coursesData.map((c: CourseDto) => {
@@ -107,25 +102,9 @@ export default function Klassen() {
         }
     };
 
-    const fetchTeachers = async (): Promise<User[]> => {
-        try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users?role=TEACHER`);
-            if (!res.ok) {
-                console.error("Failed to fetch teachers", res.status);
-                return [];
-            }
-            const data: User[] = await res.json();
-            setTeachers(data);
-            return data;
-        } catch (e) {
-            console.error("Error fetching teachers: ", e);
-            return [];
-        }
-    };
 
     useEffect(() => {
         (async () => {
-            await fetchTeachers();
             await fetchData();
         })();
     }, []);

@@ -3,7 +3,7 @@ import API_CONFIG from './apiConfig';
 
 export async function postNewTestCourseEntry () {
     try {
-        await fetch(`${API_CONFIG.BASE_URL}/api/klassen`, {
+        await fetch(`${API_CONFIG.BASE_URL}/api/course`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -18,7 +18,7 @@ export async function postNewTestCourseEntry () {
 
 export async function deleteCourse (id: string) {
     try {
-        await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${id}`, {
+        await fetch(`${API_CONFIG.BASE_URL}/api/course/${id}`, {
             method: 'DELETE',
         });
     } catch (e) {

@@ -8,13 +8,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/*
- * @author: Noah Bach
- *          <p>
- *          Creates subject table
- *          </p>
- */
+import org.springframework.stereotype.Repository;
 
+
+/**
+ * @author: Daniel Hess
+ *          <p>
+ *          Handles database requests for courses
+ *          </p>
+ **/
+
+
+@Repository
 public interface CourseRepository extends JpaRepository<Course, UUID> {
     Optional<Course> findByCourseName(String courseName);
 

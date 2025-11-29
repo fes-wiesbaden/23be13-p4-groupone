@@ -2,9 +2,14 @@ package com.gradesave.backend.services;
 
 import com.gradesave.backend.dto.course.CoursePatchRequestDTO;
 import com.gradesave.backend.models.Course;
-import com.gradesave.backend.dto.UpdateCourseRequest;
+import com.gradesave.backend.dto.course.UpdateCourseRequest;
+import com.gradesave.backend.dto.course.CourseSelectionDto;
+import com.gradesave.backend.dto.group.GroupSelectionDto;
+import com.gradesave.backend.dto.project.ProjectSelectionDto;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.repositories.CourseRepository;
+import com.gradesave.backend.repositories.GroupRepository;
+import com.gradesave.backend.repositories.ProjectRepository;
 
 import com.gradesave.backend.repositories.UserRepository;
 import jakarta.validation.Valid;
@@ -17,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/*
+/**
  * @author: Noah Bach, Daniel Hess
  * <p>
  * Service for managing Course entities. Provides basic CRUD and query operations.
@@ -29,34 +34,38 @@ import java.util.UUID;
 @Transactional
 public class CourseService {
 
-    private final CourseRepository repo;
+    private final CourseRepository courseRepository;
     private final UserRepository userRepo;
+    private final ProjectRepository projectRepository;
+    private final GroupRepository groupRepository;
 
-    public CourseService(CourseRepository repo, UserRepository userRepo) {
-        this.repo = repo;
+    public CourseService(CourseRepository repo, UserRepository userRepo, ProjectRepository projectRepository, GroupRepository groupRepository) {
+        this.courseRepository = repo;
         this.userRepo = userRepo;
+        this.projectRepository = projectRepository;
+        this.groupRepository = groupRepository;
     }
 
     public Optional<Course> getByIdTest(UUID id) {
-        return repo.findByIdTest(id);
+        return courseRepository.findByIdTest(id);
     }
 
     public Course create(Course entity) {
-        return repo.save(entity);
+        return courseRepository.save(entity);
     }
 
     @Transactional(readOnly = true)
     public Optional<Course> getById(UUID id) {
-        return repo.findById(id);
+        return courseRepository.findById(id);
     }
 
     @Transactional(readOnly = true)
     public List<Course> getAll() {
-        return repo.findAll();
+        return courseRepository.findAll();
     }
 
     public Course update(UUID id, UpdateCourseRequest req) {
-        var existing = repo.findById(id)
+        var existing = courseRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id));
 
         if (req.teacherId() != null) {
@@ -72,35 +81,35 @@ public class CourseService {
 
         existing.setCourseName(req.courseName());
 
-        return repo.save(existing);
+        return courseRepository.save(existing);
     }
 
     public boolean addStudent(Course course, User student) {
         if (!userRepo.existsById(student.getId())) return false;
-        if (!repo.existsById(course.getId())) return false;
+        if (!courseRepository.existsById(course.getId())) return false;
 
         course.getUsers().add(student);
         return true;
     }
 
     public void deleteById(UUID id) {
-        if (!repo.existsById(id))
+        if (!courseRepository.existsById(id))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id);
-        repo.deleteById(id);
+        courseRepository.deleteById(id);
     }
 
     public Optional<Course> getByName(String name) {
-        return repo.findByCourseName(name);
+        return courseRepository.findByCourseName(name);
     }
 
     @Transactional(readOnly = true)
     public boolean exists(UUID id) {
-        return repo.existsById(id);
+        return courseRepository.existsById(id);
     }
 
     @Transactional(readOnly = true)
     public long count() {
-        return repo.count();
+        return courseRepository.count();
     }
 
     public boolean removeUserFromAllCourses(UUID userId) {
@@ -108,14 +117,14 @@ public class CourseService {
         if (userTemp.isEmpty()) return false;
 
         User user = userTemp.get();
-        List<Course> courses = repo.findAllByUserId(userId);
+        List<Course> courses = courseRepository.findAllByUserId(userId);
 
         boolean removed = true;
         for (Course course : courses) {
             if (!course.getUsers().remove(user))
                 removed = false;
 
-            repo.save(course);
+            courseRepository.save(course);
         }
 
         return removed;
@@ -147,6 +156,38 @@ public class CourseService {
             course.setCourseName(req.courseName());
         }
 
-        repo.save(course);
+        courseRepository.save(course);
+    }
+
+    public List<CourseSelectionDto> findGradeOverviewOptions() {
+
+        List<Course> courses = courseRepository.findAll();
+
+        return courses.stream().map(course -> {
+
+            List<ProjectSelectionDto> projectDtos = projectRepository.findByCourseId(course.getId()).stream()
+                    .map(project -> {
+                        List<GroupSelectionDto> groupDtos = groupRepository.findByProjectId(project.getId()).stream()
+                                .map(group -> new GroupSelectionDto(
+                                        group.getId(),
+                                        group.getName()
+                                ))
+                                .toList();
+
+                        return new ProjectSelectionDto(
+                                project.getId(),
+                                project.getName(),
+                                project.getProjectStart(),
+                                groupDtos
+                        );
+                    }).toList();
+
+            return new CourseSelectionDto(
+                    course.getId(),
+                    course.getCourseName(),
+                    projectDtos
+            );
+
+        }).toList();
     }
 }

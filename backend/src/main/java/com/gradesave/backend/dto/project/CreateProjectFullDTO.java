@@ -12,12 +12,3 @@ public record CreateProjectFullDTO(
         List<GroupCreateWithMembersDTO> groups
 ) {}
 
-//const payload = {
-//projectName: projectCreateDetails.projectName,
-//courseId: projectCreateDetails.courseId,
-//projectStartDate: projectCreateDetails.projectStartDate,
-//groups: draftGroups.map(g => ({
-//    groupName: g.groupName,
-//            members: g.members.map(m => m.studentId)
-//}))
-//        }

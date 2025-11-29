@@ -29,4 +29,6 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
     boolean existsUserInProject(UUID userId, UUID projectId);
 
     List<Group> findAllByProjectId(UUID projectId);
+
+    List<Group> findByProjectId(UUID projectId);
 }

@@ -1,6 +1,8 @@
 package com.gradesave.backend.services;
 
 import com.gradesave.backend.models.Project;
+import com.gradesave.backend.repositories.CourseRepository;
+import com.gradesave.backend.repositories.GroupRepository;
 import com.gradesave.backend.repositories.ProjectRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -13,37 +15,41 @@ import java.util.UUID;
 /**
  * @author: Paul Geisthardt
  * <p>
- * ProjectService
+ * Business logic for projects
  * </p>
  */
 
 @Service
 @Transactional
 public class ProjectService implements CrudService<Project, UUID> {
-    private final ProjectRepository repo;
+    private final CourseRepository courseRepository;
+    private final ProjectRepository projectRepository;
+    private final GroupRepository groupRepository;
 
-    public ProjectService(ProjectRepository repo) {
-        this.repo = repo;
+    public ProjectService(CourseRepository courseRepository, ProjectRepository projectRepository, GroupRepository groupRepository) {
+        this.courseRepository = courseRepository;
+        this.projectRepository = projectRepository;
+        this.groupRepository = groupRepository;
     }
 
     @Override
     public Project create(Project entity) {
-        return repo.save(entity);
+        return projectRepository.save(entity);
     }
 
     @Override
     public Optional<Project> getById(UUID uuid) {
-        return repo.findById(uuid);
+        return projectRepository.findById(uuid);
     }
 
     @Override
     public List<Project> getAll() {
-        return repo.findAll();
+        return projectRepository.findAll();
     }
 
     @Override
     public Project update(UUID uuid, Project entity) {
-        Optional<Project> existingOpt = repo.findById(uuid);
+        Optional<Project> existingOpt = projectRepository.findById(uuid);
 
         if (existingOpt.isEmpty())
             throw new EntityNotFoundException("Project not found: " + uuid);
@@ -54,12 +60,12 @@ public class ProjectService implements CrudService<Project, UUID> {
         existing.setProjectStart(entity.getProjectStart());
         existing.setGroups(entity.getGroups());
 
-        return repo.save(existing);
+        return projectRepository.save(existing);
     }
 
     @Override
     public void deleteById(UUID uuid) {
-        repo.deleteById(uuid);
+        projectRepository.deleteById(uuid);
     }
 
     @Override
@@ -68,7 +74,7 @@ public class ProjectService implements CrudService<Project, UUID> {
         if (project.isEmpty())
             return false;
 
-        repo.delete(project.get());
+        projectRepository.delete(project.get());
 
         return true;
     }

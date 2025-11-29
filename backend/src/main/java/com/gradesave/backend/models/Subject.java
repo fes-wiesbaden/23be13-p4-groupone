@@ -5,10 +5,17 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 
 /**
  * @author: Michael Holl
@@ -26,9 +33,13 @@ public class Subject {
     @GeneratedValue
     private UUID id;
 
-    @NotBlank(message = "name is required")
     @Size(max = 100, message = "name must not exceed 100 characters")
     private String name;
+
+    @NotBlank(message = "shortName is required")
+    @Column(name = "short_name")
+    @Size(max = 5, message = "name must not exceed 5 characters")
+    String shortName;
 
     @Size(max = 1000, message = "description must not exceed 1000 characters")
     private String description;
@@ -58,6 +69,14 @@ public class Subject {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    public void setShortName(String shortName) {
+        this.shortName = shortName;
     }
 
     public String getDescription() {

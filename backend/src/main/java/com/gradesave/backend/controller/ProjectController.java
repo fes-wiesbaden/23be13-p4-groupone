@@ -290,7 +290,7 @@ public class ProjectController {
             } else {
                 group = groupService.update(groupDto.groupId(), group);
             }
-            
+
             updatedGroups.add(group);
         }
 
