@@ -278,6 +278,7 @@ public class CourseController {
         Set<User> users = course.getUsers();
 
         StudentDTO[] students = users.stream()
+                .filter(s -> s.getRole() == Role.STUDENT)
                 .map(s -> new StudentDTO(
                         s.getId(),
                         s.getUsername(),

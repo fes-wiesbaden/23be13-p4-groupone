@@ -230,114 +230,116 @@ export default function Grades() {
         }) || [];
 
     return (
-        <div style={{ width: "100%" }}>
-            <Box display="flex" gap={2} mb={2}>
-                <Autocomplete
-                    options={gradeOverviewOptions}
-                    getOptionLabel={(option) => option.name}
-                    renderInput={(params) =>
-                        <TextField {...params}
-                                   label="Klasse"
-                                   error={projectError}/>
+            <Box p={3} style={{ width: "100%" }}>
+                <Box display="flex" gap={2} mb={2}>
+                    <Autocomplete
+                        options={gradeOverviewOptions}
+                        getOptionLabel={(option) => option.name}
+                        renderInput={(params) =>
+                            <TextField {...params}
+                                       label="Klasse"
+                                       error={projectError}/>
+                    }
+                        onChange={(_, v) => setSelectedCourse(v)}
+                        sx={{ minWidth: 200 }}
+                    />
+                    <Autocomplete
+                        options={selectedCourse?.projects || []}
+                        getOptionLabel={(option) => option.name}
+                        onChange={(_, v) => setSelectedProject(v)}
+                        renderInput={(params) =>
+                            <TextField {...params}
+                                       label="Projekt"
+                                       error={projectError}/>}
+                        sx={{ minWidth: 200 }}
+                        disabled={selectedCourse == null}
+                    />
+                    <Autocomplete
+                        options={selectedProject?.groups || []}
+                        getOptionLabel={(option) => option.name}
+                        onChange={(_, v) => setSelectedGroup(v)}
+                        renderInput={(params) => <TextField {...params} label="Gruppe" />}
+                        sx={{ minWidth: 200 }}
+                        disabled={selectedProject == null}
+                    />
+                    <Button variant="contained" onClick={loadGrades}>
+                        Anzeigen
+                    </Button>
+                </Box>
+                {renderGradeTable &&
+                    <DataGrid
+                        rows={rows}
+                        columns={columns}
+                        columnGroupingModel={columnGroupingModel}
+                        disableRowSelectionOnClick
+                        processRowUpdate={(updatedRow) => {
+                            if (!gradeOverview) return updatedRow;
+
+                            // update gradeOverview
+                            const newGradeOverview = {
+                                ...gradeOverview,
+                                user: gradeOverview.user.map((user) => {
+                                    if (user.id !== updatedRow.id) return user;
+
+                                    const newGrades = user.grades.map((grade) => {
+                                        const newValue = updatedRow[grade.performanceId];
+
+                                        if (newValue === undefined || newValue === null) return grade;
+
+                                        return {
+                                            ...grade,
+                                            grade: newValue === "" ? null : Number(newValue),
+                                        };
+                                    });
+
+                                    return { ...user, grades: newGrades };
+                                }),
+                            };
+
+                            setGradeOverview(newGradeOverview);
+
+                            const changedUser = newGradeOverview.user.find(u => u.id === updatedRow.id);
+                            if (!changedUser) return updatedRow;
+
+                            // collect all grades of changedUser
+                            const gradeEntries = changedUser.grades.map(g => ({
+                                gradeId: g.gradeId,
+                                performanceId: g.performanceId,
+                                grade: g.grade,
+                            }));
+
+                            // add gradeEntries in updatedGrade, filter array before
+                            setUpdatedGrades((prev) => {
+                                const filtered = prev.filter(u => u.studentId !== changedUser.id);
+                                return [
+                                    ...filtered,
+                                    {
+                                        studentId: changedUser.id,
+                                        grades: gradeEntries,
+                                    }
+                                ];
+                            });
+
+                            return updatedRow;
+                        }}
+                        sx={{
+                            width: "100%",
+                            maxHeight: 500,
+                            "& .MuiDataGrid-virtualScroller": { overflowX: "auto", overflowY: "auto" },
+                            "& .MuiDataGrid-cell": { display: "flex", justifyContent: "center", alignItems: "center" },
+                            "& .MuiDataGrid-columnHeader .MuiDataGrid-columnHeaderTitleContainer": { justifyContent: "center" },
+                            "& .MuiDataGrid-columnHeaderGroup .MuiDataGrid-columnHeaderTitleContainer": { justifyContent: "center" },
+                        }}
+                    />
                 }
-                    onChange={(_, v) => setSelectedCourse(v)}
-                    sx={{ minWidth: 200 }}
-                />
-                <Autocomplete
-                    options={selectedCourse?.projects || []}
-                    getOptionLabel={(option) => option.name}
-                    onChange={(_, v) => setSelectedProject(v)}
-                    renderInput={(params) =>
-                        <TextField {...params}
-                                   label="Projekt"
-                                   error={projectError}/>}
-                    sx={{ minWidth: 200 }}
-                    disabled={selectedCourse == null}
-                />
-                <Autocomplete
-                    options={selectedProject?.groups || []}
-                    getOptionLabel={(option) => option.name}
-                    onChange={(_, v) => setSelectedGroup(v)}
-                    renderInput={(params) => <TextField {...params} label="Gruppe" />}
-                    sx={{ minWidth: 200 }}
-                    disabled={selectedProject == null}
-                />
-                <Button variant="contained" onClick={loadGrades}>
-                    Anzeigen
-                </Button>
+                <Box display="flex" gap={2} py={2}>
+                    <Button variant="contained" onClick={saveGrades}>
+                        Speichern
+                    </Button>
+                    <Button variant="contained" onClick={reset}>
+                        Zurücksetzen
+                    </Button>
+                </Box>
             </Box>
-            {renderGradeTable &&
-                <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    columnGroupingModel={columnGroupingModel}
-                    disableRowSelectionOnClick
-                    processRowUpdate={(updatedRow) => {
-                        if (!gradeOverview) return updatedRow;
-
-                        // update gradeOverview
-                        const newGradeOverview = {
-                            ...gradeOverview,
-                            user: gradeOverview.user.map((user) => {
-                                if (user.id !== updatedRow.id) return user;
-
-                                const newGrades = user.grades.map((grade) => {
-                                    const newValue = updatedRow[grade.performanceId];
-
-                                    if (newValue === undefined || newValue === null) return grade;
-
-                                    return {
-                                        ...grade,
-                                        grade: newValue === "" ? null : Number(newValue),
-                                    };
-                                });
-
-                                return { ...user, grades: newGrades };
-                            }),
-                        };
-
-                        setGradeOverview(newGradeOverview);
-
-                        const changedUser = newGradeOverview.user.find(u => u.id === updatedRow.id);
-                        if (!changedUser) return updatedRow;
-
-                        // collect all grades of changedUser
-                        const gradeEntries = changedUser.grades.map(g => ({
-                            gradeId: g.gradeId,
-                            performanceId: g.performanceId,
-                            grade: g.grade,
-                        }));
-
-                        // add gradeEntries in updatedGrade, filter array before
-                        setUpdatedGrades((prev) => {
-                            const filtered = prev.filter(u => u.studentId !== changedUser.id);
-                            return [
-                                ...filtered,
-                                {
-                                    studentId: changedUser.id,
-                                    grades: gradeEntries,
-                                }
-                            ];
-                        });
-
-                        return updatedRow;
-                    }}
-                    sx={{
-                        width: "100%",
-                        maxHeight: 500,
-                        "& .MuiDataGrid-virtualScroller": { overflowX: "auto", overflowY: "auto" },
-                        "& .MuiDataGrid-cell": { display: "flex", justifyContent: "center", alignItems: "center" },
-                        "& .MuiDataGrid-columnHeader .MuiDataGrid-columnHeaderTitleContainer": { justifyContent: "center" },
-                        "& .MuiDataGrid-columnHeaderGroup .MuiDataGrid-columnHeaderTitleContainer": { justifyContent: "center" },
-                    }}
-                />
-            }
-            <Button variant="contained" onClick={saveGrades}>
-                Speichern
-            </Button>
-            <Button variant="contained" onClick={reset}>
-                Zurücksetzen
-            </Button>
-        </div>
     );
 }

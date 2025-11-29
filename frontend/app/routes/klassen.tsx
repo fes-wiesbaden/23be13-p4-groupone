@@ -62,11 +62,6 @@ export default function Klassen() {
     const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
     const [editRow, setEditRow] = useState<CourseRow | null>(null);
     const [open, setOpen] = useState(false);
-    const [form, setForm] = useState({
-        courseName: "",
-        teacherId: "",
-    });
-    const [teachers, setTeachers] = useState<User[]>([]);
     const navigate = useNavigate();
 
     async function handleEditClick(row: CourseRow) {
@@ -107,65 +102,9 @@ export default function Klassen() {
         }
     };
 
-    const fetchTeachers = async (): Promise<User[]> => {
-        try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users?role=TEACHER`);
-            if (!res.ok) {
-                console.error("Failed to fetch teachers", res.status);
-                return [];
-            }
-            const data: User[] = await res.json();
-            setTeachers(data);
-            return data;
-        } catch (e) {
-            console.error("Error fetching teachers: ", e);
-            return [];
-        }
-    };
-
-    const onSave = async () => {
-        if (editRow) {
-            const updateRequest = {
-                courseName: form.courseName,
-                teacherId: form.teacherId,
-            };
-            const res = await fetch(
-                `${API_CONFIG.BASE_URL}/api/course/${editRow.id}`,
-                {
-                    method: "PUT",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(updateRequest),
-                }
-            );
-            if (res.ok) {
-                await fetchData();
-                setOpen(false);
-            } else {
-                alert("Aktualisieren fehlgeschlagen.");
-            }
-        } else {
-            const createRequest = {
-                courseName: form.courseName,
-                teacherId: form.teacherId,
-            };
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(createRequest),
-            });
-            if (res.ok) {
-                await fetchTeachers();
-                await fetchData();
-                setOpen(false);
-            } else {
-                alert("Erstellen fehlgeschlagen.");
-            }
-        }
-    };
 
     useEffect(() => {
         (async () => {
-            await fetchTeachers();
             await fetchData();
         })();
     }, []);

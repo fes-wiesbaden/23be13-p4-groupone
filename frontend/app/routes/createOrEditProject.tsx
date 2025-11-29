@@ -181,7 +181,7 @@ export default function createOrEditProject() {
             setProject(data);
             setOriginalProject(JSON.parse(JSON.stringify(data)));
 
-            const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${data.courseId}/students`);
+            const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${data.courseId}/students`);
             const students: Student[] = await studentRes.json();
 
             const assignedIds = new Set(
@@ -201,7 +201,7 @@ export default function createOrEditProject() {
 
     const fetchCourses = async () => {
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/all/bare`);
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/all/bare`);
             const coursesDto: CourseDto[] = await res.json();
 
             setCourses(coursesDto)
@@ -260,7 +260,7 @@ export default function createOrEditProject() {
             )
 
             try{
-                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${value}/students`);
+                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${value}/students`);
                 const students: Student[] = await studentRes.json();
                 setDraftUnassignedStudents(students)
             } catch (err: any) {
@@ -504,7 +504,7 @@ export default function createOrEditProject() {
             if (isEdit) {
                 if (!project?.courseId) return;
 
-                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${project.courseId}/students`);
+                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${project.courseId}/students`);
                 const students: Student[] = await studentRes.json();
 
                 const shuffled = [...students].sort(() => Math.random() - 0.5);
@@ -529,7 +529,7 @@ export default function createOrEditProject() {
             } else {
                 if (!projectCreateDetails.courseId) return;
 
-                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/klassen/${projectCreateDetails.courseId}/students`);
+                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${projectCreateDetails.courseId}/students`);
                 const students: Student[] = await studentRes.json();
 
                 const shuffled = [...students].sort(() => Math.random() - 0.5);

@@ -23,60 +23,66 @@ import java.util.UUID;
 @Transactional
 public class PerformanceService implements CrudService<Performance, UUID> {
 
-    private final PerformanceRepository repo;
+    private final PerformanceRepository performanceRepository;
 
-    public PerformanceService(PerformanceRepository repo) {
-        this.repo = repo;
+    public PerformanceService(PerformanceRepository performanceRepository) {
+        this.performanceRepository = performanceRepository;
     }
 
     @Override
     public Performance create(Performance entity) {
-        return repo.save(entity);
+        return performanceRepository.save(entity);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Performance> getById(UUID id) {
-        return repo.findById(id);
+        return performanceRepository.findById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Performance> getAll() {
-        return repo.findAll();
+        return performanceRepository.findAll();
     }
 
     @Override
     public Performance update(UUID id, Performance patch) {
-        Performance existing = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Performance not found: " + id));
+        Performance existing = performanceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Performance not found: " + id));
         existing.setName(patch.getName());
         existing.setShortName(patch.getShortName());
         existing.setWeight(patch.getWeight());
-        return repo.save(existing);
+        return performanceRepository.save(existing);
     }
 
     @Override
     public void deleteById(UUID id) {
-        if (!repo.existsById(id)) {
+        if (!performanceRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id);
         }
-        repo.deleteById(id);
+        performanceRepository.deleteById(id);
     }
 
     @Override
     public boolean deleteIfExists(UUID uuid) {
-        return false;
+        Optional<Performance> performanceOpt = this.getById(uuid);
+        if (performanceOpt.isEmpty())
+            return false;
+
+        performanceRepository.delete(performanceOpt.get());
+
+        return true;
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean exists(UUID id) {
-        return repo.existsById(id);
+        return performanceRepository.existsById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public long count() {
-        return repo.count();
+        return performanceRepository.count();
     }
 }

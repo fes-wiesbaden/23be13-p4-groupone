@@ -36,7 +36,7 @@ public class Grade {
     @JoinColumn(name = "project_subject_id")
     private ProjectSubject projectSubject;
 
-    @DecimalMin(value = "1.0", inclusive = true, message = "grade must be greater than 1")
+    @DecimalMin(value = "1.0", inclusive = true, message = "grade must be greater or equal to 1")
     @DecimalMax(value = "6.0", inclusive = true, message = "grade must be less than or equal to 6")
     @NotNull(message = "grade is required")
     private double grade;
