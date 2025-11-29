@@ -34,8 +34,8 @@ public class ProjectSubject {
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
 
-    @NotNull(message = "Weight is required")
-    private int weight;
+    @NotNull(message = "Duration is required")
+    private int duration;
 
     public UUID getId() {
         return id;
@@ -61,11 +61,11 @@ public class ProjectSubject {
         this.subject = subject;
     }
 
-    public int getWeight() {
-        return weight;
+    public int getDuration() {
+        return duration;
     }
 
-    public void setWeight(int weight) {
-        this.weight = weight;
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 }

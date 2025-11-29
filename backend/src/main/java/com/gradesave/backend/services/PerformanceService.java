@@ -48,10 +48,31 @@ public class PerformanceService implements CrudService<Performance, UUID> {
 
     @Override
     public Performance update(UUID id, Performance patch) {
-        Performance existing = performanceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Performance not found: " + id));
-        existing.setName(patch.getName());
-        existing.setShortName(patch.getShortName());
-        existing.setWeight(patch.getWeight());
+        Performance existing = performanceRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Performance not found: " + id
+                ));
+
+
+        if (patch.getName() != null) {
+            existing.setName(patch.getName());
+        } else {
+            existing.setName(null);
+        }
+
+        if (patch.getShortName() != null) {
+            existing.setShortName(patch.getShortName());
+        } else {
+            existing.setShortName(null);
+        }
+
+        if (patch.getWeight() != null) {
+            existing.setWeight(patch.getWeight());
+        } else {
+            existing.setWeight(null);
+        }
+
         return performanceRepository.save(existing);
     }
 

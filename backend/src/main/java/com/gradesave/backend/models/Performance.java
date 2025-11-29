@@ -34,7 +34,7 @@ public class Performance {
     String name;
 
     @NotBlank(message = "shortName is required")
-    @Size(max = 3, message = "name must not exceed 3 characters")
+    @Size(max = 5, message = "name must not exceed 5 characters")
     String shortName;
 
     @ManyToOne

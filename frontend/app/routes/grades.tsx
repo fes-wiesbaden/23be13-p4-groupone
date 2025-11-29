@@ -89,8 +89,6 @@ export default function Grades() {
     }, []);
 
     const saveGrades = async () => {
-        console.log("TT", updatedGrades);
-        console.log("hiho",JSON.stringify({ updatedGrades }));
         if (updatedGrades.length > 0) {
             try {
                 const url = `${API_CONFIG.BASE_URL}/api/grade/save`;
@@ -139,7 +137,6 @@ export default function Grades() {
                 return
             }
             const data = await res.json();
-            console.log(data);
             setGradeOverviewBackup(data);
             setGradeOverview(data);
             setRenderGradeTable(true);

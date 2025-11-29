@@ -38,7 +38,7 @@ public class Subject {
 
     @NotBlank(message = "shortName is required")
     @Column(name = "short_name")
-    @Size(max = 3, message = "name must not exceed 3 characters")
+    @Size(max = 5, message = "name must not exceed 5 characters")
     String shortName;
 
     @Size(max = 1000, message = "description must not exceed 1000 characters")
