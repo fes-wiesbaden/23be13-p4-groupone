@@ -8,8 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -37,9 +35,7 @@ public class ProjectSubject {
     private Subject subject;
 
     @NotNull(message = "Weight is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Weight must be greater than 0")
-    @DecimalMax(value = "1.0", inclusive = true, message = "Weight must be less than or equal to 1")
-    private Double weight;
+    private int weight;
 
     public UUID getId() {
         return id;
@@ -65,12 +61,11 @@ public class ProjectSubject {
         this.subject = subject;
     }
 
-    public Double getWeight() {
+    public int getWeight() {
         return weight;
     }
 
-    public void setWeight(Double weight) {
+    public void setWeight(int weight) {
         this.weight = weight;
     }
-
 }

@@ -1,10 +1,10 @@
-package com.gradesave.backend.dto;
+package com.gradesave.backend.dto.course;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
-public record UpdateCourseRequest(
+public record CreateCourseRequest(
         @NotBlank String courseName,
-        UUID teacherId
-) {}
+        @NotNull UUID teacherId) {
+}

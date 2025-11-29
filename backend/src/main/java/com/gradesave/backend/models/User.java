@@ -53,6 +53,10 @@ public class User {
     @JsonIgnore
     private Set<Course> courses = new HashSet<>();
 
+    @ManyToMany(mappedBy = "users")
+    @JsonIgnore
+    private Set<Group> groups = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -107,5 +111,13 @@ public class User {
 
     public void setCourses(Set<Course> courses) {
         this.courses = courses;
+    }
+
+    public Set<Group> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Set<Group> groups) {
+        this.groups = groups;
     }
 }

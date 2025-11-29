@@ -1,7 +1,7 @@
 package com.gradesave.backend.controller;
 
-import com.gradesave.backend.dto.CreateCourseRequest;
-import com.gradesave.backend.dto.UpdateCourseRequest;
+import com.gradesave.backend.dto.course.CreateCourseRequest;
+import com.gradesave.backend.dto.course.UpdateCourseRequest;
 import com.gradesave.backend.dto.course.*;
 import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.Course;
@@ -18,6 +18,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.gradesave.backend.dto.course.CourseSelectionDto;
+
 /**
  * @author: Noah Bach, Daniel Hess
  * <p>
@@ -31,7 +37,7 @@ import java.util.*;
  **/
 
 @RestController
-@RequestMapping("/api/klassen")
+@RequestMapping("/api/course")
 public class CourseController {
 
     private static final Logger log = LoggerFactory.getLogger(CourseController.class);
@@ -313,5 +319,10 @@ public class CourseController {
 
         courseService.create(course);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/findGradeOverviewOptions")
+    public List<CourseSelectionDto> findGradeOverviewOptions() {
+        return courseService.findGradeOverviewOptions();
     }
 }

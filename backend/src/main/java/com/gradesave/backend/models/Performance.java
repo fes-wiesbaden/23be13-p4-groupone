@@ -10,7 +10,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -27,9 +30,12 @@ public class Performance {
     @GeneratedValue
     private UUID id;
 
-    @NotBlank(message = "name is required")
     @Size(max = 100, message = "name must not exceed 100 characters")
     String name;
+
+    @NotBlank(message = "shortName is required")
+    @Size(max = 3, message = "name must not exceed 3 characters")
+    String shortName;
 
     @ManyToOne
     @JoinColumn(name = "project_subject_id", nullable = false)
@@ -37,6 +43,11 @@ public class Performance {
 
     @OneToMany(mappedBy = "performance")
     private List<Grade> grades;
+
+    @NotNull(message = "Weight is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Weight must be greater than 0")
+    @DecimalMax(value = "1.0", inclusive = true, message = "Weight must be less than or equal to 1")
+    private Double weight;
 
     public UUID getId() {
         return id;
@@ -68,6 +79,22 @@ public class Performance {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    public void setShortName(String shortName) {
+        this.shortName = shortName;
+    }
+
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
     }
 
 }

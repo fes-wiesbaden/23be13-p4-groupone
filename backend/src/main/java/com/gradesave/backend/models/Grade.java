@@ -10,8 +10,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -31,26 +29,22 @@ public class Grade {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "performance_id", nullable = false)
+    @JoinColumn(name = "performance_id")
     private Performance performance;
 
-    @Min(1)
-    @Max(6)
-    @NotNull(message = "grade is required")
-    private int grade;
-
     @ManyToOne
-    @JoinColumn(name = "teacher_id", nullable = false)
-    private User teacher;
+    @JoinColumn(name = "project_subject_id")
+    private ProjectSubject projectSubject;
+
+    @DecimalMin(value = "1.0", inclusive = true, message = "grade must be greater than 1")
+    @DecimalMax(value = "6.0", inclusive = true, message = "grade must be less than or equal to 6")
+    @NotNull(message = "grade is required")
+    private double grade;
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
     private User student;
 
-    @NotNull(message = "Weight is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Weight must be greater than 0")
-    @DecimalMax(value = "1.0", inclusive = true, message = "Weight must be less than or equal to 1")
-    private Double weight;
 
     public UUID getId() {
         return id;
@@ -68,20 +62,12 @@ public class Grade {
         return performance;
     }
 
-    public int getGrade() {
+    public double getGrade() {
         return grade;
     }
 
-    public void setGrade(int grade) {
+    public void setGrade(double grade) {
         this.grade = grade;
-    }
-
-    public User getTeacher() {
-        return teacher;
-    }
-
-    public void setTeacher(User teacher) {
-        this.teacher = teacher;
     }
 
     public User getStudent() {
@@ -92,12 +78,12 @@ public class Grade {
         this.student = student;
     }
 
-    public Double getWeight() {
-        return weight;
+    public ProjectSubject getProjectSubject() {
+        return projectSubject;
     }
 
-    public void setWeight(Double weight) {
-        this.weight = weight;
+    public void setProjectSubject(ProjectSubject projectSubject) {
+        this.projectSubject = projectSubject;
     }
 
 }

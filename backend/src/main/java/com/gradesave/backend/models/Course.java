@@ -4,13 +4,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,13 +23,6 @@ import jakarta.validation.constraints.Size;
  * <p>
  * Creates course table
  * </p>
- *
- *
- * @author: Noah Bach, Daniel Hess
- *          <p>
- *          Creates course table
- *          </p>
- *          was protoyped by Noah Bach and finally implemented by Daniel Hess
  */
 
 @Entity
@@ -53,6 +49,10 @@ public class Course {
     )
     private Set<User> users = new HashSet<>();
 
+    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<Project> projects = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -67,6 +67,14 @@ public class Course {
 
     public void setCourseName(String name) {
         this.courseName = name;
+    }
+
+    public void setProjects(Set<Project> projects) {
+        this.projects = projects;
+    }
+
+    public Set<Project> getProjects() {
+        return projects;
     }
 
     public User getClassTeacher() {

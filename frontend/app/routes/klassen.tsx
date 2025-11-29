@@ -11,11 +11,11 @@ import {useNavigate} from "react-router";
  * @author Noah Bach
  * @author Daniel Hess
  *
- * UI for the Klassen (courses) administration.
+ * UI for courses administration.
  *
  * - Displays a table of classes.
  * - Allows creating, editing and deleting classes.
- * - Fetches courses from `/api/klassen`.
+ * - Fetches courses from `/api/course`.
  *
  * @editetd Paul Geisthardt
  * - change dto
@@ -78,7 +78,7 @@ export default function Klassen() {
     }
 
     async function handleDeleteClick(id: string) {
-        if (!window.confirm("willst du diese klasse wirklich löschen?")) {
+        if (!window.confirm("Soll diese Klasse wirklich gelöscht werden?")) {
             return;
         }
 
@@ -88,7 +88,7 @@ export default function Klassen() {
 
     const fetchData = async () => {
         try {
-            const resCourses = await fetch(`${API_CONFIG.BASE_URL}/api/klassen`);
+            const resCourses = await fetch(`${API_CONFIG.BASE_URL}/api/course`);
             const coursesData = await resCourses.json();
 
             const mapped: CourseRow[] = coursesData.map((c: CourseDto) => {
@@ -120,6 +120,46 @@ export default function Klassen() {
         } catch (e) {
             console.error("Error fetching teachers: ", e);
             return [];
+        }
+    };
+
+    const onSave = async () => {
+        if (editRow) {
+            const updateRequest = {
+                courseName: form.courseName,
+                teacherId: form.teacherId,
+            };
+            const res = await fetch(
+                `${API_CONFIG.BASE_URL}/api/course/${editRow.id}`,
+                {
+                    method: "PUT",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(updateRequest),
+                }
+            );
+            if (res.ok) {
+                await fetchData();
+                setOpen(false);
+            } else {
+                alert("Aktualisieren fehlgeschlagen.");
+            }
+        } else {
+            const createRequest = {
+                courseName: form.courseName,
+                teacherId: form.teacherId,
+            };
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(createRequest),
+            });
+            if (res.ok) {
+                await fetchTeachers();
+                await fetchData();
+                setOpen(false);
+            } else {
+                alert("Erstellen fehlgeschlagen.");
+            }
         }
     };
 
