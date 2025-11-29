@@ -14,7 +14,7 @@ import java.util.List;
 
 public record GradeOverviewDto(
         List<SubjectDto> subjects,
-        List<UserGradeDto> user
+        List<UserGradeDto> users
         ) {
 
 }
