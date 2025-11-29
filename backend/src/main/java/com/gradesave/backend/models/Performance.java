@@ -30,6 +30,7 @@ public class Performance {
     @GeneratedValue
     private UUID id;
 
+    @NotBlank(message = "name is required")
     @Size(max = 100, message = "name must not exceed 100 characters")
     String name;
 
