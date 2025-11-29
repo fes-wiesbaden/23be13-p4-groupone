@@ -23,7 +23,7 @@ export interface GradeOverviewOption { id: string; name: string; projects: Proje
 
 export interface GradeOverview {
     subjects: Subject[];
-    user: User[];
+    users: User[];
 }
 
 export interface Subject {
@@ -211,7 +211,7 @@ export default function Grades() {
 
     // Build rows
     const rows =
-        gradeOverview?.user.map((u, index) => {
+        gradeOverview?.users.map((u, index) => {
             const row: any = {
                 id: u.id,
                 nr: index + 1,
@@ -275,7 +275,7 @@ export default function Grades() {
                             // update gradeOverview
                             const newGradeOverview = {
                                 ...gradeOverview,
-                                user: gradeOverview.user.map((user) => {
+                                user: gradeOverview.users.map((user) => {
                                     if (user.id !== updatedRow.id) return user;
 
                                     const newGrades = user.grades.map((grade) => {
