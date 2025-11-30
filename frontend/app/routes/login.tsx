@@ -5,6 +5,14 @@ import { TextField, Button, Typography, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
+/**
+ * @author: Daniel Hess
+ * <p>
+ * UI for login page. Uses the login endpoint of the backend to authenticate the user.
+ * </p>
+ *
+ **/
+
 interface EnvConfig {
     VITE_API_URL?: string;
 }

@@ -2,6 +2,14 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "~/contexts/AuthContext";
 
+/**
+ * @author: Daniel Hess
+ * <p>
+ * Component to protect routes. Redirects to login page if user is not authenticated.
+ * </p>
+ *
+ **/
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }

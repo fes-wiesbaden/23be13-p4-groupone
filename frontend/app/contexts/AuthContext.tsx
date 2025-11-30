@@ -6,6 +6,15 @@ import {
   type ReactNode,
 } from "react";
 
+/**
+ * @author: Daniel Hess
+ * <p>
+ * Context provider for authentication. Stores the currently authenticated user in a state.
+ * Provides functions to login and logout the user.
+ * </p>
+ *
+ **/
+
 interface User {
   username: string;
   role: string;
