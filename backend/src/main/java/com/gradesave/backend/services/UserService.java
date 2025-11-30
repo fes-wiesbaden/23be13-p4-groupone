@@ -26,6 +26,10 @@ public class UserService implements CrudService<User, UUID> {
         this.courseService = courseService;
     }
 
+    public User findByUsername(String username){
+        return repo.findByUsername(username).orElse(null);
+    }
+
     @Override
     public User create(User entity) {
         entity.setPassword(encoder.encode(entity.getPassword()));

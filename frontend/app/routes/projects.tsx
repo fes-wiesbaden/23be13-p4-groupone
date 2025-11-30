@@ -90,7 +90,7 @@ export default function Projects () {
 
     const fetchProjects = async () => {
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/all`, {method: "GET",});
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/all`, {method: "GET", credentials: "include"});
             const raw: ProjectResponse[] = await res.json();
 
             setProjects(raw);
@@ -137,7 +137,8 @@ export default function Projects () {
 
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/delete/${id}`, {
-                method: "DELETE"
+                method: "DELETE",
+                credentials: "include"
             })
 
             if (!res.ok) {

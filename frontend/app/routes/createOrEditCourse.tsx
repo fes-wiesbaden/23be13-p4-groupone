@@ -263,7 +263,8 @@ export default function CreateOrEditCourse() {
         setLoadingCourse(true)
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/${courseId}`, {
-                method: "GET"
+                method: "GET",
+                credentials: "include"
             });
 
             if (!res.ok) {
@@ -290,7 +291,9 @@ export default function CreateOrEditCourse() {
     const fetchTeachers = async () => {
         setLoadingTeachers(true)
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/teachers`);
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/teachers`, {
+              credentials: "include"
+            });
 
             if (!res.ok) {
                 console.error(`Failed to fetch teachers: ${res.status}`);
@@ -311,7 +314,9 @@ export default function CreateOrEditCourse() {
     const fetchStudents = async () => {
         setLoadingStudents(true)
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/free/students`);
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/free/students`, {
+              credentials: "include"
+            });
 
             if (!res.ok) {
                 console.error(`Failed to fetch students: ${res.status}`);
@@ -458,6 +463,7 @@ export default function CreateOrEditCourse() {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/full`, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
+                credentials: "include",
                 body: JSON.stringify(courseCreateDetails),
             })
 
@@ -490,6 +496,7 @@ export default function CreateOrEditCourse() {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/${courseId}/full`, {
                 method: "PUT",
                 headers: {"Content-Type": "application/json"},
+                credentials: "include",
                 body: JSON.stringify(payload),
             })
 

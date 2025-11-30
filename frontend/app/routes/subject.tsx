@@ -43,8 +43,8 @@ export default function Subject() {
       try {
         // load all subjects
         const resSubjects = await fetch(
-          `${API_CONFIG.BASE_URL}/api/subject/findAll`
-        );
+          `${API_CONFIG.BASE_URL}/api/subject/findAll`, {
+            credentials: "include" });
         const subjectsData = await resSubjects.json();
         setAllSubjects(subjectsData);
       } catch (err) {
@@ -79,6 +79,7 @@ export default function Subject() {
       //delete subject
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/subject/${id}`, {
         method: "DELETE",
+        credentials: "include"
       });
       if (res.ok)
         setAllSubjects((prev) => prev.filter((subject) => subject.id !== id));
@@ -110,6 +111,7 @@ export default function Subject() {
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify(editingSubject),
           }
         );
@@ -124,6 +126,7 @@ export default function Subject() {
         res = await fetch(`${API_CONFIG.BASE_URL}/api/subject`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(editingSubject),
         });
         if (res.ok) {

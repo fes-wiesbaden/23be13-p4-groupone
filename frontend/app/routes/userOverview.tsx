@@ -104,7 +104,9 @@ export default function UsersPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8080/api/users");
+      const res = await fetch("http://localhost:8080/api/users", {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error(`GET /api/users ${res.status}`);
       const data: Array<{
         id: string;
@@ -151,6 +153,7 @@ export default function UsersPage() {
     if (!confirm("Diesen Benutzer wirklich löschen?")) return;
     const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/${id}`, {
       method: "DELETE",
+      credentials: "include",
     });
     if (res.ok) {
       setRows((prev) => prev.filter((r) => r.id !== id));
@@ -179,8 +182,10 @@ export default function UsersPage() {
       const res = await fetch(`http://localhost:8080/api/users/${editRow.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(updateRequest),
       });
+
       if (res.ok) {
         await load();
         setOpen(false);
@@ -199,6 +204,7 @@ export default function UsersPage() {
       const res = await fetch("http://localhost:8080/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(createRequest),
       });
       if (res.ok) {
@@ -212,7 +218,13 @@ export default function UsersPage() {
 
   return (
     <>
-      <FileUpload accept={".csv"} type={CsvType.USERS} url={`${API_CONFIG.BASE_URL}/api/csv/upload`} upload_name={"Hochladen der CSV"} select_name={"Wählen sie eine Nutzer CSV aus"}/>
+      <FileUpload
+        accept={".csv"}
+        type={CsvType.USERS}
+        url={`${API_CONFIG.BASE_URL}/api/csv/upload`}
+        upload_name={"Hochladen der CSV"}
+        select_name={"Wählen sie eine Nutzer CSV aus"}
+      />
       <DataGridWithAdd<UserRow>
         columns={columns}
         rows={rows}
