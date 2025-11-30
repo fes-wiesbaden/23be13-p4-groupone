@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
 } from "react";
 
@@ -38,8 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const apiUrl =
     (import.meta.env as any).VITE_API_URL ?? "http://localhost:8080";
 
-  // Check if user is already authenticated on mount
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch(`${apiUrl}/api/users/me`, {
         credentials: "include",
@@ -57,11 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [apiUrl]);
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   const login = (userData: User) => {
     setUser(userData);

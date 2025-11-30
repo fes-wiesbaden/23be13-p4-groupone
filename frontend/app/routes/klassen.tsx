@@ -4,17 +4,7 @@ import { deleteCourse } from "~/adminfunctions";
 import DataTableWithAdd, {
   type DataRow,
 } from "../components/dataTableWithAddButton";
-import Button from "@mui/material/Button";
 import API_CONFIG from "../apiConfig";
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-} from "@mui/material";
 import { useNavigate } from "react-router";
 
 /**
@@ -56,8 +46,6 @@ import type { User, Role, CourseDto } from "../types/models";
 
 export default function Klassen() {
   const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
-  const [editRow, setEditRow] = useState<CourseRow | null>(null);
-  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   async function handleEditClick(row: CourseRow) {
