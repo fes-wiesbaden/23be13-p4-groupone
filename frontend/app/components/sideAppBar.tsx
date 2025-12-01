@@ -38,6 +38,7 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import ProfileIcon from '../assets/test_profile_icon.jpg'
+import {useAuth} from "~/contexts/AuthContext";
 
 const drawerWidth = 240;
 
@@ -134,9 +135,10 @@ interface MenuItem {
     text: string;
     icon: React.ReactNode;
     path: string;
+    roles?: string[];
 }
 
-function DrawerMenu({items, open, navigate}: { items: MenuItem[]; open: boolean; navigate: (path: string) => void }) {
+function DrawerMenu({items, open, navigate, onLogout}: { items: MenuItem[]; open: boolean; navigate: (path: string) => void; onLogout?: () => void }) {
     return (
         <List>
             {items.map((item) => (
@@ -147,7 +149,13 @@ function DrawerMenu({items, open, navigate}: { items: MenuItem[]; open: boolean;
                         placement="right"
                     >
                         <ListItemButton
-                            onClick={() => navigate(item.path)}
+                            onClick={() => {
+                                if (item.text === 'Abmelden' && onLogout) {
+                                    onLogout();
+                                } else {
+                                    navigate(item.path);
+                                }
+                            }}
                             sx={[
                                 {
                                     minHeight: 48,
@@ -195,8 +203,9 @@ export default function SideAppBar({children}: SideAppBarProps) {
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
     const navigate = useNavigate();
-
-    const handleDrawerOpen = () => {
+    const {logout, user, isAuthenticated} = useAuth();
+  
+  const handleDrawerOpen = () => {
         setOpen(true);
     };
 
@@ -206,12 +215,12 @@ export default function SideAppBar({children}: SideAppBarProps) {
 
     const menuItems: MenuItem[] = [
         {text: 'Startseite', icon: <HomeIcon/>, path: '/'},
-        {text: 'Klassen', icon: <SchoolIcon/>, path: '/klassen'},
-        {text: 'Benutzer', icon: <PeopleIcon/>, path: '/user'},
-        {text: 'Fragen', icon: <QuizIcon/>, path: '/fragen'},
-        {text: 'Noten', icon: <GradeIcon/>, path: '/noten'},
-        {text: 'Projekte', icon: <ProjectIcon/>, path: '/projekte'},
-        {text: 'Lernbereich', icon: <LearningIcon/>, path: '/lernbereich'},
+        {text: 'Klassen', icon: <SchoolIcon/>, path: '/klassen', roles: ['ADMIN', 'TEACHER']},
+        {text: 'Benutzer', icon: <PeopleIcon/>, path: '/user', roles: ['ADMIN']},
+        {text: 'Fragen', icon: <QuizIcon/>, path: '/fragen', roles: ['ADMIN', 'TEACHER']},
+        {text: 'Noten', icon: <GradeIcon/>, path: '/noten', roles: ['ADMIN', 'TEACHER', 'STUDENT']},
+        {text: 'Projekte', icon: <ProjectIcon/>, path: '/projekte', roles: ['ADMIN', 'TEACHER', 'STUDENT']},
+        {text: 'Lernbereich', icon: <LearningIcon/>, path: '/lernbereich', roles: ['ADMIN', 'TEACHER', 'STUDENT']},
     ];
 
     const bottomItems: MenuItem[] = [
@@ -219,6 +228,18 @@ export default function SideAppBar({children}: SideAppBarProps) {
         {text: 'Einstellungen', icon: <SettingsIcon/>, path: '/einstellungen'},
         {text: 'Abmelden', icon: <LogoutIcon/>, path: '/logout'},
     ];
+
+    const filteredMenuItems = menuItems.filter(item => {
+        if (!item.roles || item.roles.length === 0) {
+            return true;
+        }
+        return user && item.roles.includes(user.role);
+    });
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
 
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
     const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
@@ -241,145 +262,160 @@ export default function SideAppBar({children}: SideAppBarProps) {
     return (
         <Box sx={{display: 'flex'}}>
             <CssBaseline/>
-            <AppBar position="fixed" open={open}>
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        onClick={handleDrawerOpen}
-                        edge="start"
-                        sx={[
-                            {
-                                marginRight: 5,
-                            },
-                            open && {display: 'none'},
-                        ]}
-                    >
-                        <MenuIcon/>
-                    </IconButton>
-                    <AdbIcon sx={{display: {xs: 'none', md: 'flex'}, mr: 1}}/>
-                    <Typography
-                        variant="h6"
-                        noWrap
-                        component="a"
-                        href="/"
-                        sx={{
-                            mr: 2,
-                            display: {xs: 'none', md: 'flex'},
-                            fontFamily: 'monospace',
-                            fontWeight: 700,
-                            letterSpacing: '.3rem',
-                            color: 'inherit',
-                            textDecoration: 'none',
-                        }}
-                    >
-                        LOGO
-                    </Typography>
-
-                    <Box sx={{flexGrow: 1, display: {xs: 'flex', md: 'none'}}}>
-                        <IconButton
-                            size="large"
-                            aria-label="account of current user"
-                            aria-controls="menu-appbar"
-                            aria-haspopup="true"
-                            onClick={handleOpenNavMenu}
-                            color="inherit"
-                        >
-                            <MenuIcon/>
-                        </IconButton>
-                        <Menu
-                            id="menu-appbar"
-                            anchorEl={anchorElNav}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'left',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }}
-                            open={Boolean(anchorElNav)}
-                            onClose={handleCloseNavMenu}
-                            sx={{display: {xs: 'block', md: 'none'}}}
-                        >
-                        </Menu>
-                    </Box>
-                    <AdbIcon sx={{display: {xs: 'flex', md: 'none'}, mr: 1}}/>
-                    <Typography
-                        variant="h5"
-                        noWrap
-                        component="a"
-                        href="/"
-                        sx={{
-                            mr: 2,
-                            display: {xs: 'flex', md: 'none'},
-                            flexGrow: 1,
-                            fontFamily: 'monospace',
-                            fontWeight: 700,
-                            letterSpacing: '.3rem',
-                            color: 'inherit',
-                            textDecoration: 'none',
-                        }}
-                    >
-                        LOGO
-                    </Typography>
-                    <Box sx={{flexGrow: 1, display: {xs: 'none', md: 'flex'}}}>
-                    </Box>
-                    <Box sx={{flexGrow: 0}}>
-                        <Tooltip title="Open settings">
-                            <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
-                                <Avatar alt="Remy Sharp" src={ProfileIcon}/> {/* TODO: logic to get user icons */}
+            {isAuthenticated && (
+                <>
+                    <AppBar position="fixed" open={open}>
+                        <Toolbar>
+                            <IconButton
+                                color="inherit"
+                                aria-label="open drawer"
+                                onClick={handleDrawerOpen}
+                                edge="start"
+                                sx={[
+                                    {
+                                        marginRight: 5,
+                                    },
+                                    open && {display: 'none'},
+                                ]}
+                            >
+                                <MenuIcon/>
                             </IconButton>
-                        </Tooltip>
-                        <Menu
-                            sx={{mt: '45px'}}
-                            id="menu-appbar-user"
-                            anchorEl={anchorElUser}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            open={Boolean(anchorElUser)}
-                            onClose={handleCloseUserMenu}
-                        >
-                            {settings.map((setting) => (
-                                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                                    <Typography sx={{textAlign: 'center'}}>{setting}</Typography>
-                                </MenuItem>
-                            ))}
-                        </Menu>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-            <Drawer variant="permanent" open={open}>
-                <DrawerHeader open={open}>
-                    <IconButton onClick={open ? handleDrawerClose : handleDrawerOpen}>
-                        {open ? (
-                            theme.direction === "rtl" ? <ChevronRightIcon/> : <ChevronLeftIcon/>
-                        ) : (
-                            <MenuIcon/>
-                        )}
-                    </IconButton>
-                </DrawerHeader>
-                <Divider/>
-                <DrawerMenu items={menuItems} open={open} navigate={navigate}/>
+                            <Typography
+                                variant="h5"
+                                noWrap
+                                component="a"
+                                href="/"
+                                sx={{
+                                    mr: 2,
+                                    display: {xs: 'none', md: 'flex'},
+                                    fontWeight: 800,
+                                    letterSpacing: '0.05rem',
+                                    color: 'inherit',
+                                    textDecoration: 'none',
+                                    background: 'linear-gradient(45deg, #ffffff 30%, #e3f2fd 90%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                }}
+                            >
+                                GradeSave
+                            </Typography>
 
-                <Divider/>
-                <DrawerMenu items={bottomItems} open={open} navigate={navigate}/>
-            </Drawer>
+                            <Box sx={{flexGrow: 1, display: {xs: 'flex', md: 'none'}}}>
+                                <IconButton
+                                    size="large"
+                                    aria-label="account of current user"
+                                    aria-controls="menu-appbar"
+                                    aria-haspopup="true"
+                                    onClick={handleOpenNavMenu}
+                                    color="inherit"
+                                >
+                                    <MenuIcon/>
+                                </IconButton>
+                                <Menu
+                                    id="menu-appbar"
+                                    anchorEl={anchorElNav}
+                                    anchorOrigin={{
+                                        vertical: 'bottom',
+                                        horizontal: 'left',
+                                    }}
+                                    keepMounted
+                                    transformOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'left',
+                                    }}
+                                    open={Boolean(anchorElNav)}
+                                    onClose={handleCloseNavMenu}
+                                    sx={{display: {xs: 'block', md: 'none'}}}
+                                >
+                                </Menu>
+                            </Box>
+                            <Typography
+                                variant="h6"
+                                noWrap
+                                component="a"
+                                href="/"
+                                sx={{
+                                    mr: 2,
+                                    display: {xs: 'flex', md: 'none'},
+                                    flexGrow: 1,
+                                    fontWeight: 800,
+                                    letterSpacing: '0.05rem',
+                                    color: 'inherit',
+                                    textDecoration: 'none',
+                                    background: 'linear-gradient(45deg, #ffffff 30%, #e3f2fd 90%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                }}
+                            >
+                                GradeSave
+                            </Typography>
+                            <Box sx={{flexGrow: 1, display: {xs: 'none', md: 'flex'}}}>
+                            </Box>
+                            <Box sx={{flexGrow: 0}}>
+                                <Tooltip title="Open settings">
+                                    <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
+                                        <Avatar alt="Remy Sharp" src={ProfileIcon}/> {/* TODO: logic to get user icons */}
+                                    </IconButton>
+                                </Tooltip>
+                                <Menu
+                                    sx={{mt: '45px'}}
+                                    id="menu-appbar-user"
+                                    anchorEl={anchorElUser}
+                                    anchorOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }}
+                                    keepMounted
+                                    transformOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }}
+                                    open={Boolean(anchorElUser)}
+                                    onClose={handleCloseUserMenu}
+                                >
+                                  {settings.map((setting) => (
+                                            <MenuItem 
+                                                key={setting} 
+                                                onClick={() => {
+                                                    handleCloseUserMenu();
+                                                    if (setting === 'Logout') {
+                                                        handleLogout();
+                                                    }
+                                                }}
+                                            >
+                                                <Typography sx={{textAlign: 'center'}}>{setting}</Typography>
+                                            </MenuItem>
+                                        ))}
+                                    </Menu>
+                            </Box>
+                        </Toolbar>
+                    </AppBar>
+                    <Drawer variant="permanent" open={open}>
+                        <DrawerHeader open={open}>
+                            <IconButton onClick={open ? handleDrawerClose : handleDrawerOpen}>
+                                {open ? (
+                                    theme.direction === "rtl" ? <ChevronRightIcon/> : <ChevronLeftIcon/>
+                                ) : (
+                                    <MenuIcon/>
+                                )}
+                            </IconButton>
+                        </DrawerHeader>
+                        <Divider/>
+                        <DrawerMenu items={filteredMenuItems} open={open} navigate={navigate}/>
+
+                        <Divider/>
+                        <DrawerMenu items={bottomItems} open={open} navigate={navigate} onLogout={handleLogout}/>
+                    </Drawer>
+                </>
+            )}
             <Box
                 component="main"
                 sx={{
                     flexGrow: 1,
                     minWidth: 0,
                 }}>
-                <Toolbar />
+                {isAuthenticated && <Toolbar />}
                 {children}
             </Box>
         </Box>

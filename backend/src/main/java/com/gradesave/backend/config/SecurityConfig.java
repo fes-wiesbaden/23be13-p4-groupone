@@ -1,5 +1,6 @@
 package com.gradesave.backend.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,22 +23,43 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/users/login", "/api/users/register").permitAll()
-                .anyRequest().authenticated()
-            )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                );
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/users/login").permitAll()
 
+                        .requestMatchers(
+                                "/api/users/**",
+                                "/api/csv/**")
+                        .hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/courses/**",
+                                "/api/subjects/**",
+                                "/api/groups/**",
+                                "/api/questions/**")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
+
+                        .requestMatchers(
+                                "/api/grades/**",
+                                "/api/projects/**")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
+
+                        .anyRequest().authenticated())
+                .logout(logout -> logout
+                        .logoutUrl("/api/users/logout")
+                        .logoutSuccessHandler(
+                                (request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK))
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID"))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
