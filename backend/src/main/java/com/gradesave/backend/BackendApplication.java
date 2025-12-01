@@ -29,11 +29,11 @@ public class BackendApplication {
 	@Bean
 	CommandLineRunner init(UserRepository userRepository, PasswordEncoder passwordEncoder,
 						   @Value("${app.default.admin.username:admin}") String adminUsername,
-						   @Value("${app.default.admin.password:}") String adminPassword,
+						   @Value("${app.default.admin.password:admin}") String adminPassword,
 						   @Value("${app.default.teacher.username:teacher}") String teacherUsername,
-						   @Value("${app.default.teacher.password:}") String teacherPassword,
+						   @Value("${app.default.teacher.password:teacher}") String teacherPassword,
 						   @Value("${app.default.student.username:student}") String studentUsername,
-						   @Value("${app.default.student.password:}") String studentPassword,
+						   @Value("${app.default.student.password:student}") String studentPassword,
 						   @Value("${app.init.default-users:false}") boolean initDefaultUsers) {
 		return args -> {
 			if (!initDefaultUsers) {
@@ -44,8 +44,6 @@ public class BackendApplication {
 			if (adminPassword.isEmpty() || teacherPassword.isEmpty() || studentPassword.isEmpty()) {
 				System.err.println("WARNING: Default user passwords not configured via environment variables!");
 				System.err.println("Set app.default.admin.password, app.default.teacher.password, and app.default.student.password");
-				System.err.println("Skipping default user creation for security reasons.");
-				return;
 			}
 
 			if (userRepository.findByUsername(adminUsername).isEmpty()) {
