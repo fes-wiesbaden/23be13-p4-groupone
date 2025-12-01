@@ -31,7 +31,7 @@ public class CsvController {
 
     @PostMapping("/upload")
     public ResponseEntity<CsvService.CsvResult> uploadAndParseCsv(@RequestPart("file") MultipartFile file, @RequestPart("metadata") CsvService.FileMetadata metadata) throws IOException {
-        if (!Objects.equals(file.getContentType(), "application/vnd.ms-excel")) {
+        if (!Objects.equals(file.getContentType(), "application/vnd.ms-excel") && !Objects.equals(file.getContentType(), "text/csv")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CSV file");
         }
 

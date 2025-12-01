@@ -6,12 +6,8 @@ import com.gradesave.backend.dto.group.ProjectDetailGroupDTO;
 import com.gradesave.backend.dto.project.*;
 import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.*;
-import com.gradesave.backend.services.CourseService;
-import com.gradesave.backend.services.GroupService;
-import com.gradesave.backend.services.ProjectService;
-import com.gradesave.backend.services.UserService;
+import com.gradesave.backend.services.*;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,22 +23,24 @@ import java.util.*;
  **/
 
 @RestController
-@RequestMapping("api/project")
+@RequestMapping("/api/project")
 public class ProjectController {
     private final ProjectService projectService;
     private final CourseService courseService;
     private final UserService userService;
     private final GroupService groupService;
+    private final SubjectService subjectService;
 
-    public ProjectController(ProjectService projectService, CourseService courseService, UserService userService, GroupService groupService) {
+    public ProjectController(ProjectService projectService, CourseService courseService, UserService userService, GroupService groupService, SubjectService subjectService) {
         this.projectService = projectService;
         this.courseService = courseService;
         this.userService = userService;
         this.groupService = groupService;
+        this.subjectService = subjectService;
     }
 
     private Integer getUnassignedStudentsAmount(Project project) {
-        Course course= project.getCourse();
+        Course course = project.getCourse();
         long totalStudents = course.getUsers().stream()
                 .filter(u -> u.getRole() == Role.STUDENT)
                 .count();
@@ -158,7 +156,8 @@ public class ProjectController {
                                         ))
                                         .toArray(StudentDTO[]::new)
                         ))
-                        .toArray(GroupMembersDTO[]::new)
+                        .toArray(GroupMembersDTO[]::new),
+                ProjectSubjectDTO.fromEntity(project)
         );
 
         return ResponseEntity.ok(dto);
@@ -305,5 +304,65 @@ public class ProjectController {
         projectService.update(id, project);
 
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("{projectId}/add/subject")
+    public ResponseEntity<Map<String, String>> addSubjectToProject(@PathVariable UUID projectId, @Valid @RequestBody AddSubjectToProjectDTO req) {
+        Optional<Project> projectOpt = projectService.getById(projectId);
+        if (projectOpt.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Project not found: " + projectId));
+
+        Optional<Subject> subjectOpt = subjectService.getById(req.subjectId());
+        if (subjectOpt.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Subject not found: " + req.subjectId()));
+
+        Project project = projectOpt.get();
+        Subject subject = subjectOpt.get();
+
+
+        boolean alreadyExists = project.getProjectSubjects().stream()
+                .anyMatch(ps -> ps.getSubject().getId().equals(req.subjectId()));
+
+        if (alreadyExists)
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Subject is already added to the project"));
+
+        ProjectSubject projectSubject = new ProjectSubject();
+        projectSubject.setSubject(subject);
+        projectSubject.setProject(project);
+        projectSubject.setDuration(req.duration());
+
+        project.getProjectSubjects().add(projectSubject);
+
+        projectService.update(projectId, project);
+
+        return ResponseEntity.ok(Map.of("message", "Subject added successfully"));
+    }
+
+    @PostMapping("{projectId}/remove/subject/{subjectId}")
+    public ResponseEntity<Map<String, String>> removeSubjectFromProject(@PathVariable UUID projectId, @PathVariable UUID subjectId) {
+        Optional<Project> projectOpt = projectService.getById(projectId);
+        if (projectOpt.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Project not found: " + projectId));
+
+        Project project = projectOpt.get();
+
+        Optional<ProjectSubject> projectSubjectOpt = project.getProjectSubjects().stream()
+                .filter(ps -> ps.getSubject().getId().equals(subjectId)).findFirst();
+
+        if (projectSubjectOpt.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Subject is not part of the project"));
+
+        ProjectSubject projectSubject = projectSubjectOpt.get();
+
+        project.getProjectSubjects().remove(projectSubject);
+
+        projectService.update(projectId, project);
+
+        return ResponseEntity.ok(Map.of("message", "Subject removed successfully"));
     }
 }

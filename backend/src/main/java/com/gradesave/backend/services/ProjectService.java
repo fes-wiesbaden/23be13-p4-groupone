@@ -59,6 +59,7 @@ public class ProjectService implements CrudService<Project, UUID> {
         existing.setName(entity.getName());
         existing.setProjectStart(entity.getProjectStart());
         existing.setGroups(entity.getGroups());
+        existing.setProjectSubjects(entity.getProjectSubjects());
 
         return projectRepository.save(existing);
     }
@@ -81,11 +82,11 @@ public class ProjectService implements CrudService<Project, UUID> {
 
     @Override
     public boolean exists(UUID uuid) {
-        return false;
+        return projectRepository.existsById(uuid);
     }
 
     @Override
     public long count() {
-        return 0;
+        return projectRepository.count();
     }
 }
