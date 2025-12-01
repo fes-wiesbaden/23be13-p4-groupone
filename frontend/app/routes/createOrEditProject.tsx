@@ -512,6 +512,7 @@ export default function createOrEditProject() {
                     });
                 } catch (err: any) {
                     console.error(`Failed to add subject: ${err.message}`);
+                    setSaveError(`Failed to add subject: ${err.message}`)
                 }
             }
 
@@ -576,6 +577,7 @@ export default function createOrEditProject() {
                         });
                     } catch (err: any) {
                         console.error(`Failed to add subject: ${err.message}`);
+                        setSaveError(`Failed to add subject: ${err.message}`)
                     }
                 }
             }

@@ -192,7 +192,6 @@ export default function Subject() {
                 margin="dense"
                 label="Abkürzung"
                 fullWidth
-                multiline
                 value={editingSubject?.shortName || ""}
                 onChange={(e) =>
                     editingSubject &&
