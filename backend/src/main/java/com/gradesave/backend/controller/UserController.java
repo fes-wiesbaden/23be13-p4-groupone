@@ -8,12 +8,24 @@ import com.gradesave.backend.dto.user.TeacherDTO;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.services.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,9 +43,87 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final AuthenticationManager authenticationManager;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuthenticationManager authenticationManager) {
         this.userService = userService;
+        this.authenticationManager = authenticationManager;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(
+            @RequestParam String username, 
+            @RequestParam String password,
+            HttpServletRequest request) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+            );
+
+            SecurityContext securityContext = SecurityContextHolder.getContext();
+            securityContext.setAuthentication(authentication);
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
+
+            User user = userService.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Login successful",
+                    "role", user.getRole(),
+                    "username", user.getUsername()
+            ));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated() || 
+            authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+
+        String username = authentication.getName();
+        User user = userService.findByUsername(username);
+        
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "username", user.getUsername(),
+                "role", user.getRole().toString()
+        ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            SecurityContextHolder.clearContext();
+            
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
+            
+            Cookie cookie = new Cookie("JSESSIONID", null);
+            cookie.setPath("/");
+            cookie.setHttpOnly(true);
+            cookie.setMaxAge(0);
+            response.addCookie(cookie);
+            
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Logout failed"));
+        }
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
