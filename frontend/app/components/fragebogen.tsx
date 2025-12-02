@@ -1,19 +1,20 @@
 /**
- * @author: Naoh Bach
+ * @author: Noah Bach
  * Component that returns a form of a "Fragebogen" for students to fill out
  *
  **/
 
 // TODO: popup / dialog "bist du sicher?" wenn nicht alle fragen beantwortet
 
-import React, { type JSX } from "react";
-import {
-    DataGrid,
-    type GridColDef
-} from "@mui/x-data-grid";
-import { Button, FormControl, IconButton, MenuItem, Select, TextField } from "@mui/material";
+/*
+    edit view = lehrer muss noch besesr gemacht werden
+    kein edit view = schüler view
+ */
+
+import React, {type JSX, useState} from "react";
+import {DataGrid, type GridColDef} from "@mui/x-data-grid";
+import {Button, IconButton, MenuItem, Select, TextField} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 export interface FragebogenRow {
@@ -28,86 +29,84 @@ interface SortedQuestions {
 }
 
 export default function FragebogenTable({
-  onSubmit,
-  rows: rowData,
-  studentNames,
-  editView: isEditView,
-  subject
-}: {
-  onSubmit: React.FormEventHandler<HTMLFormElement>;
-  rows: FragebogenRow[];
-  studentNames: string[];
-  editView?: boolean;
-  subject?: string
+                                            onSubmit,
+                                            rows: rowData,
+                                            studentNames,
+                                            editView: isEditView,
+                                            subject
+                                        }: {
+    onSubmit: React.FormEventHandler<HTMLFormElement>;
+    rows: FragebogenRow[];
+    studentNames: string[];
+    editView?: boolean;
+    subject?: string
 }) {
-    
+
     const sortedRows: SortedQuestions = SortQuestions(rowData)
 
     const [gradeRows, setGradeRows] = useState<FragebogenRow[]>([...sortedRows.gradeQuestions]);
     const [textRows, setTextRows] = useState<FragebogenRow[]>([...sortedRows.textQuestions]);
 
-    const [newQuestions, setNewQuestions] = useState(0);
+    const randomUUID = (): string => {
+        return typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : String(Date.now());
+    }
 
-    const deleteQuestion = function(id: string){
-        for (let index = 0; index < gradeRows.length; index++){
-            if (gradeRows[index].id == id){
-                console.log(gradeRows[index].id + " == " + id)
-                setGradeRows(gradeRows.splice(index, 1));
+    const deleteQuestion = function (id: string) {
+        for (let index = 0; index < gradeRows.length; index++) {
+            if (gradeRows[index].id == id) {
+                setGradeRows(gradeRows.filter((_, i) => i !== index));
                 return;
             }
         }
-        for (let index = 0; index < textRows.length; index++){
-            if (textRows[index].id == id){
-                console.log(textRows[index].id + " == " + id)
-                setTextRows(textRows.splice(index, 1));
+        for (let index = 0; index < textRows.length; index++) {
+            if (textRows[index].id === id) {
+                setTextRows(textRows.filter((_, i) => i !== index));
                 return;
             }
         }
     }
 
-    const noGradeSelectedDefaultValue = 255; // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
+    const NO_GRADE_SELECTED = 255; // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
     studentNames = ["Selbsteinschätzung"].concat(studentNames);
 
-    const TextQuestionField = function({
-        text: questionText,
-        questionId
-    }: {
+    const TextQuestionField = function ({
+                                            text: questionText,
+                                            questionId
+                                        }: {
         text: string
         questionId: string
-    }){
-        return <>
-            {
-                <>
-                    <div style={{marginTop: "1em"}}>
-                        {isEditView ? "Frage " + questionId : questionText}
-                    </div>
-                    <span style={{display:"flex"}}>
-                        <TextField 
-                            fullWidth
-                            defaultValue={isEditView ? questionText : null}
-                            placeholder={isEditView ? "Frage eingeben..." : "Antwort eingeben..."}
-                            name={questionId + (isEditView ? "question" : "answer")}
-                        />
-                        {
-                            isEditView &&
-                            <IconButton
-                                onClick={() => deleteQuestion(questionId)}
-                            >
-                                <DeleteIcon />
-                            </IconButton>
-                        }
-                    </span>
-                </>
-            }
-        </>
+    }) {
+        return (
+            <>
+                <div style={{marginTop: "1em"}}>
+                    {isEditView ? "Frage " + questionId : questionText}
+                </div>
+                <span style={{display: "flex"}}>
+                    <TextField
+                        fullWidth
+                        defaultValue={isEditView ? questionText : null}
+                        placeholder={isEditView ? "Frage eingeben..." : "Antwort eingeben..."}
+                        name={questionId + (isEditView ? "question" : "answer")}
+                    />
+                    {
+                        isEditView &&
+                        <IconButton
+                            onClick={() => deleteQuestion(questionId)}
+                        >
+                            <DeleteIcon/>
+                        </IconButton>
+                    }
+                </span>
+            </>
+        )
     }
 
-    const TextQuestions = function({
-        questions
-    }: {
+    const TextQuestions = function ({
+                                        questions
+                                    }: {
         questions: FragebogenRow[]
-    }){
-        let fields: JSX.Element[] = questions.map((q) => 
+    }) {
+        let fields: JSX.Element[] = questions.map((q) =>
             <TextQuestionField
                 text={q.question}
                 questionId={q.id}
@@ -142,13 +141,13 @@ export default function FragebogenTable({
         headerName: name,
         display: 'flex',
         renderCell: (params) => {
-            if (params.row.type == 'grade')
+            if (params.row.type === 'grade')
                 return <Select
                     name={isEditView ? "" : (params.id + "answer" + index)}
-                    defaultValue={noGradeSelectedDefaultValue}
+                    defaultValue={NO_GRADE_SELECTED}
                     style={{flex: 1}}
                 >
-                    <MenuItem value={noGradeSelectedDefaultValue}
+                    <MenuItem value={NO_GRADE_SELECTED}
                     >Note wählen</MenuItem>
                     <MenuItem value={1}>1</MenuItem>
                     <MenuItem value={2}>2</MenuItem>
@@ -164,28 +163,26 @@ export default function FragebogenTable({
         disableReorder: true
     })))
 
-    const addGradeQuestion = function(params:any) {
-        setGradeRows(prev =>[
+    const addGradeQuestion = function () {
+        setGradeRows(prev => [
             ...prev,
             {
-                id: newQuestions + "new",
+                id: randomUUID(),
                 question: "Neue Frage",
                 type: 'grade'
             }
         ])
-        setNewQuestions(prev=>prev+1)
     }
-    
-    const addTextQuestion = function(params:any) {
-        setTextRows(prev =>[
+
+    const addTextQuestion = function () {
+        setTextRows(prev => [
             ...prev,
             {
-                id: newQuestions + "new",
+                id: randomUUID(),
                 question: "Neue Frage",
                 type: 'text'
             }
         ])
-        setNewQuestions(prev=>prev+1)
     }
 
     return <form
@@ -207,7 +204,7 @@ export default function FragebogenTable({
             <div style={{width: "100%", display: "flex"}}>
                 <IconButton
                     onClick={addGradeQuestion}
-                    aria-label="Textfrage Hinzufügen"
+                    aria-label="Notenfrage Hinzufügen"
                     style={{width: "100%"}}
                 >
                     <AddIcon/>
@@ -230,11 +227,11 @@ export default function FragebogenTable({
             </div>
         }
 
-        <Button 
+        <Button
             type="submit"
             variant="contained"
             style={{marginTop: "1em"}}
-            
+
         >
             {isEditView ? "Speichern" : "Abgeben"}
         </Button>
@@ -243,21 +240,18 @@ export default function FragebogenTable({
 }
 
 
-
-
-
 // function AddButton(){
 //     return <IconButton onClick={onAddClick} aria-label="add">
 //                 <AddIcon/>
 //             </IconButton>
 // }
 
-function SortQuestions(questions: FragebogenRow[]): SortedQuestions{
+function SortQuestions(questions: FragebogenRow[]): SortedQuestions {
     let returnObject: SortedQuestions = {
         gradeQuestions: [],
         textQuestions: []
     }
     for (let q of questions)
-        (q.type == 'grade' ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
+        (q.type === 'grade' ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
     return returnObject;
 }
