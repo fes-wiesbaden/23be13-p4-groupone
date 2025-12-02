@@ -43,7 +43,7 @@ public class Project {
     @JsonIgnore
     private Set<ProjectQuestion> projectQuestions = new HashSet<>();
 
-    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<ProjectSubject> projectSubjects = new HashSet<>();
 

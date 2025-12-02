@@ -1,14 +1,13 @@
 package com.gradesave.backend.services;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
+import com.gradesave.backend.models.Subject;
+import com.gradesave.backend.repositories.SubjectRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gradesave.backend.models.Subject;
-import com.gradesave.backend.repositories.SubjectRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @author: Michael Holl
@@ -34,7 +33,7 @@ public class SubjectService implements CrudService<Subject, UUID> {
 
     @Override
     public Optional<Subject> getById(UUID id) {
-        return Optional.empty();
+        return subjectRepository.findById(id);
     }
 
     @Override

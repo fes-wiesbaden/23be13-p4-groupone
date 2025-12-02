@@ -1,7 +1,6 @@
 package com.gradesave.backend.dto.project;
 
 import com.gradesave.backend.dto.group.GroupMembersDTO;
-import com.gradesave.backend.models.Group;
 
 import java.util.UUID;
 
@@ -17,8 +16,10 @@ public record ProjectDetailDTO(
 
         ProjectStartDateDTO projectStartDate,
 
-        GroupMembersDTO[] groups
-) { }
+        GroupMembersDTO[] groups,
+        ProjectSubjectDTO[] subjects
+) {
+}
 
 //interface ProjectDetailResponse {
 //    projectId: string;
