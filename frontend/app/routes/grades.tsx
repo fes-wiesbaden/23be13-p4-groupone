@@ -135,7 +135,10 @@ export default function Grades() {
             const url =
                 `${API_CONFIG.BASE_URL}/api/grade/overview?projectId=${selectedProject.id}` +
                 (selectedGroup ? `&groupId=${selectedGroup.id}` : "");
-            const res = await fetch(url);
+            const res = await fetch(url, {
+                method: "GET",
+                credentials: "include",
+            });
             if (!res.ok) {
                 return
             }
@@ -278,7 +281,7 @@ export default function Grades() {
                             // update gradeOverview
                             const newGradeOverview = {
                                 ...gradeOverview,
-                                user: gradeOverview.users.map((user) => {
+                                users: gradeOverview.users.map((user) => {
                                     if (user.id !== updatedRow.id) return user;
 
                                     const newGrades = user.grades.map((grade) => {
@@ -298,7 +301,7 @@ export default function Grades() {
 
                             setGradeOverview(newGradeOverview);
 
-                            const changedUser = newGradeOverview.user.find(u => u.id === updatedRow.id);
+                            const changedUser = newGradeOverview.users.find(u => u.id === updatedRow.id);
                             if (!changedUser) return updatedRow;
 
                             // collect all grades of changedUser
