@@ -63,21 +63,39 @@ public class QuestionService implements CrudService<Question, UUID>{
 
     @Override
     public Question update(UUID id, Question entity) {
-        return null;
+        Question existing = questionRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Question not found"));
+
+        existing.setText(entity.getText());
+        existing.setSubjects(entity.getSubjects());
+        existing.setType(entity.getType());
+
+        return questionRepository.save(existing);
     }
 
     @Override
     public void deleteById(UUID id) {
+        questionRepository.deleteById(id);
+    }
 
+    @Override
+    public boolean deleteIfExists(UUID uuid) {
+        Optional<Question> question = this.getById(uuid);
+        if (question.isEmpty())
+            return false;
+
+        questionRepository.delete(question.get());
+
+        return true;
     }
 
     @Override
     public boolean exists(UUID id) {
-        return false;
+        return questionRepository.existsById(id);
     }
 
     @Override
     public long count() {
-        return 0;
+        return questionRepository.count();
     }
 }

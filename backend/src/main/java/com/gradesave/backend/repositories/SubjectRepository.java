@@ -1,5 +1,6 @@
 package com.gradesave.backend.repositories;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,5 +18,5 @@ import com.gradesave.backend.models.Subject;
  */
 @Repository
 public interface SubjectRepository extends JpaRepository<Subject, UUID> {
-
+    List<Subject> findByProjectSubjects_Project_Id(UUID projectId);
 }

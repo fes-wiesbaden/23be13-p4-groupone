@@ -4,13 +4,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,9 +23,8 @@ import jakarta.validation.constraints.Size;
  * <p>
  * Creates course table
  * </p>
- *
- *
  */
+
 @Entity
 @Table(name = "course")
 public class Course {
@@ -33,10 +35,10 @@ public class Course {
 
     @NotBlank(message = "name is required")
     @Size(max = 100, message = "name must not exceed 100 characters")
-    String name;
+    private String courseName;
 
     @ManyToOne
-    @JoinColumn(name = "class_teacher_id", nullable = false)
+    @JoinColumn(name = "class_teacher_id", nullable = true)
     private User classTeacher;
 
     @ManyToMany
@@ -47,6 +49,10 @@ public class Course {
     )
     private Set<User> users = new HashSet<>();
 
+    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<Project> projects = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -55,12 +61,20 @@ public class Course {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getCourseName() {
+        return courseName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCourseName(String name) {
+        this.courseName = name;
+    }
+
+    public void setProjects(Set<Project> projects) {
+        this.projects = projects;
+    }
+
+    public Set<Project> getProjects() {
+        return projects;
     }
 
     public User getClassTeacher() {

@@ -17,8 +17,9 @@ import java.util.UUID;
  * Creates user table
  * </p>
  *
- *
- */
+ **/
+
+
 @Entity
 @Table(name = "\"user\"")
 public class User {
@@ -29,6 +30,7 @@ public class User {
 
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    @Column(unique = true)
     private String username;
 
     @NotBlank(message = "First name is required")
@@ -50,6 +52,10 @@ public class User {
     @ManyToMany(mappedBy = "users")
     @JsonIgnore
     private Set<Course> courses = new HashSet<>();
+
+    @ManyToMany(mappedBy = "users")
+    @JsonIgnore
+    private Set<Group> groups = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -105,5 +111,13 @@ public class User {
 
     public void setCourses(Set<Course> courses) {
         this.courses = courses;
+    }
+
+    public Set<Group> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Set<Group> groups) {
+        this.groups = groups;
     }
 }

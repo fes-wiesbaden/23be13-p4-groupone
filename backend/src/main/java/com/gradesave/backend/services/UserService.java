@@ -1,7 +1,7 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
-import com.gradesave.backend.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,12 +16,18 @@ import java.util.UUID;
 @Transactional
 public class UserService implements CrudService<User, UUID> {
 
-    private final UserRepository repo;
+    private final com.gradesave.backend.repositories.UserRepository repo;
     private final PasswordEncoder encoder;
+    private final CourseService courseService;
 
-    public UserService(UserRepository repo, PasswordEncoder encoder) {
+    public UserService(com.gradesave.backend.repositories.UserRepository repo, PasswordEncoder encoder, CourseService courseService) {
         this.repo = repo;
         this.encoder = encoder;
+        this.courseService = courseService;
+    }
+
+    public User findByUsername(String username){
+        return repo.findByUsername(username).orElse(null);
     }
 
     @Override
@@ -34,6 +40,16 @@ public class UserService implements CrudService<User, UUID> {
     @Transactional(readOnly = true)
     public Optional<User> getById(UUID id) {
         return repo.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<User> getByUsername(String name) {
+        return repo.findByUsername(name);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByUsername(String name) {
+        return repo.existsByUsername(name);
     }
 
     @Override
@@ -60,10 +76,26 @@ public class UserService implements CrudService<User, UUID> {
 
     @Override
     public void deleteById(UUID id) {
-        if (!repo.existsById(id)) {
+        if (!repo.existsById(id))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id);
-        }
+
+        if (!courseService.removeUserFromAllCourses(id))
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to remove User from all courses");
+
         repo.deleteById(id);
+    }
+
+    @Override
+    public boolean deleteIfExists(UUID uuid) {
+
+        Optional<User> user = this.getById(uuid);
+        if (user.isEmpty())
+            return false;
+
+        repo.delete(user.get());
+
+        return true;
+
     }
 
     @Override
@@ -76,5 +108,17 @@ public class UserService implements CrudService<User, UUID> {
     @Transactional(readOnly = true)
     public long count() {
         return repo.count();
+    }
+
+    public List<User> GetUsersByRole(Role role){
+        return repo.findByRole(role);
+    }
+
+    public List<User> getUnassignedStudents() {
+        return repo.findUnassignedStudents();
+    }
+
+    public List<User> getUsersByIds(List<UUID> uuids) {
+        return repo.findAllById(uuids);
     }
 }

@@ -25,9 +25,10 @@ import {
  *
  **/
 
-interface Subject extends DataRow {
+export interface Subject extends DataRow {
   id: string;
   name: string;
+  shortName: string;
   description: string;
   learningField: boolean;
 }
@@ -43,8 +44,8 @@ export default function Subject() {
       try {
         // load all subjects
         const resSubjects = await fetch(
-          `${API_CONFIG.BASE_URL}/api/subject/findAll`
-        );
+          `${API_CONFIG.BASE_URL}/api/subject/findAll`, {
+            credentials: "include" });
         const subjectsData = await resSubjects.json();
         setAllSubjects(subjectsData);
       } catch (err) {
@@ -60,6 +61,7 @@ export default function Subject() {
     const newSubject: Subject = {
       id: "",
       name: "",
+      shortName: "",
       description: "",
       learningField: true,
     };
@@ -79,6 +81,7 @@ export default function Subject() {
       //delete subject
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/subject/${id}`, {
         method: "DELETE",
+        credentials: "include"
       });
       if (res.ok)
         setAllSubjects((prev) => prev.filter((subject) => subject.id !== id));
@@ -94,6 +97,7 @@ export default function Subject() {
     if (
       originalSubject &&
       editingSubject.name === originalSubject.name &&
+      editingSubject.shortName === originalSubject.shortName &&
       editingSubject.description === originalSubject.description &&
       editingSubject.learningField === originalSubject.learningField
     ) {
@@ -110,6 +114,7 @@ export default function Subject() {
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify(editingSubject),
           }
         );
@@ -124,6 +129,7 @@ export default function Subject() {
         res = await fetch(`${API_CONFIG.BASE_URL}/api/subject`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(editingSubject),
         });
         if (res.ok) {
@@ -143,6 +149,7 @@ export default function Subject() {
       <DataGridWithAdd<Subject>
         columns={[
           { label: "Name", key: "name" },
+          { label: "Abkürzung", key: "shortName" },
           { label: "Beschreibung", key: "description" },
           { label: "Typ", key: "type" },
         ]}
@@ -178,6 +185,18 @@ export default function Subject() {
                 editingSubject &&
                 setEditingSubject({ ...editingSubject, name: e.target.value })
               }
+            />
+            <TextField
+                autoFocus
+                required
+                margin="dense"
+                label="Abkürzung"
+                fullWidth
+                value={editingSubject?.shortName || ""}
+                onChange={(e) =>
+                    editingSubject &&
+                    setEditingSubject({ ...editingSubject, shortName: e.target.value })
+                }
             />
             <TextField
               margin="dense"
