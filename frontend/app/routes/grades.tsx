@@ -7,6 +7,7 @@ import {
     type GridColDef,
     type GridColumnGroupingModel
 } from "@mui/x-data-grid";
+import CustomizedSnackbars from '../components/snackbar';
 
 /**
  * @author Michael Holl
@@ -70,6 +71,13 @@ export default function Grades() {
     const [updatedGrades, setUpdatedGrades] = useState<UpdateGradeRequest[]>([]);
     const [projectError, setProjectError] = useState(false);
     const [courseError, setCourseError] = useState(false);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+    const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+    };
 
     // Fetch dropdown options
     useEffect(() => {
@@ -89,29 +97,35 @@ export default function Grades() {
     }, []);
 
     const saveGrades = async () => {
-        if (updatedGrades.length > 0) {
-            try {
-                const url = `${API_CONFIG.BASE_URL}/api/grade/save`;
+        if (updatedGrades.length <= 0)
+            return;
+        try {
+            const url = `${API_CONFIG.BASE_URL}/api/grade/save`;
 
-                const res = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updatedGrades),
-                });
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedGrades),
+            });
 
-                if (!res.ok) {
-                    //TO DO Snackbar einbauen: Speichern fehlgeschlagen!
-                    console.error("Fehler beim Speichern der Noten:", res.statusText);
-                    return;
-                }
-                //TO DO Snackbar einbauen: Erfolgreich gespeichert!
-                console.log("Noten erfolgreich gespeichert!");
-                setUpdatedGrades([]);
+            if (!res.ok) {
+                console.error("Fehler beim Speichern der Noten:", res.statusText);
 
-            } catch (err) {
-                console.error(err);
+                setSnackbarMessage("Fehler beim Speichern!");
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
+                return;
             }
-        }
+            console.log("Noten erfolgreich gespeichert!");
+            setUpdatedGrades([]);
+
+            setSnackbarMessage("Noten erfolgreich gespeichert!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+
+        } catch (err) {
+            console.error(err);
+        }        
     };
 
     const reset = () => {
@@ -337,6 +351,12 @@ export default function Grades() {
                         Zurücksetzen
                     </Button>
                 </Box>
+                <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+                />
             </Box>
     );
 }
