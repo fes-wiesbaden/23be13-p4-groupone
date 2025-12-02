@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
   useLocation,
   useNavigate,
+  useMatches,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -62,7 +63,7 @@ function ProtectedApp() {
     }
   }, [isAuthenticated, isLoading, isPublicRoute, navigate]);
 
-  // Show loading state
+
   if (isLoading) {
     return (
       <div
