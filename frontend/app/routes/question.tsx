@@ -16,6 +16,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
+import {QuestionType} from "~/components/fragebogen";
 
 /**
  * @author: Michael Holl
@@ -29,10 +30,10 @@ interface Subject {
   name: string;
 }
 
-interface Question {
+export interface Question {
   id: string;
   text: string;
-  type: "TEXT" | "GRADE";
+  type: QuestionType;
   subjects: Subject[];
 }
 
@@ -312,8 +313,8 @@ export default function Question() {
                 name="type"
                 defaultValue={editQuestion?.type || "TEXT"}
               >
-                <MenuItem value="TEXT">Text</MenuItem>
-                <MenuItem value="GRADE">Note</MenuItem>
+                <MenuItem value={QuestionType.TEXT}>Text</MenuItem>
+                <MenuItem value={QuestionType.GRADE}>Note</MenuItem>
               </Select>
             </FormControl>
           </form>

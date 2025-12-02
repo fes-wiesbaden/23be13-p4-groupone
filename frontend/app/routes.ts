@@ -4,6 +4,8 @@ export default [
   index("routes/home.tsx"),
   route("user", "routes/userOverview.tsx"),
   route("fragen", "routes/question.tsx"),
+  route("fragebogen", "routes/questionbow-selection.tsx"),
+  route("fragebogen/:fragebogenId", "routes/questionbow.tsx"),
   route("klassen", "routes/klassen.tsx"),
   route("klassen/:courseId", "routes/createOrEditCourse.tsx"),
   route("Lernbereich", "routes/subject.tsx"),

@@ -6,6 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import type {Role} from "~/types/models";
 
 /**
  * @author: Daniel Hess
@@ -18,7 +19,7 @@ import {
 
 interface User {
   username: string;
-  role: string;
+  role: Role;
 }
 
 interface AuthContextType {
