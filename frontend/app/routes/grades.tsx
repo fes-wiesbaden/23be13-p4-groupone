@@ -83,7 +83,9 @@ export default function Grades() {
     useEffect(() => {
         const fetchOptions = async () => {
             try {
-                const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/findGradeOverviewOptions`);
+                const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/findGradeOverviewOptions`, {
+                  credentials: "include"
+                });
                 if (!res.ok) {
                     return
                 }
@@ -101,10 +103,11 @@ export default function Grades() {
             return;
         try {
             const url = `${API_CONFIG.BASE_URL}/api/grade/save`;
-
+            
             const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify(updatedGrades),
             });
 

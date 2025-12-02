@@ -68,8 +68,8 @@ export default function Question() {
       // load all subjects
       try {
         const resSubjects = await fetch(
-          `${API_CONFIG.BASE_URL}/api/subject/findAll`
-        );
+          `${API_CONFIG.BASE_URL}/api/subject/findAll`, {
+            credentials: "include" });
         const subjectsData = await resSubjects.json();
         setSubjectsList(subjectsData);
       } catch (err) {
@@ -78,7 +78,9 @@ export default function Question() {
       // load all questions
       try {
         const resQuestions = await fetch(
-          `${API_CONFIG.BASE_URL}/api/question/findAll`
+          `${API_CONFIG.BASE_URL}/api/question/findAll`, {
+            credentials: "include"
+          }
         );
         const questionsData = await resQuestions.json();
         setAllQuestions(questionsData);
@@ -112,11 +114,14 @@ export default function Question() {
   const handleDeleteClick = async (id: string) => {
     try {
       await fetch(`${API_CONFIG.BASE_URL}/api/question/${id}`, {
-        method: "DELETE",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+        method: "DELETE",
+        credentials: "include"
       });
 
       const resQuestions = await fetch(
-        `${API_CONFIG.BASE_URL}/api/question/findAll`
+        `${API_CONFIG.BASE_URL}/api/question/findAll`,{
+          credentials: "include"
+        }
       );
       const questionsData = await resQuestions.json();
       setAllQuestions(questionsData);
@@ -141,6 +146,7 @@ export default function Question() {
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/question`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -171,13 +177,14 @@ export default function Question() {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         }
       );
 
       const resQuestions = await fetch(
-        `${API_CONFIG.BASE_URL}/api/question/findAll`
-      );
+        `${API_CONFIG.BASE_URL}/api/question/findAll`,{
+          credentials: "include" });
       const questionsData = await resQuestions.json();
       setAllQuestions(questionsData);
     } catch (err) {

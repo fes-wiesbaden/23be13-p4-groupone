@@ -176,12 +176,15 @@ export default function createOrEditProject() {
     const fetchProject = async () => {
         setLoading(true)
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {method: "GET",});
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}`, {
+              method: "GET", credentials: "include"});
             const data: ProjectDetailResponse = await res.json();
             setProject(data);
             setOriginalProject(JSON.parse(JSON.stringify(data)));
 
-            const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${data.courseId}/students`);
+            const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${data.courseId}/students`, {
+              credentials: "include"
+            });
             const students: Student[] = await studentRes.json();
 
             const assignedIds = new Set(
@@ -201,7 +204,9 @@ export default function createOrEditProject() {
 
     const fetchCourses = async () => {
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/all/bare`);
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/all/bare`, {
+              credentials: "include"
+            });
             const coursesDto: CourseDto[] = await res.json();
 
             setCourses(coursesDto)
@@ -260,7 +265,9 @@ export default function createOrEditProject() {
             )
 
             try{
-                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${value}/students`);
+                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${value}/students`, {
+                  credentials: "include"
+                });
                 const students: Student[] = await studentRes.json();
                 setDraftUnassignedStudents(students)
             } catch (err: any) {
@@ -443,6 +450,7 @@ export default function createOrEditProject() {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/create/full`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify(payload)
             })
 
@@ -475,6 +483,7 @@ export default function createOrEditProject() {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}/full`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify(payload)
             })
 
@@ -504,7 +513,9 @@ export default function createOrEditProject() {
             if (isEdit) {
                 if (!project?.courseId) return;
 
-                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${project.courseId}/students`);
+                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${project.courseId}/students`, {
+                  credentials: "include"
+                });
                 const students: Student[] = await studentRes.json();
 
                 const shuffled = [...students].sort(() => Math.random() - 0.5);
@@ -529,7 +540,9 @@ export default function createOrEditProject() {
             } else {
                 if (!projectCreateDetails.courseId) return;
 
-                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${projectCreateDetails.courseId}/students`);
+                const studentRes = await fetch(`${API_CONFIG.BASE_URL}/api/course/${projectCreateDetails.courseId}/students`, {
+                  credentials: "include"
+                });
                 const students: Student[] = await studentRes.json();
 
                 const shuffled = [...students].sort(() => Math.random() - 0.5);
