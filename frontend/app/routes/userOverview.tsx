@@ -2,10 +2,14 @@
  * @Author: Daniel Hess
  * @Date: 09/09/2024
  * Creates overview of all users with actions to edit, delete and add new users
- * 
+ *
  * @Edited by Kebba Ceesay
  * @Date: 03/12/2025
  * Snackbar integration completed
+ *
+ * @Edited by Kebba Ceesay
+ * @Date: 08/12/2025
+ * Add dialog integration
  */
 import * as React from "react";
 import {
@@ -26,6 +30,7 @@ import { useCallback, useEffect, useState } from "react";
 import API_CONFIG from "~/apiConfig";
 import FileUpload from "~/components/fileUpload";
 import CsvType from "~/types/csvType";
+import alertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
@@ -79,6 +84,7 @@ export default function UsersPage() {
     password: "",
   });
   const [error, setError] = useState<Record<string, string>>({});
+  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!form.username.trim()) {
@@ -159,7 +165,9 @@ export default function UsersPage() {
   };
 
   const onDeleteClick = async (id: string) => {
-    if (!confirm("Diesen Benutzer wirklich löschen?")) return;
+    if (!await confirm())
+      return;
+
     const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/${id}`, {
       method: "DELETE",
       credentials: "include",
@@ -351,6 +359,7 @@ export default function UsersPage() {
           severity={snackbarSeverity}
           onClose={handleSnackbarClose}
       />
+      {ConfirmDialog}
     </>
   );
 }

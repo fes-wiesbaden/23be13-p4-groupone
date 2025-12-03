@@ -16,6 +16,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
+import alertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
 
 /**
@@ -23,10 +24,15 @@ import CustomizedSnackbars from "../components/snackbar";
  * <p>
  *   Component to add, edit & delete questions for questionnaire
  * </p>
- * 
+ *
  * @Edited by Kebba Ceesay
  * <p>
  *    Snackbar integration completed
+ * </p>
+ *
+ * @Edited by Noah Bach
+ * <p>
+ *    Added dialaog integration
  * </p>
  **/
 interface Subject {
@@ -71,6 +77,7 @@ export default function Question() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const handleSnackbarClose = () => { setSnackbarOpen(false);};
+  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,6 +128,9 @@ export default function Question() {
   };
 
   const handleDeleteClick = async (id: string) => {
+    if (!await confirm())
+      return;
+
     try {
       await fetch(`${API_CONFIG.BASE_URL}/api/question/${id}`, {
         method: "DELETE",
@@ -136,7 +146,7 @@ export default function Question() {
       setAllQuestions(questionsData);
       setSnackbarMessage("Die Frage wurde erfolgreich gelöscht!");
       setSnackbarSeverity("success");
-      setSnackbarOpen(true);     
+      setSnackbarOpen(true);
 
     } catch (err: any) {
       console.error("Error deleting question:", err);
@@ -365,6 +375,7 @@ export default function Question() {
           severity={snackbarSeverity}
           onClose={handleSnackbarClose}
       />
+      {ConfirmDialog}
     </>
   );
 }
