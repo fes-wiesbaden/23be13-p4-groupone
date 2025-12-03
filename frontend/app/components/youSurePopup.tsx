@@ -1,7 +1,13 @@
+/**
+ * @author: Noah Bach
+ * Component that returns a dialog and an async function for confirming actions
+ *
+ **/
+
 import { Button, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 export default function alertDialog(
     title?: string,
