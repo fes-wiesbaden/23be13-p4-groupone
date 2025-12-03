@@ -1,28 +1,35 @@
 import { Button, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 
-export default function AlertDialog({
-    open: [open, setOpen],
-    text,
-    title,
-    confirmFunc
-}: {
-    open: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
+export default function alertDialog(
+    title?: string,
     text?: string
-    title?: string
-    confirmFunc: (params: any) => any
-}) {
-    const handleClose = () => setOpen(false);
-    const handleConfirm = (params: any) => {
-        console.log("confirmed");
-        console.log(params);
+) {
+    const [open, setOpen] = useState(false);
+    const [resolveFn, setResolve] = useState<((value: boolean) => void) | null>(null);
+    
+    const confirm = useCallback(
+        (): Promise<boolean> => {
+            setOpen(true);
+            return new Promise<boolean>((resolve) => {
+                setResolve(() => resolve);
+            });
+        },
+        []
+    );
+    
+    const handleClose = () => {
         setOpen(false);
-        // confirmFunc(params);
+        if (resolveFn) resolveFn(false);
+    }
+    const handleConfirm = () => {
+        setOpen(false);
+        if (resolveFn) resolveFn(true);
     }
 
-    return(
+    const dialogElement = (
         <Dialog
             open={open}
             onClose={handleClose}
@@ -40,5 +47,7 @@ export default function AlertDialog({
                 <Button onClick={handleClose} autoFocus>Abbrechen</Button>
             </DialogActions>
         </Dialog>
-    )
+    );
+
+    return [confirm, dialogElement] as const;
 }
