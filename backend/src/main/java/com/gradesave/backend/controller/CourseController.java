@@ -326,4 +326,9 @@ public class CourseController {
     public List<CourseSelectionDto> findGradeOverviewOptions() {
         return courseService.findGradeOverviewOptions();
     }
+
+    @GetMapping("newFragebogen")
+    public List<CourseSelectionWithMembersDto> findCapableGradeOverviewOptions() {
+        return courseService.findNewFragebogenCapable();
+    }
 }

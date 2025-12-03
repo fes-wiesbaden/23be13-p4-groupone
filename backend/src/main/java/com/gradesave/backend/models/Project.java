@@ -39,7 +39,7 @@ public class Project {
     @Column(name = "project_start")
     private LocalDate projectStart;
 
-    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<ProjectQuestion> projectQuestions = new HashSet<>();
 
@@ -83,14 +83,6 @@ public class Project {
         this.projectStart = projectStart;
     }
 
-    public Set<ProjectQuestion> getProjectQuestions() {
-        return projectQuestions;
-    }
-
-    public void setProjectQuestions(Set<ProjectQuestion> projectQuestions) {
-        this.projectQuestions = projectQuestions;
-    }
-
     public Set<ProjectSubject> getProjectSubjects() {
         return projectSubjects;
     }
@@ -105,5 +97,13 @@ public class Project {
 
     public void setGroups(Set<Group> groups) {
         this.groups = groups;
+    }
+
+    public Set<ProjectQuestion> getProjectQuestions() {
+        return projectQuestions;
+    }
+
+    public void setProjectQuestions(Set<ProjectQuestion> projectQuestions) {
+        this.projectQuestions = projectQuestions;
     }
 }

@@ -7,14 +7,16 @@
 // TODO: popup / dialog "bist du sicher?" wenn nicht alle fragen beantwortet
 
 
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import DataTableWithAdd, {type DataRow} from "~/components/dataTableWithAddButton";
-import {Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import {Autocomplete, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import type {Question} from "~/routes/question";
+import type {GradeOverview, GradeOverviewOption, GroupOption, ProjectOption} from "~/routes/grades";
+import API_CONFIG from "~/apiConfig";
 
 export enum QuestionType {
     GRADE = "GRADE",
@@ -48,7 +50,6 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
     const [draftQuestions, setDraftQuestions] = useState<Question[]>([])
     const [selectedPremade, setSelectedPremade] = useState<Question>()
 
-
     const visibleQuestions: FragebogenRow[] = [
         ...questions,
         ...draftQuestions.map(q => ({
@@ -58,9 +59,9 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
         }))
     ];
 
-    const sorted = SortQuestions(visibleQuestions);
+    const sorted: SortedQuestions = SortQuestions(visibleQuestions);
     const NO_GRADE_SELECTED = 255;
-    const allStudents = ["Selbsteinschätzung", ...studentNames];
+    const allStudents = [...studentNames];
 
     const QUESTION_COL_WIDTH = "320px";
     const STUDENT_COL_WIDTH = `${Math.max(120, 800 / allStudents.length)}px`;
@@ -124,7 +125,7 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
     }
 
     const handleSubmit = () => {
-
+        onSubmit(visibleQuestions)
     }
 
     return (
@@ -218,6 +219,11 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
 
             {!editView && (
                 <>
+                    {(sorted.gradeQuestions.length === 0 && sorted.textQuestions.length === 0) && (
+                        <Box>
+                            Es existieren keine Fragen
+                        </Box>
+                    )}
                     {sorted.gradeQuestions.length > 0 && (
                         <Box mb={4}>
                             <table
@@ -330,6 +336,7 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
                     <Button
                         variant="contained"
                         sx={{mt: 2}}
+                        onClick={handleSubmit}
                     >
                         Abgeben
                     </Button>

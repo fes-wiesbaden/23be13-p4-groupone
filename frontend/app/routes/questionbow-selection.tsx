@@ -1,59 +1,100 @@
-import DataTableWithAdd, {type DataRow} from "~/components/dataTableWithAddButton";
 import {useEffect, useState} from "react";
 import API_CONFIG from "~/apiConfig";
 import {useNavigate} from "react-router";
+import {DataGrid} from "@mui/x-data-grid";
+import {Autocomplete, Box, TextField} from "@mui/material";
 
-interface QuestionbowRow extends DataRow {
+interface CourseFilter {
     id: string;
+    name: string;
+    projects: ProjectFilter[];
+}
+
+interface ProjectFilter {
+    id: string;
+    name: string;
+    questionCount: number;
+}
+
+interface QuestionbowRow {
+    id: string;
+    projectId: string;
     projectName: string;
+    courseId: string;
     courseName: string;
     questionCount: number;
 }
 
 type QuestionnaireResponse = {
-    projectId: string,
-    projectName: string,
-    courseId: string,
-    courseName: string,
-    questionCount: number
-}
+    courses: {
+        id: string;
+        name: string;
+        projects: {
+            id: string;
+            name: string;
+            questionCount: number;
+        }[];
+    }[];
+};
 
 export default function QuestionbowSelection() {
     const navigate = useNavigate();
-    const [questionnaires, setQuestionnaires] = useState<QuestionbowRow[]>([]);
 
+    const [courses, setCourses] = useState<CourseFilter[]>([]);
+    const [selectedCourse, setSelectedCourse] = useState<CourseFilter | null>(null);
+    const [selectedProject, setSelectedProject] = useState<ProjectFilter | null>(null);
+
+    const [allRows, setAllRows] = useState<QuestionbowRow[]>([]);
+    const [rows, setRows] = useState<QuestionbowRow[]>([]);
 
     const fetchQuestionnaires = async () => {
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/with-questions`, {method: "GET", credentials: "include"});
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/fragebögen`, {
+                method: "GET",
+                credentials: "include",
+            });
 
-            if (!res.ok) {
-                return;
-            }
+            if (!res.ok) return;
+            const data: QuestionnaireResponse = await res.json();
 
-            const data: QuestionnaireResponse[] = await res.json();
-            const rows: QuestionbowRow[] = data.map((item) => ({
-                id: item.projectId,
-                projectName: item.projectName,
-                courseName: item.courseName,
-                questionCount: item.questionCount,
-            }));
-            setQuestionnaires(rows);
-        } catch (err: any) {
+            setCourses(data.courses);
+
+            const rows = data.courses.flatMap(course =>
+                course.projects.map(project => ({
+                    id: project.id,
+                    projectId: project.id,
+                    projectName: project.name,
+                    courseId: course.id,
+                    courseName: course.name,
+                    questionCount: project.questionCount,
+                }))
+            );
+
+            setAllRows(rows);
+            setRows(rows);
+        } catch (err) {
             console.error("Failed to fetch questionnaires:", err);
         }
-    }
+    };
 
     useEffect(() => {
-        fetchQuestionnaires()
+        fetchQuestionnaires();
     }, []);
 
-    const handleAdd = () => {
-        navigate(`/fragebogen/new`)
-    };
+    // filtering
+    useEffect(() => {
+        if (!selectedCourse) {
+            setRows(allRows);
+            return;
+        }
 
-    const handleDelete = () => {
-    };
+        let filtered = allRows.filter(r => r.courseId === selectedCourse.id);
+
+        if (selectedProject)
+            filtered = filtered.filter(r => r.projectId === selectedProject.id);
+
+        setRows(filtered);
+    }, [selectedCourse, selectedProject]);
 
     const handleEdit = (row: QuestionbowRow) => {
         navigate(`/fragebogen/${row.id}`);
@@ -61,17 +102,48 @@ export default function QuestionbowSelection() {
 
     return (
         <>
-            <DataTableWithAdd<QuestionbowRow>
-                columns={[
-                    {key: "projectName", label: "Projekt"},
-                    {key: "courseName", label: "Kurs"},
-                    {key: "questionCount", label: "Anzahl Fragen"},
-                ]}
-                rows={questionnaires}
-                onAddClick={handleAdd}
-                onDeleteClick={handleDelete}
-                onEditClick={handleEdit}
-            />
+            <Box display="flex" gap={2} mb={2}>
+                <Autocomplete
+                    options={courses}
+                    value={selectedCourse}
+                    getOptionLabel={(o) => o?.name ?? ""}
+                    onChange={(_, v) => {
+                        setSelectedCourse(v);
+                        setSelectedProject(null);
+                    }}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Kurs"/>
+                    )}
+                    sx={{minWidth: 200}}
+                />
+
+                <Autocomplete
+                    options={selectedCourse?.projects || []}
+                    value={selectedProject}
+                    getOptionLabel={(o) => o?.name ?? ""}
+                    onChange={(_, v) => setSelectedProject(v)}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Projekt"/>
+                    )}
+                    sx={{minWidth: 200}}
+                    disabled={!selectedCourse}
+                />
+            </Box>
+
+            <Box sx={{width: "100%"}}>
+                <DataGrid<QuestionbowRow>
+                    columns={[
+                        {field: "projectName", headerName: "Projekt", flex: 1},
+                        {field: "courseName", headerName: "Kurs", flex: 1},
+                        {field: "questionCount", headerName: "Anzahl Fragen", flex: 1},
+                    ]}
+                    rows={rows}
+                    getRowId={(row) => row.id}
+                    onRowClick={(params) => handleEdit(params.row)}
+                    disableRowSelectionOnClick
+                    sx={{width: "100%", cursor: "pointer"}}
+                />
+            </Box>
         </>
-    )
+    );
 }

@@ -1,9 +1,13 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.dto.question.QuestionDTO;
 import com.gradesave.backend.models.Project;
+import com.gradesave.backend.models.ProjectQuestion;
+import com.gradesave.backend.models.Question;
 import com.gradesave.backend.repositories.CourseRepository;
 import com.gradesave.backend.repositories.GroupRepository;
 import com.gradesave.backend.repositories.ProjectRepository;
+import com.gradesave.backend.repositories.QuestionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -25,11 +29,13 @@ public class ProjectService implements CrudService<Project, UUID> {
     private final CourseRepository courseRepository;
     private final ProjectRepository projectRepository;
     private final GroupRepository groupRepository;
+    private final QuestionRepository questionRepository;
 
-    public ProjectService(CourseRepository courseRepository, ProjectRepository projectRepository, GroupRepository groupRepository) {
+    public ProjectService(CourseRepository courseRepository, ProjectRepository projectRepository, GroupRepository groupRepository, QuestionRepository questionRepository) {
         this.courseRepository = courseRepository;
         this.projectRepository = projectRepository;
         this.groupRepository = groupRepository;
+        this.questionRepository = questionRepository;
     }
 
     @Override
@@ -88,5 +94,33 @@ public class ProjectService implements CrudService<Project, UUID> {
     @Override
     public long count() {
         return projectRepository.count();
+    }
+
+    public void updateFragebogen(Project project, QuestionDTO[] questions) {
+        for (QuestionDTO questionDTO : questions) {
+            Question question = questionRepository.findById(questionDTO.id()).orElseGet(() -> {
+                Question q = new Question();
+                q.setText(questionDTO.text());
+                q.setType(questionDTO.type());
+                return questionRepository.save(q);
+            });
+
+            question.setType(questionDTO.type());
+            question.setText(questionDTO.text());
+            questionRepository.save(question);
+
+            // Check if this question is already linked to the project
+            boolean alreadyLinked = project.getProjectQuestions().stream()
+                    .anyMatch(pq -> pq.getQuestion().getId().equals(question.getId()));
+
+            if (!alreadyLinked) {
+                ProjectQuestion projectQuestion = new ProjectQuestion();
+                projectQuestion.setProject(project);
+                projectQuestion.setQuestion(question);
+                project.getProjectQuestions().add(projectQuestion);
+            }
+        }
+
+        projectRepository.save(project);
     }
 }

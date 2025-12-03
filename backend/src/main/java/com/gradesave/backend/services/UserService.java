@@ -3,6 +3,9 @@ package com.gradesave.backend.services;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,5 +123,22 @@ public class UserService implements CrudService<User, UUID> {
 
     public List<User> getUsersByIds(List<UUID> uuids) {
         return repo.findAllById(uuids);
+    }
+
+    public Optional<User> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser")) {
+            return Optional.empty();
+        }
+
+        String username = authentication.getName();
+        User user = this.findByUsername(username);
+
+        if (user == null)
+            return Optional.empty();
+
+        return Optional.of(user);
     }
 }

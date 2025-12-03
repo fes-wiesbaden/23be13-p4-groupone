@@ -1,6 +1,10 @@
 package com.gradesave.backend.services;
 
 import com.gradesave.backend.dto.course.CoursePatchRequestDTO;
+import com.gradesave.backend.dto.course.CourseSelectionWithMembersDto;
+import com.gradesave.backend.dto.group.GroupMembersDTO;
+import com.gradesave.backend.dto.project.ProjectSelectionWithMembersDto;
+import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.Course;
 import com.gradesave.backend.dto.course.UpdateCourseRequest;
 import com.gradesave.backend.dto.course.CourseSelectionDto;
@@ -189,5 +193,50 @@ public class CourseService {
             );
 
         }).toList();
+    }
+
+    public List<CourseSelectionWithMembersDto> findNewFragebogenCapable() {
+
+        List<Course> courses = courseRepository.findAll();
+
+        return courses.stream().map(course -> {
+
+            List<ProjectSelectionWithMembersDto> projectDtos = projectRepository.findByCourseId(course.getId()).stream()
+                    .filter(project -> project.getProjectQuestions().size() == 0)
+                    .map(project -> {
+                        List<GroupMembersDTO> groupDtos = groupRepository.findByProjectId(project.getId()).stream()
+                                .map(group -> new GroupMembersDTO(
+                                        group.getId(),
+                                        group.getName(),
+                                        group.getUsers().stream()
+                                                .map(s -> new StudentDTO(
+                                                        s.getId(),
+                                                        s.getUsername(),
+                                                        s.getFirstName(),
+                                                        s.getLastName()
+                                                ))
+                                                .toArray(StudentDTO[]::new)
+                                ))
+                                .toList();
+
+                        return new ProjectSelectionWithMembersDto(
+                                project.getId(),
+                                project.getName(),
+                                project.getProjectStart(),
+                                groupDtos
+                        );
+                    }).toList();
+
+            return new CourseSelectionWithMembersDto(
+                    course.getId(),
+                    course.getCourseName(),
+                    projectDtos
+            );
+
+        }).toList();
+    }
+
+    public List<Course> getAllWithUser(User user) {
+        return courseRepository.findAllByUserId(user.getId());
     }
 }
