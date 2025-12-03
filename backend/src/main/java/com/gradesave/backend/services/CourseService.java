@@ -24,10 +24,11 @@ import java.util.UUID;
 
 /**
  * @author: Noah Bach, Daniel Hess
- * <p>
- * Service for managing Course entities. Provides basic CRUD and query operations.
- * </p>
- * Updated by Daniel Hess
+ *          <p>
+ *          Service for managing Course entities. Provides basic CRUD and query
+ *          operations.
+ *          </p>
+ *          Updated by Daniel Hess
  */
 
 @Service
@@ -39,7 +40,8 @@ public class CourseService {
     private final ProjectRepository projectRepository;
     private final GroupRepository groupRepository;
 
-    public CourseService(CourseRepository repo, UserRepository userRepo, ProjectRepository projectRepository, GroupRepository groupRepository) {
+    public CourseService(CourseRepository repo, UserRepository userRepo, ProjectRepository projectRepository,
+            GroupRepository groupRepository) {
         this.courseRepository = repo;
         this.userRepo = userRepo;
         this.projectRepository = projectRepository;
@@ -50,7 +52,7 @@ public class CourseService {
         return courseRepository.findByIdTest(id);
     }
 
-    public Course create(Course entity) {
+    public Course createOrUpdate(Course entity) {
         return courseRepository.save(entity);
     }
 
@@ -85,10 +87,13 @@ public class CourseService {
     }
 
     public boolean addStudent(Course course, User student) {
-        if (!userRepo.existsById(student.getId())) return false;
-        if (!courseRepository.existsById(course.getId())) return false;
+        if (!userRepo.existsById(student.getId()))
+            return false;
+        if (!courseRepository.existsById(course.getId()))
+            return false;
 
         course.getUsers().add(student);
+        courseRepository.save(course);
         return true;
     }
 
@@ -100,6 +105,10 @@ public class CourseService {
 
     public Optional<Course> getByName(String name) {
         return courseRepository.findByCourseName(name);
+    }
+
+    public boolean isExistedByName(String name) {
+        return getByName(name).isPresent();
     }
 
     @Transactional(readOnly = true)
@@ -114,7 +123,8 @@ public class CourseService {
 
     public boolean removeUserFromAllCourses(UUID userId) {
         Optional<User> userTemp = userRepo.findById(userId);
-        if (userTemp.isEmpty()) return false;
+        if (userTemp.isEmpty())
+            return false;
 
         User user = userTemp.get();
         List<Course> courses = courseRepository.findAllByUserId(userId);
@@ -170,23 +180,20 @@ public class CourseService {
                         List<GroupSelectionDto> groupDtos = groupRepository.findByProjectId(project.getId()).stream()
                                 .map(group -> new GroupSelectionDto(
                                         group.getId(),
-                                        group.getName()
-                                ))
+                                        group.getName()))
                                 .toList();
 
                         return new ProjectSelectionDto(
                                 project.getId(),
                                 project.getName(),
                                 project.getProjectStart(),
-                                groupDtos
-                        );
+                                groupDtos);
                     }).toList();
 
             return new CourseSelectionDto(
                     course.getId(),
                     course.getCourseName(),
-                    projectDtos
-            );
+                    projectDtos);
 
         }).toList();
     }
