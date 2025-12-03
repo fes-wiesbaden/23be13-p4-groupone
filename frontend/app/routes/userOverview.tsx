@@ -22,6 +22,7 @@ import { useCallback, useEffect, useState } from "react";
 import API_CONFIG from "~/apiConfig";
 import FileUpload from "~/components/fileUpload";
 import CsvType from "~/types/csvType";
+import CustomizedSnackbars from "../components/snackbar";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
 
@@ -59,6 +60,10 @@ const columns: Column[] = [
 export default function UsersPage() {
   const [rows, setRows] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const handleSnackbarClose = () => { setSnackbarOpen(false);};
 
   const [editRow, setEditRow] = useState<UserRow | null>(null);
   const [open, setOpen] = useState(false);
@@ -157,6 +162,10 @@ export default function UsersPage() {
     });
     if (res.ok) {
       setRows((prev) => prev.filter((r) => r.id !== id));
+      setOpen(false);
+      setSnackbarMessage("Benutzer wurde erfolgreich gelöscht!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } else {
       alert("Löschen fehlgeschlagen.");
     }
@@ -189,6 +198,9 @@ export default function UsersPage() {
       if (res.ok) {
         await load();
         setOpen(false);
+        setSnackbarMessage("Benutzer wurde erfolgreich bearbeitet!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
       } else {
         alert("Aktualisieren fehlgeschlagen.");
       }
@@ -210,6 +222,9 @@ export default function UsersPage() {
       if (res.ok) {
         await load();
         setOpen(false);
+        setSnackbarMessage("Benutzer wurde erfolgreich erstellt!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
       } else {
         alert("Erstellen fehlgeschlagen.");
       }
@@ -312,6 +327,12 @@ export default function UsersPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      <CustomizedSnackbars
+          open={snackbarOpen}
+          message={snackbarMessage}
+          severity={snackbarSeverity}
+          onClose={handleSnackbarClose}
+      />
     </>
   );
 }

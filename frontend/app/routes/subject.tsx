@@ -16,6 +16,7 @@ import {
   RadioGroup,
   TextField,
 } from "@mui/material";
+import CustomizedSnackbars from "../components/snackbar";
 
 /**
  * @author: Michael Holl
@@ -38,6 +39,14 @@ export default function Subject() {
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [originalSubject, setOriginalSubject] = useState<Subject | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,10 +92,23 @@ export default function Subject() {
         method: "DELETE",
         credentials: "include"
       });
-      if (res.ok)
+      if (res.ok) {
         setAllSubjects((prev) => prev.filter((subject) => subject.id !== id));
+        setSnackbarMessage("Der Eintrag wurde erfolgreich gelöscht!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      } else {
+        setSnackbarMessage("Fehler beim Löschen!");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        alert("Löschen fehlgeschlagen.");
+      }
     } catch (err) {
       console.error("Error deleting subject:", err);
+      setSnackbarMessage("Fehler beim Löschen!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      alert("Löschen fehlgeschlagen.");
     }
   };
 
@@ -123,7 +145,8 @@ export default function Subject() {
           setAllSubjects((prev) =>
             prev.map((s) => (s.id === updated.id ? updated : s))
           );
-        }
+          showSnackbar(`Das ${updated.learningField ? "Lernfeld" : "Schulfach"} "${updated.name}" wurde erfolgreich bearbeitet!`);
+        } 
       } else {
         // Create subject
         res = await fetch(`${API_CONFIG.BASE_URL}/api/subject`, {
@@ -135,6 +158,9 @@ export default function Subject() {
         if (res.ok) {
           const newSubject = await res.json();
           setAllSubjects((prev) => [...prev, newSubject]);
+          showSnackbar(`Das ${newSubject.learningField ? "Lernfeld" : "Schulfach"} "${newSubject.name}" wurde erfolgreich erstellt!`);
+        } else {
+          showSnackbar("Fehler beim Erstellen des Lernbereichs!", "error");
         }
       }
     } catch (err) {
@@ -249,6 +275,12 @@ export default function Subject() {
           </Button>
         </DialogActions>
       </Dialog>
+      <CustomizedSnackbars
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
     </>
   );
 }

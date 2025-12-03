@@ -76,7 +76,7 @@ export default function Grades() {
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
     const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
+        setSnackbarOpen(false);
     };
 
     // Fetch dropdown options
@@ -132,7 +132,16 @@ export default function Grades() {
     };
 
     const reset = () => {
+    if (!gradeOverviewBackup) {
+        setSnackbarMessage("Zurücksetzen fehlgeschlagen!");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+    }
         setGradeOverview(gradeOverviewBackup)
+        setSnackbarMessage("Änderungen wurden erfolgreich zurückgesetzt!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
     }
 
     const loadGrades = async () => {
