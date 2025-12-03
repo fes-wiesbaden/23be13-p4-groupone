@@ -43,10 +43,13 @@ const columns = [
 ];
 
 import type { User, Role, CourseDto } from "../types/models";
+import alertDialog from "~/components/youSurePopup";
 
 export default function Klassen() {
   const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
   const navigate = useNavigate();
+
+  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie die Klasse wirklich löschen?")
 
   async function handleEditClick(row: CourseRow) {
     navigate(`/klassen/${row.id}`);
@@ -57,9 +60,8 @@ export default function Klassen() {
   }
 
   async function handleDeleteClick(id: string) {
-    if (!window.confirm("Soll diese Klasse wirklich gelöscht werden?")) {
+    if (!await confirm())
       return;
-    }
 
     await deleteCourse(id);
     await fetchData();
@@ -103,6 +105,7 @@ export default function Klassen() {
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteClick}
       />
+      {ConfirmDialog}
     </>
   );
 }

@@ -16,6 +16,7 @@ import {
   RadioGroup,
   TextField,
 } from "@mui/material";
+import alertDialog from "~/components/youSurePopup";
 
 /**
  * @author: Michael Holl
@@ -38,6 +39,7 @@ export default function Subject() {
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [originalSubject, setOriginalSubject] = useState<Subject | null>(null);
+  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,6 +79,9 @@ export default function Subject() {
   };
 
   const handleDeleteClick = async (id: string) => {
+    if (!await confirm())
+      return;
+
     try {
       //delete subject
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/subject/${id}`, {
@@ -249,6 +254,7 @@ export default function Subject() {
           </Button>
         </DialogActions>
       </Dialog>
+      {ConfirmDialog}
     </>
   );
 }
