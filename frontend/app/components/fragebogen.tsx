@@ -260,6 +260,5 @@ function SortQuestions(questions: FragebogenRow[]): SortedQuestions {
     }
     for (let q of questions)
         (q.type === 'grade' ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
-        (q.type === 'grade' ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
     return returnObject;
 }
