@@ -48,22 +48,20 @@ export default function FragebogenTable({
 
     const [newQuestions, setNewQuestions] = useState(0);
 
-    const deleteQuestion = function(id: string){
-        for (let index = 0; index < gradeRows.length; index++){
-            if (gradeRows[index].id == id){
-                console.log(gradeRows[index].id + " == " + id)
-                setGradeRows(gradeRows.splice(index, 1));
-                return;
+    const deleteQuestion = function(id: string) {
+        const deleteFromArray = (rows: FragebogenRow[], setRows: React.Dispatch<React.SetStateAction<FragebogenRow[]>>) => {
+            const index = rows.findIndex(row => row.id === id);
+            if (index !== -1) {
+                setRows(rows.filter((_, i) => i !== index));
+                return true;
             }
+            return false;
+        };
+        
+        if (!deleteFromArray(gradeRows, setGradeRows)) {
+            deleteFromArray(textRows, setTextRows);
         }
-        for (let index = 0; index < textRows.length; index++){
-            if (textRows[index].id == id){
-                console.log(textRows[index].id + " == " + id)
-                setTextRows(textRows.splice(index, 1));
-                return;
-            }
-        }
-    }
+    };
 
     const noGradeSelectedDefaultValue = 255; // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
     studentNames = ["Selbsteinschätzung"].concat(studentNames);
@@ -122,19 +120,17 @@ export default function FragebogenTable({
         {
             field: 'question',
             headerName: 'Frage',
-            width: 200,
             disableColumnMenu: true,
             disableReorder: true,
-            flex: 0.3,
+            flex: isEditView ? 0.5 : 0.3,
             editable: isEditView,
-            renderCell: (params) => {
-                return <TextField
+            renderCell: (params) =>
+                <TextField
                     fullWidth
                     multiline
                     defaultValue={params.row.question}
                     name={params.row.id + "question"}
                 />
-            }
         }
     ];
     columns = columns.concat(studentNames.map((name, index) => ({
@@ -163,6 +159,22 @@ export default function FragebogenTable({
         disableColumnMenu: true,
         disableReorder: true
     })))
+
+    if (isEditView)
+        columns.push(
+            {
+                field: "deleteButton",
+                disableColumnMenu: true,
+                disableReorder: true,
+                flex: 0.1,
+                renderCell: (params) => 
+                    <IconButton
+                        onClick={() => deleteQuestion(params.row.id)}
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+            }
+        );
 
     const addGradeQuestion = function(params:any) {
         setGradeRows(prev =>[
@@ -242,22 +254,12 @@ export default function FragebogenTable({
     </form>;
 }
 
-
-
-
-
-// function AddButton(){
-//     return <IconButton onClick={onAddClick} aria-label="add">
-//                 <AddIcon/>
-//             </IconButton>
-// }
-
 function SortQuestions(questions: FragebogenRow[]): SortedQuestions{
     let returnObject: SortedQuestions = {
         gradeQuestions: [],
         textQuestions: []
     }
     for (let q of questions)
-        (q.type == 'grade' ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
+        (q.type === 'grade' ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
     return returnObject;
 }
