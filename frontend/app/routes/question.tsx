@@ -23,7 +23,11 @@ import CustomizedSnackbars from "../components/snackbar";
  * <p>
  *   Component to add, edit & delete questions for questionnaire
  * </p>
- *
+ * 
+ * @Edited by Kebba Ceesay
+ * <p>
+ *    Snackbar integration completed
+ * </p>
  **/
 interface Subject {
   id: string;

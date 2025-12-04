@@ -2,6 +2,10 @@
  * @Author: Daniel Hess
  * @Date: 09/09/2024
  * Creates overview of all users with actions to edit, delete and add new users
+ * 
+ * @Edited by Kebba Ceesay
+ * @Date: 03/12/2025
+ * Snackbar integration completed
  */
 import * as React from "react";
 import {

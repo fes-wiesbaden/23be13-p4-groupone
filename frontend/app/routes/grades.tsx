@@ -16,6 +16,9 @@ import CustomizedSnackbars from '../components/snackbar';
  * - Select course, project, and group
  * - Fetch and display grades in an editable DataGrid
  * - Supports resetting and saving grades
+ * 
+ * @Edited by Kebba Ceesay
+ * Snackbar integration completed
  */
 
 export interface GroupOption { id: string; name: string; }

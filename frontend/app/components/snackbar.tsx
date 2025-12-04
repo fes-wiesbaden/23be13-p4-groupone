@@ -1,7 +1,11 @@
 import * as React from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-
+/*
+  * @Author: Kebba Ceesay
+  * @Date: 03/12/2025
+  * Created a success snackbar that shows up after the user successfully completes an action or fails.
+*/
 
 interface Props {
   open: boolean;

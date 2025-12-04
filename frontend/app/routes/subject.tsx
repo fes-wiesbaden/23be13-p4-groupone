@@ -23,6 +23,11 @@ import CustomizedSnackbars from "../components/snackbar";
  * <p>
  *   Component to add, edit & delete subjects
  * </p>
+ * 
+ * @Edited by Kebba Ceesay
+ * <p>
+ *    Snackbar integration completed
+ * </p>
  *
  **/
 
