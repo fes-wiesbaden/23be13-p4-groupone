@@ -88,15 +88,22 @@ public class CsvService {
                 user.setFirstName(firstName);
                 user.setLastName(lastName);
                 user.setRole(role);
-                user.setUsername(firstName.toLowerCase() + "." + lastName.toLowerCase());
+
+                String baseUsername = firstName.toLowerCase() + "." + lastName.toLowerCase();
+                String username = baseUsername;
+                int counter = 1;
+                while (userService.getByUsername(username).isPresent()) {
+                    username = baseUsername + counter;
+                    counter++;
+                }
+                user.setUsername(username);
+
+                if (!username.equals(baseUsername)) {
+                    log.info("Username '{}' already exists, using '{}' instead", baseUsername, username);
+                }
 
                 String tempPassword = generateRandomPassword(12);
                 user.setPassword(tempPassword);
-
-                if (userService.getByUsername(user.getUsername()).isPresent()) {
-                    log.warn("User with username '{}' already exists, skipping", user.getUsername());
-                    continue;
-                }
 
                 User savedUser = userService.create(user, true);
 
@@ -138,7 +145,7 @@ public class CsvService {
                 try {
                     pdfService.generateBulkUserCredentialsPdf(usersWithPasswords);
                 } catch (Exception e) {
-                    System.err.println("Failed to generate bulk PDF: " + e.getMessage());
+                    log.error("Failed to generate bulk PDF: {}", e.getMessage(), e);
                 }
             }
 

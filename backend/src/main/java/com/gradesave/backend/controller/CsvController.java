@@ -24,10 +24,10 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/csv")
 public class CsvController {
-    private final CsvService csvServicee;
+    private final CsvService csvService;
 
-    public CsvController(CsvService csvServicee) {
-        this.csvServicee = csvServicee;
+    public CsvController(CsvService csvService) {
+        this.csvService = csvService;
     }
 
     @PostMapping("/upload")
@@ -37,7 +37,7 @@ public class CsvController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CSV file");
         }
 
-        csvServicee.importUsersFromCsv(file);
+        csvService.importUsersFromCsv(file);
 
         return ResponseEntity.ok("CSV file processed successfully");
     }
