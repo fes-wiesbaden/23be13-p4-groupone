@@ -43,7 +43,7 @@ public class Answer {
     @Min(1)
     @Max(6)
     @Column(name = "answer_grade")
-    private int answerGrade;
+    private Integer answerGrade;
 
     @Column(name = "answer_text")
     private String answerText;

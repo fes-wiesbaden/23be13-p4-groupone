@@ -9,24 +9,37 @@
 
 import React, {useEffect, useState} from "react";
 import DataTableWithAdd, {type DataRow} from "~/components/dataTableWithAddButton";
-import {Autocomplete, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import {Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import type {Question} from "~/routes/question";
-import type {GradeOverview, GradeOverviewOption, GroupOption, ProjectOption} from "~/routes/grades";
-import API_CONFIG from "~/apiConfig";
+import {useAuth} from "~/contexts/AuthContext";
+import Typography from "@mui/material/Typography";
+import {useNavigate} from "react-router";
+
+export enum QuestionnaireActivityStatus {
+    EDITING = "EDITING",
+    READY_FOR_ANSWERING = "READY_FOR_ANSWERING",
+    ARCHIVED = "ARCHIVED"
+}
 
 export enum QuestionType {
     GRADE = "GRADE",
     TEXT = "TEXT"
 }
 
+export type StudentAnswer = {
+    studentId: string,
+    answer?: string | number
+}
+
 export interface FragebogenRow extends DataRow {
     id: string;
     question: string;
     type: QuestionType
+    answer?: StudentAnswer[]
 }
 
 interface SortedQuestions {
@@ -34,37 +47,123 @@ interface SortedQuestions {
     textQuestions: FragebogenRow[];
 }
 
-interface FragebogenProps {
-    rows: FragebogenRow[];
-    studentNames: string[];
-    editView?: boolean;
-    onSubmit: (rows: FragebogenRow[]) => void;
+export type FragebogenStudent = {
+    studentId: string,
+    studentName: string
 }
 
-export default function Fragebogen({rows, studentNames, editView = false, onSubmit}: FragebogenProps) {
-    const [questions, setQuestions] = useState<FragebogenRow[]>([...rows])
+interface FragebogenProps {
+    rows: FragebogenRow[];
+    students: FragebogenStudent[]
+    editView?: boolean;
+    onSubmit: (rows: FragebogenRow[], status: QuestionnaireActivityStatus) => void;
+    status: QuestionnaireActivityStatus
+    isPreview: boolean
+}
+
+export default function Fragebogen({rows, students, editView = false, onSubmit, status, isPreview}: FragebogenProps) {
+    const {user, isLoading} = useAuth()
+
+    if (isLoading) return <>Loading User...</>
+
+    const NO_GRADE_SELECTED = 255;
+    const myId = user?.userId;
+    if (!myId) return <>Log in</>
+
+    const initializeAnswers = (row: FragebogenRow): FragebogenRow => {
+        if (row.type === QuestionType.GRADE) {
+            if (!row.answer || row.answer.length === 0) {
+                return {
+                    ...row,
+                    answer: students.map(s => ({
+                        studentId: s.studentId,
+                        answer: NO_GRADE_SELECTED
+                    }))
+                };
+            }
+
+            const existingIds = row.answer.map(a => a.studentId);
+            const missingStudents = students.filter(s => !existingIds.includes(s.studentId));
+
+            return {
+                ...row,
+                answer: [
+                    ...row.answer,
+                    ...missingStudents.map(s => ({
+                        studentId: s.studentId,
+                        answer: NO_GRADE_SELECTED
+                    }))
+                ]
+            };
+        }
+
+        if (row.type === QuestionType.TEXT) {
+            const myAnswer = row.answer?.find(a => a.studentId === myId);
+
+            if (myAnswer) return row;
+
+            return {
+                ...row,
+                answer: [{
+                    studentId: myId,
+                    answer: ""
+                }]
+            };
+        }
+
+        return row;
+    };
+
+    const [questions, setQuestions] = useState<FragebogenRow[]>(() => rows.map(initializeAnswers))
     const [dialogOpen, setDialogOpen] = useState(false)
     const [newQuestion, setNewQuestion] = useState("")
     const [newType, setNewType] = useState<QuestionType>(QuestionType.GRADE)
     const [dialogMode, setDialogMode] = useState<"new" | "premade" | "">("")
     const [draftQuestions, setDraftQuestions] = useState<Question[]>([])
     const [selectedPremade, setSelectedPremade] = useState<Question>()
+    const [editingQuestion, setEditingQuestion] = useState<FragebogenRow | null>(null)
+    const [isEditMode, setIsEditMode] = useState(false)
+    const [questionBowStatus, setQuestionBowStatus] = useState<QuestionnaireActivityStatus>(QuestionnaireActivityStatus.EDITING)
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        setQuestions(rows.map(initializeAnswers));
+    }, [rows, students]);
 
     const visibleQuestions: FragebogenRow[] = [
         ...questions,
         ...draftQuestions.map(q => ({
             id: q.id,
             question: q.text,
-            type: q.type
+            type: q.type,
+            answer: students.map(s => ({
+                studentId: s.studentId,
+                answer: q.type === QuestionType.GRADE ? NO_GRADE_SELECTED : ""
+            }))
         }))
     ];
 
     const sorted: SortedQuestions = SortQuestions(visibleQuestions);
-    const NO_GRADE_SELECTED = 255;
-    const allStudents = [...studentNames];
+    const allStudents = [...students];
 
     const QUESTION_COL_WIDTH = "320px";
     const STUDENT_COL_WIDTH = `${Math.max(120, 800 / allStudents.length)}px`;
+
+    const allAnsweredFilled = questions.every(q => {
+        if (!q.answer) return false;
+
+        if (q.type === QuestionType.GRADE) {
+            return q.answer.every(a => typeof a.answer === "number" && a.answer !== NO_GRADE_SELECTED);
+        }
+
+        if (q.type === QuestionType.TEXT) {
+            const myAnswer = q.answer.find(a => a.studentId === myId);
+            return myAnswer && typeof myAnswer.answer === "string" && myAnswer.answer.trim() !== "";
+        }
+
+        return false;
+    });
 
     const columns = [
         {key: "question", label: "Frage"},
@@ -76,47 +175,91 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
     }
 
     const addQuestion = () => {
+        setIsEditMode(false)
+        setEditingQuestion(null)
+        setNewQuestion("")
+        setNewType(QuestionType.GRADE)
+        setDialogMode("")
         setDialogOpen(true)
     }
 
-    const editQuestion = () => {
-
-    }
-
-    const deleteQuestion = () => {
-
-    }
-
     const handleNewQuestion = () => {
-        if (dialogMode === "new" && newQuestion.trim()) {
-            setDraftQuestions(prevState => [
+        if (isEditMode && editingQuestion) {
+            const isDraft = draftQuestions.some(q => q.id === editingQuestion.id);
+
+            if (isDraft) {
+                setDraftQuestions(prevState =>
+                    prevState.map(q =>
+                        q.id === editingQuestion.id
+                            ? {...q, text: newQuestion, type: newType}
+                            : q
+                    )
+                );
+            } else {
+                setQuestions(prevState =>
+                    prevState.map(q =>
+                        q.id === editingQuestion.id
+                            ? {...q, question: newQuestion, type: newType}
+                            : q
+                    )
+                );
+            }
+        } else {
+            if (dialogMode === "new" && newQuestion.trim()) {
+                setDraftQuestions(prevState => [
+                        ...prevState,
+                        {
+                            id: randomUUID(),
+                            text: newQuestion,
+                            type: newType,
+                            subjects: []
+                        }
+                    ]
+                )
+            }
+
+            if (dialogMode === "premade" && selectedPremade) {
+                setDraftQuestions(prevState => [
                     ...prevState,
                     {
                         id: randomUUID(),
-                        text: newQuestion,
-                        type: newType,
+                        text: selectedPremade.text,
+                        type: selectedPremade.type,
                         subjects: []
                     }
-                ]
-            )
-        }
-
-        if (dialogMode === "premade" && selectedPremade) {
-            setDraftQuestions(prevState => [
-                ...prevState,
-                {
-                    id: randomUUID(),
-                    text: selectedPremade.text,
-                    type: selectedPremade.type,
-                    subjects: []
-                }
-            ])
+                ])
+            }
         }
 
         setDialogOpen(false);
         setNewQuestion("");
         setDialogMode("");
         setSelectedPremade(undefined);
+        setIsEditMode(false);
+        setEditingQuestion(null);
+    }
+
+    const editQuestion = (row: FragebogenRow) => {
+        setIsEditMode(true)
+        setEditingQuestion(row)
+        setNewQuestion(row.question)
+        setNewType(row.type)
+        setDialogMode("new")
+        setDialogOpen(true)
+    }
+
+    const deleteQuestion = (questionId: string) => {
+        if (!window.confirm(`Möchtest du die Frage wirklich löschen?`)) {
+            return;
+        }
+
+        const isDraft = draftQuestions.some(q => q.id === questionId);
+
+        if (isDraft) {
+            setDraftQuestions(prevState => prevState.filter(q => q.id !== questionId));
+        } else {
+            setQuestions(prevState => prevState.filter(q => q.id !== questionId));
+        }
     }
 
     const handleReset = () => {
@@ -125,7 +268,7 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
     }
 
     const handleSubmit = () => {
-        onSubmit(visibleQuestions)
+        onSubmit(visibleQuestions, questionBowStatus)
     }
 
     return (
@@ -136,42 +279,59 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
                         columns={columns}
                         rows={visibleQuestions}
                         onAddClick={() => addQuestion()}
-                        onEditClick={editQuestion}
-                        onDeleteClick={deleteQuestion}
+                        onEditClick={(row) => editQuestion(row as FragebogenRow)}
+                        onDeleteClick={(id) => deleteQuestion(id)}
                     />
 
-                    <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
-                        <Button variant="contained" onClick={handleReset}>
-                            Zurücksetzten
-                        </Button>
-                        <Button variant="contained" onClick={handleSubmit}>
-                            Speichern
-                        </Button>
+                    <Box display="flex" flexDirection="column" gap={2} pt={2}>
+                        <TextField
+                            select
+                            label="Fragebogen Status"
+                            value={questionBowStatus}
+                            onChange={(e) => setQuestionBowStatus(e.target.value as QuestionnaireActivityStatus)}
+                        >
+                            {Object.values(QuestionnaireActivityStatus).map(qs => (
+                                <MenuItem key={qs} value={qs}>
+                                    {qs}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                            <Button variant="contained" onClick={handleReset}>
+                                Zurücksetzten
+                            </Button>
+                            <Button variant="contained" onClick={handleSubmit}>
+                                Speichern
+                            </Button>
+                        </Box>
                     </Box>
 
                     <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-                        <DialogTitle>Neue Frage hinzufügen</DialogTitle>
+                        <DialogTitle>{isEditMode ? "Frage bearbeiten" : "Neue Frage hinzufügen"}</DialogTitle>
                         <DialogContent>
-                            <TextField
-                                autoFocus
-                                select
-                                margin="dense"
-                                label="Fragequelle"
-                                fullWidth
-                                value={dialogMode}
-                                onChange={(e) => setDialogMode(e.target.value as "new" | "premade")}
-                            >
-                                <MenuItem value="new">Neue Frage erstellen</MenuItem>
-                                <MenuItem value="premade">Bestehende auswählen</MenuItem>
-                            </TextField>
+                            {!isEditMode && (
+                                <TextField
+                                    autoFocus
+                                    select
+                                    margin="dense"
+                                    label="Fragequelle"
+                                    fullWidth
+                                    value={dialogMode}
+                                    onChange={(e) => setDialogMode(e.target.value as "new" | "premade")}
+                                >
+                                    <MenuItem value="new">Neue Frage erstellen</MenuItem>
+                                    <MenuItem value="premade">Bestehende auswählen</MenuItem>
+                                </TextField>
+                            )}
 
-                            {dialogMode !== "" && (
+                            {!isEditMode && dialogMode !== "" && (
                                 <Box py={2}>
                                     <Divider/>
                                 </Box>
                             )}
 
-                            {dialogMode === "new" && (
+                            {(dialogMode === "new" || isEditMode) && (
                                 <>
                                     <TextField
                                         autoFocus
@@ -208,16 +368,42 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
                             <Button
                                 variant="contained"
                                 onClick={handleNewQuestion}
-                                disabled={dialogMode === "new" ? !newQuestion : !selectedPremade || dialogMode === ""}
+                                disabled={isEditMode ? !newQuestion : (dialogMode === "new" ? !newQuestion : !selectedPremade || dialogMode === "")}
                             >
-                                Hinzufügen
+                                {isEditMode ? "Speichern" : "Hinzufügen"}
                             </Button>
                         </DialogActions>
                     </Dialog>
                 </>
             )}
 
-            {!editView && (
+            {!editView && status === QuestionnaireActivityStatus.EDITING && !isPreview && (
+                <>
+                    <Typography>
+                        You do not belong here, it is still being editied by teachers
+                    </Typography>
+                    <Button variant="contained" onClick={() => {
+                        navigate("/fragebogen")
+                    }}>
+                        Return
+                    </Button>
+                </>
+            )}
+
+            {!editView && status === QuestionnaireActivityStatus.ARCHIVED && !isPreview && (
+                <>
+                    <Typography>
+                        Dieser Fragebogen ist archiviert
+                    </Typography>
+                    <Button variant="contained" onClick={() => {
+                        navigate("/fragebogen")
+                    }}>
+                        Return
+                    </Button>
+                </>
+            )}
+
+            {(!editView && status === QuestionnaireActivityStatus.READY_FOR_ANSWERING || !editView && isPreview) && (
                 <>
                     {(sorted.gradeQuestions.length === 0 && sorted.textQuestions.length === 0) && (
                         <Box>
@@ -252,16 +438,16 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
                                     >
                                         Frage
                                     </th>
-                                    {allStudents.map((name) => (
+                                    {allStudents.map((s) => (
                                         <th
-                                            key={name}
+                                            key={s.studentId}
                                             style={{
                                                 textAlign: "center",
                                                 padding: "8px 4px",
                                                 borderBottom: "1px solid #ccc"
                                             }}
                                         >
-                                            {name}
+                                            {s.studentName}
                                         </th>
                                     ))}
                                 </tr>
@@ -279,9 +465,9 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
                                             {q.question}
                                         </td>
 
-                                        {allStudents.map((name, index) => (
+                                        {allStudents.map((s, index) => (
                                             <td
-                                                key={name + index}
+                                                key={s.studentId + index}
                                                 style={{
                                                     padding: "4px",
                                                     textAlign: "center"
@@ -289,14 +475,34 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
                                             >
                                                 <TextField
                                                     select
-                                                    name={`${q.id}-grade-${index}`}
-                                                    defaultValue={NO_GRADE_SELECTED}
+                                                    disabled={status !== QuestionnaireActivityStatus.READY_FOR_ANSWERING && !isPreview}
+                                                    name={`${q.id}-${s.studentId}`}
+                                                    value={q.answer?.find(a => a.studentId === s.studentId)?.answer ?? NO_GRADE_SELECTED}
                                                     fullWidth
                                                     sx={{
                                                         "& .MuiSelect-select": {
                                                             padding: "8px",
                                                             textAlign: "center"
                                                         }
+                                                    }}
+                                                    onChange={(e) => {
+                                                        setQuestions(prevState =>
+                                                            prevState.map(item =>
+                                                                item.id === q.id
+                                                                    ? {
+                                                                        ...item,
+                                                                        answer: item.answer?.map(a =>
+                                                                            a.studentId === s.studentId
+                                                                                ? {...a, answer: e.target.value}
+                                                                                : a
+                                                                        ) || [{
+                                                                            studentId: s.studentId,
+                                                                            answer: e.target.value
+                                                                        }]
+                                                                    }
+                                                                    : item
+                                                            )
+                                                        )
                                                     }}
                                                 >
                                                     <MenuItem value={NO_GRADE_SELECTED}>
@@ -327,16 +533,37 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
                             <TextField
                                 fullWidth
                                 multiline
+                                disabled={status !== QuestionnaireActivityStatus.READY_FOR_ANSWERING && !isPreview}
                                 placeholder="Antwort eingeben..."
-                                name={`${q.id}-text-answer`}
+                                name={`${q.id}`}
+                                value={q.answer?.find(a => a.studentId === myId)?.answer || ""}
+                                onChange={(e) => {
+                                    if (!myId) return
+
+                                    setQuestions(prevState =>
+                                        prevState.map(item =>
+                                            item.id === q.id
+                                                ? {
+                                                    ...item,
+                                                    answer: item.answer?.map(a =>
+                                                        a.studentId === myId
+                                                            ? {...a, answer: e.target.value}
+                                                            : a
+                                                    ) || [{studentId: myId, answer: e.target.value}]
+                                                }
+                                                : item
+                                        )
+                                    )
+                                }}
                             />
                         </Box>
                     ))}
-
+                    {/*Slay ist cool*/}
                     <Button
                         variant="contained"
                         sx={{mt: 2}}
                         onClick={handleSubmit}
+                        disabled={!allAnsweredFilled || status !== QuestionnaireActivityStatus.READY_FOR_ANSWERING && !isPreview}
                     >
                         Abgeben
                     </Button>
@@ -346,13 +573,7 @@ export default function Fragebogen({rows, studentNames, editView = false, onSubm
     )
 }
 
-
-// function AddButton(){
-//     return <IconButton onClick={onAddClick} aria-label="add">
-//                 <AddIcon/>
-//             </IconButton>
-// }
-
+// Riven ist Arsch
 function SortQuestions(questions: FragebogenRow[]): SortedQuestions {
     let returnObject: SortedQuestions = {
         gradeQuestions: [],
@@ -362,231 +583,3 @@ function SortQuestions(questions: FragebogenRow[]): SortedQuestions {
         (q.type === QuestionType.GRADE ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
     return returnObject;
 }
-
-// export default function FragebogenTable({
-//                                             onSubmit,
-//                                             rows: rowData,
-//                                             studentNames,
-//                                             editView: isEditView,
-//                                             subject
-//                                         }: {
-//     onSubmit: React.FormEventHandler<HTMLFormElement>;
-//     rows: FragebogenRow[];
-//     studentNames: string[];
-//     editView?: boolean;
-//     subject?: string
-// }) {
-//
-//     const sortedRows: SortedQuestions = SortQuestions(rowData)
-//
-//     const [gradeRows, setGradeRows] = useState<FragebogenRow[]>([...sortedRows.gradeQuestions]);
-//     const [textRows, setTextRows] = useState<FragebogenRow[]>([...sortedRows.textQuestions]);
-//
-//     const randomUUID = (): string => {
-//         return typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : String(Date.now());
-//     }
-//
-//     const deleteQuestion = function (id: string) {
-//         for (let index = 0; index < gradeRows.length; index++) {
-//             if (gradeRows[index].id == id) {
-//                 setGradeRows(gradeRows.filter((_, i) => i !== index));
-//                 return;
-//             }
-//         }
-//         for (let index = 0; index < textRows.length; index++) {
-//             if (textRows[index].id === id) {
-//                 setTextRows(textRows.filter((_, i) => i !== index));
-//                 return;
-//             }
-//         }
-//     }
-//
-//     const NO_GRADE_SELECTED = 255; // große Zahl als default, damit später auffällt, wenn der Wert fälschlicherweise mitberechnet wird
-//     studentNames = ["Selbsteinschätzung"].concat(studentNames);
-//
-//     const TextQuestionField = function ({
-//                                             text: questionText,
-//                                             questionId
-//                                         }: {
-//         text: string
-//         questionId: string
-//     }) {
-//         return (
-//             <>
-//                 <div style={{marginTop: "1em"}}>
-//                     {isEditView ? "Frage " + questionId : questionText}
-//                 </div>
-//                 <span style={{display: "flex"}}>
-//                     <TextField
-//                         fullWidth
-//                         defaultValue={isEditView ? questionText : null}
-//                         placeholder={isEditView ? "Frage eingeben..." : "Antwort eingeben..."}
-//                         name={questionId + (isEditView ? "question" : "answer")}
-//                     />
-//                     {
-//                         isEditView &&
-//                         <IconButton
-//                             onClick={() => deleteQuestion(questionId)}
-//                         >
-//                             <DeleteIcon/>
-//                         </IconButton>
-//                     }
-//                 </span>
-//             </>
-//         )
-//     }
-//
-//     const TextQuestions = function ({
-//                                         questions
-//                                     }: {
-//         questions: FragebogenRow[]
-//     }) {
-//         let fields: JSX.Element[] = questions.map((q) =>
-//             <TextQuestionField
-//                 text={q.question}
-//                 questionId={q.id}
-//                 key={q.id}
-//             />
-//         );
-//
-//         return <>{fields}</>
-//     }
-//
-//     let columns: GridColDef[] = [
-//         {
-//             field: 'question',
-//             headerName: 'Frage',
-//             width: 200,
-//             disableColumnMenu: true,
-//             disableReorder: true,
-//             flex: 0.3,
-//             editable: isEditView,
-//             renderCell: (params) => {
-//                 return <TextField
-//                     fullWidth
-//                     multiline
-//                     defaultValue={params.row.question}
-//                     name={params.row.id + "question"}
-//                 />
-//             }
-//         }
-//     ];
-//     columns = columns.concat(studentNames.map((name, index) => ({
-//         field: name,
-//         headerName: name,
-//         display: 'flex',
-//         renderCell: (params) => {
-//             if (params.row.type === 'grade')
-//                 return <Select
-//                     name={isEditView ? "" : (params.id + "answer" + index)}
-//                     defaultValue={NO_GRADE_SELECTED}
-//                     style={{flex: 1}}
-//                 >
-//                     <MenuItem value={NO_GRADE_SELECTED}
-//                     >Note wählen</MenuItem>
-//                     <MenuItem value={1}>1</MenuItem>
-//                     <MenuItem value={2}>2</MenuItem>
-//                     <MenuItem value={3}>3</MenuItem>
-//                     <MenuItem value={4}>4</MenuItem>
-//                     <MenuItem value={5}>5</MenuItem>
-//                     <MenuItem value={6}>6</MenuItem>
-//                 </Select>
-//             return <>error</>;
-//         },
-//         flex: 1 / studentNames.length,
-//         disableColumnMenu: true,
-//         disableReorder: true
-//     })))
-//
-//     const addGradeQuestion = function () {
-//         setGradeRows(prev => [
-//             ...prev,
-//             {
-//                 id: randomUUID(),
-//                 question: "Neue Frage",
-//                 type: 'grade'
-//             }
-//         ])
-//     }
-//
-//     const addTextQuestion = function () {
-//         setTextRows(prev => [
-//             ...prev,
-//             {
-//                 id: randomUUID(),
-//                 question: "Neue Frage",
-//                 type: 'text'
-//             }
-//         ])
-//     }
-//
-//     return <form
-//         onSubmit={onSubmit}
-//     >
-//         {
-//             isEditView &&
-//             (subject == undefined)
-//                 ? <span>Kein Fach oder Lernfeld zugewiesen</span>
-//                 : <span>{subject}</span>
-//         }
-//         <DataGrid
-//             rows={gradeRows}
-//             columns={columns}
-//             getRowHeight={() => "auto"}
-//         />
-//         {
-//             isEditView &&
-//             <div style={{width: "100%", display: "flex"}}>
-//                 <IconButton
-//                     onClick={addGradeQuestion}
-//                     aria-label="Notenfrage Hinzufügen"
-//                     style={{width: "100%"}}
-//                 >
-//                     <AddIcon/>
-//                 </IconButton>
-//             </div>
-//         }
-//         <TextQuestions
-//             questions={textRows}
-//         />
-//         {
-//             isEditView &&
-//             <div style={{width: "100%", display: "flex"}}>
-//                 <IconButton
-//                     onClick={addTextQuestion}
-//                     aria-label="Textfrage Hinzufügen"
-//                     style={{width: "100%"}}
-//                 >
-//                     <AddIcon/>
-//                 </IconButton>
-//             </div>
-//         }
-//
-//         <Button
-//             type="submit"
-//             variant="contained"
-//             style={{marginTop: "1em"}}
-//
-//         >
-//             {isEditView ? "Speichern" : "Abgeben"}
-//         </Button>
-//
-//     </form>;
-// }
-//
-//
-// // function AddButton(){
-// //     return <IconButton onClick={onAddClick} aria-label="add">
-// //                 <AddIcon/>
-// //             </IconButton>
-// // }
-//
-// function SortQuestions(questions: FragebogenRow[]): SortedQuestions {
-//     let returnObject: SortedQuestions = {
-//         gradeQuestions: [],
-//         textQuestions: []
-//     }
-//     for (let q of questions)
-//         (q.type === 'grade' ? returnObject.gradeQuestions.push(q) : returnObject.textQuestions.push(q));
-//     return returnObject;
-// }

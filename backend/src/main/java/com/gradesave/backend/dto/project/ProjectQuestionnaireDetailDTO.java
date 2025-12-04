@@ -17,7 +17,7 @@ public record ProjectQuestionnaireDetailDTO(
         QuestionDTO[] questions,
         QuestionnaireActivityStatus status
 ) {
-    public static ProjectQuestionnaireDetailDTO fromEntity(Project project, List<Group> groups) {
+    public static ProjectQuestionnaireDetailDTO fromEntity(Project project, List<Group> groups, QuestionnaireActivityStatus status) {
         return new ProjectQuestionnaireDetailDTO(
                 project.getId(),
                 project.getName(),
@@ -42,7 +42,7 @@ public record ProjectQuestionnaireDetailDTO(
                                 pq.getQuestion().getType()
                         ))
                         .toArray(QuestionDTO[]::new),
-                QuestionnaireActivityStatus.EDITING
+                status
         );
     }
 }

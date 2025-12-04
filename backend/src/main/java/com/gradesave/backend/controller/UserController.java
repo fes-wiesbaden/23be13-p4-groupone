@@ -52,7 +52,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(
-            @RequestParam String username, 
+            @RequestParam String username,
             @RequestParam String password,
             HttpServletRequest request) {
         try {
@@ -84,21 +84,22 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        if (authentication == null || !authentication.isAuthenticated() || 
+
+        if (authentication == null || !authentication.isAuthenticated() ||
             authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser")) {
             return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
         }
 
         String username = authentication.getName();
         User user = userService.findByUsername(username);
-        
+
         if (user == null) {
             return ResponseEntity.status(404).body(Map.of("error", "User not found"));
         }
 
         return ResponseEntity.ok(Map.of(
                 "username", user.getUsername(),
+                "userId", user.getId(),
                 "role", user.getRole().toString()
         ));
     }
@@ -107,18 +108,18 @@ public class UserController {
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
             SecurityContextHolder.clearContext();
-            
+
             HttpSession session = request.getSession(false);
             if (session != null) {
                 session.invalidate();
             }
-            
+
             Cookie cookie = new Cookie("JSESSIONID", null);
             cookie.setPath("/");
             cookie.setHttpOnly(true);
             cookie.setMaxAge(0);
             response.addCookie(cookie);
-            
+
             return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

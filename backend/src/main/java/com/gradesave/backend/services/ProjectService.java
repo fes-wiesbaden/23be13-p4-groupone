@@ -1,5 +1,6 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.dto.project.QuestionnaireActivityStatus;
 import com.gradesave.backend.dto.question.QuestionDTO;
 import com.gradesave.backend.models.Project;
 import com.gradesave.backend.models.ProjectQuestion;
@@ -12,9 +13,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: Paul Geisthardt
@@ -96,7 +96,14 @@ public class ProjectService implements CrudService<Project, UUID> {
         return projectRepository.count();
     }
 
-    public void updateFragebogen(Project project, QuestionDTO[] questions) {
+    public void updateFragebogen(Project project, QuestionDTO[] questions, QuestionnaireActivityStatus status) {
+        Set<UUID> requestQuestionIds = Arrays.stream(questions)
+                .map(QuestionDTO::id)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        project.getProjectQuestions().removeIf(pq -> !requestQuestionIds.contains(pq.getQuestion().getId()));
+
         for (QuestionDTO questionDTO : questions) {
             Question question = questionRepository.findById(questionDTO.id()).orElseGet(() -> {
                 Question q = new Question();
@@ -109,7 +116,6 @@ public class ProjectService implements CrudService<Project, UUID> {
             question.setText(questionDTO.text());
             questionRepository.save(question);
 
-            // Check if this question is already linked to the project
             boolean alreadyLinked = project.getProjectQuestions().stream()
                     .anyMatch(pq -> pq.getQuestion().getId().equals(question.getId()));
 
@@ -120,6 +126,8 @@ public class ProjectService implements CrudService<Project, UUID> {
                 project.getProjectQuestions().add(projectQuestion);
             }
         }
+
+        project.setActivityStatus(status);
 
         projectRepository.save(project);
     }

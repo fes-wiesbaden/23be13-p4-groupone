@@ -6,6 +6,7 @@
 import * as React from 'react';
 import {type CSSObject, styled, type Theme, useTheme} from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import PollIcon from '@mui/icons-material/Poll';
 import {useNavigate} from 'react-router-dom';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar, {type AppBarProps as MuiAppBarProps} from '@mui/material/AppBar';
@@ -231,6 +232,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
             path: '/lernbereich',
             roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
         },
+        {text: 'Fragebogen', icon: <PollIcon/>, path: '/fragebogen', roles: [Role.STUDENT, Role.TEACHER, Role.ADMIN]},
     ];
 
     const bottomItems: MenuItem[] = [

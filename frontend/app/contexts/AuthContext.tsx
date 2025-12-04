@@ -19,6 +19,7 @@ import type {Role} from "~/types/models";
 
 interface User {
   username: string;
+  userId: string;
   role: Role;
 }
 

@@ -2,7 +2,12 @@ import {useAuth} from "~/contexts/AuthContext";
 import {Role} from "~/types/models";
 import {useEffect, useState} from "react";
 import Button from "@mui/material/Button";
-import FragebogenTable, {type FragebogenRow, QuestionType} from "~/components/fragebogen";
+import FragebogenTable, {
+    type FragebogenRow,
+    type FragebogenStudent,
+    QuestionnaireActivityStatus,
+    QuestionType
+} from "~/components/fragebogen";
 import Box from "@mui/material/Box";
 import {useParams} from "react-router-dom";
 import {Autocomplete, TextField} from "@mui/material";
@@ -10,7 +15,6 @@ import API_CONFIG from "~/apiConfig";
 import type {ProjectDetailGroup} from "~/routes/createOrEditProject";
 import Divider from "@mui/material/Divider";
 
-export type QuestionnaireActivityStatus = "EDITING" | "READY_FOR_ANSWERING" | "ARCHIVED";
 
 interface ProjectWithQuestionAndGroups {
     projectId: string;
@@ -29,6 +33,21 @@ interface Question {
 
 type FragebogenPutRequest = {
     questions: Question[],
+    status: QuestionnaireActivityStatus
+}
+
+export interface StudentAnswerDTO {
+    studentId: string,
+    answer: string | number
+}
+
+export interface ProjectQuestionAnswerDTO {
+    questionId: string,
+    answers: StudentAnswerDTO[]
+}
+
+export interface ProjectQuestionAnswersDTO {
+    questions: ProjectQuestionAnswerDTO[]
 }
 
 export default function Questionbow() {
@@ -41,8 +60,9 @@ export default function Questionbow() {
     const [projectQuestions, setProjectQuestions] = useState<FragebogenRow[]>([]);
     const [saving, setSaving] = useState(false);
     const [loadingProject, setLoadingProject] = useState(false)
+    const [questionBowStatus, setQuestionBowStatus] = useState<QuestionnaireActivityStatus | null>(null)
 
-    const groupMembers = (() => {
+    const groupMembers: FragebogenStudent[] = (() => {
         if (!selectedGroup) return [];
 
         const fullNames = selectedGroup.members.map(s => `${s.firstName} ${s.lastName}`);
@@ -52,17 +72,29 @@ export default function Questionbow() {
             counts[name] = (counts[name] ?? 0) + 1;
         }
 
-        return selectedGroup.members.map(member => {
+        const members: FragebogenStudent[] = selectedGroup.members.map(member => {
+            let studentName: string;
+
             if (user && member.username === user.username) {
-                return "Selbsteinschätzung";
+                studentName = "Selbsteinschätzung";
+            } else {
+                const fullName = `${member.firstName} ${member.lastName}`;
+                studentName = counts[fullName] > 1 ? `${fullName} (${member.username})` : fullName;
             }
 
-            const fullName = `${member.firstName} ${member.lastName}`;
-            if (counts[fullName] > 1) {
-                return `${fullName} (${member.username})`;
+            return {
+                studentName: studentName,
+                studentId: member.studentId
             }
-            return fullName;
         });
+
+        members.sort((a, b) => {
+            if (a.studentName === "Selbsteinschätzung") return -1;
+            if (b.studentName === "Selbsteinschätzung") return 1;
+            return 0;
+        });
+
+        return members;
     })();
 
     useEffect(() => {
@@ -99,6 +131,7 @@ export default function Questionbow() {
                 }))
                 setProjectQuestions(questions)
 
+                setQuestionBowStatus(data.status)
             } catch (err) {
                 console.error(err);
             } finally {
@@ -115,7 +148,7 @@ export default function Questionbow() {
     if (loadingProject) return <>Loading Project...</>
     if (!isAuthenticated) return <>:( unauthenticated</>
 
-    const saveQuestions = async (rows: FragebogenRow[]) => {
+    const saveQuestions = async (rows: FragebogenRow[], status: QuestionnaireActivityStatus) => {
         setSaving(true);
 
         try {
@@ -124,7 +157,8 @@ export default function Questionbow() {
                     id: r.id,
                     text: r.question,
                     type: r.type
-                }))
+                })),
+                status: status,
             }
 
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}/fragebogen`, {
@@ -144,7 +178,37 @@ export default function Questionbow() {
     }
 
     const submitAnswers = async (rows: FragebogenRow[]) => {
+        if (user?.role != Role.STUDENT) return
+
         console.log("SUBMITTIII")
+        console.log(rows)
+
+        try {
+            const payload: ProjectQuestionAnswersDTO = {
+                questions: rows.map(r => ({
+                    questionId:  r.id,
+                    answers: (r.answer || []).map(a => ({
+                        studentId: a.studentId,
+                        answer: a.answer ? a.answer : (r.type === QuestionType.GRADE ? 0 : "")
+                    }))
+                }))
+            }
+
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}/fragebogenAnswers`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                credentials: "include",
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                return;
+            }
+        } catch (err: any) {
+            console.error(err)
+        } finally {
+
+        }
     }
 
     return (
@@ -177,8 +241,10 @@ export default function Questionbow() {
                             <FragebogenTable
                                 rows={projectQuestions}
                                 onSubmit={saveQuestions}
-                                studentNames={groupMembers}
+                                students={groupMembers}
                                 editView={!previewAsStudent}
+                                status={questionBowStatus || QuestionnaireActivityStatus.ARCHIVED}
+                                isPreview={true}
                             />
                         )}
                     </Box>
@@ -188,9 +254,11 @@ export default function Questionbow() {
                     <>
                         <FragebogenTable
                             rows={projectQuestions}
-                            studentNames={groupMembers}
+                            students={groupMembers}
                             onSubmit={submitAnswers}
                             editView={false}
+                            status={questionBowStatus || QuestionnaireActivityStatus.ARCHIVED}
+                            isPreview={false}
                         />
                     </>
                 )

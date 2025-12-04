@@ -32,13 +32,15 @@ public class ProjectController {
     private final UserService userService;
     private final GroupService groupService;
     private final SubjectService subjectService;
+    private final AnswerService answerService;
 
-    public ProjectController(ProjectService projectService, CourseService courseService, UserService userService, GroupService groupService, SubjectService subjectService) {
+    public ProjectController(ProjectService projectService, CourseService courseService, UserService userService, GroupService groupService, SubjectService subjectService, AnswerService answerService) {
         this.projectService = projectService;
         this.courseService = courseService;
         this.userService = userService;
         this.groupService = groupService;
         this.subjectService = subjectService;
+        this.answerService = answerService;
     }
 
     private Integer getUnassignedStudentsAmount(Project project) {
@@ -419,7 +421,7 @@ public class ProjectController {
         if (projectOpt.isEmpty())
             return ResponseEntity.notFound().build();
 
-        projectService.updateFragebogen(projectOpt.get(), req.questions());
+        projectService.updateFragebogen(projectOpt.get(), req.questions(), req.status());
 
         return ResponseEntity.ok().build();
     }
@@ -461,8 +463,6 @@ public class ProjectController {
         return ResponseEntity.ok(new FragebogenResponse(dtoCourses));
     }
 
-//                        ? `${API_CONFIG.BASE_URL}/api/project/${projectId}/myGroup`
-//            : `${API_CONFIG.BASE_URL}/api/project/${projectId}/groups`;
     @GetMapping("{projectId}/myGroup")
     public ResponseEntity<ProjectQuestionnaireDetailDTO> getMyGroup(@PathVariable UUID projectId) {
         Optional<User> userOpt = userService.getCurrentUser();
@@ -487,7 +487,12 @@ public class ProjectController {
 
         Group group = groupOpt.get();
 
-        ProjectQuestionnaireDetailDTO dto = ProjectQuestionnaireDetailDTO.fromEntity(project, List.of(group));
+        QuestionnaireActivityStatus status = project.getActivityStatus();
+
+        if (status == QuestionnaireActivityStatus.READY_FOR_ANSWERING && answerService.hasUserSubmitted(project, user))
+            status = QuestionnaireActivityStatus.ARCHIVED;
+
+        ProjectQuestionnaireDetailDTO dto = ProjectQuestionnaireDetailDTO.fromEntity(project, List.of(group), status);
 
         return ResponseEntity.ok(dto);
     }
@@ -500,8 +505,33 @@ public class ProjectController {
 
         Project project = projectOpt.get();
 
-        ProjectQuestionnaireDetailDTO dto = ProjectQuestionnaireDetailDTO.fromEntity(project, project.getGroups().stream().toList());
+        ProjectQuestionnaireDetailDTO dto = ProjectQuestionnaireDetailDTO.fromEntity(project, project.getGroups().stream().toList(), project.getActivityStatus());
 
         return ResponseEntity.ok(dto);
     }
+
+    @PostMapping("{projectId}/fragebogenAnswers")
+    public ResponseEntity<?> postUserAnswers(@PathVariable UUID projectId, @Valid @RequestBody ProjectQuestionAnswersDTO req) {
+        Optional<Project> projectOpt = projectService.getById(projectId);
+        if (projectOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Project project = projectOpt.get();
+
+        Optional<User> userOpt = userService.getCurrentUser();
+        if (userOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        User user = userOpt.get();
+
+        if (answerService.hasUserSubmitted(project, user))
+            return ResponseEntity.status(401).body("Already Submitted");
+
+        if (!answerService.answerQuestions(project, user, req))
+            return ResponseEntity.status(401).body("FAiled to answer questions");
+
+        return ResponseEntity.ok().build();
+    }
+
+//            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}/fragebogenAnswers`, {
 }

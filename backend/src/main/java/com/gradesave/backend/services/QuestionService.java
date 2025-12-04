@@ -52,8 +52,8 @@ public class QuestionService implements CrudService<Question, UUID>{
     }
 
     @Override
-    public Optional<Question> getById(UUID Id) {
-        return Optional.empty();
+    public Optional<Question> getById(UUID id) {
+        return questionRepository.findById(id);
     }
 
     @Override
