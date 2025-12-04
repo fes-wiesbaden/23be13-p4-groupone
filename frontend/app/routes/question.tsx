@@ -16,6 +16,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
+import alertDialog from "~/components/youSurePopup";
 
 /**
  * @author: Michael Holl
@@ -62,6 +63,7 @@ export default function Question() {
   const [openDialog, setOpenDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editQuestion, setEditQuestion] = useState<Question | null>(null);
+  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,6 +114,9 @@ export default function Question() {
   };
 
   const handleDeleteClick = async (id: string) => {
+    if (!await confirm())
+      return;
+      
     try {
       await fetch(`${API_CONFIG.BASE_URL}/api/question/${id}`, {
         method: "DELETE",
@@ -326,6 +331,7 @@ export default function Question() {
           </Button>
         </DialogActions>
       </Dialog>
+      {ConfirmDialog}
     </>
   );
 }

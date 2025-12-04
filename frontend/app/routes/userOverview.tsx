@@ -22,6 +22,7 @@ import { useCallback, useEffect, useState } from "react";
 import API_CONFIG from "~/apiConfig";
 import FileUpload from "~/components/fileUpload";
 import CsvType from "~/types/csvType";
+import alertDialog from "~/components/youSurePopup";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
 
@@ -70,6 +71,7 @@ export default function UsersPage() {
     password: "",
   });
   const [error, setError] = useState<Record<string, string>>({});
+  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!form.username.trim()) {
@@ -150,7 +152,9 @@ export default function UsersPage() {
   };
 
   const onDeleteClick = async (id: string) => {
-    if (!confirm("Diesen Benutzer wirklich löschen?")) return;
+    if (!await confirm())
+      return;
+
     const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/${id}`, {
       method: "DELETE",
       credentials: "include",
@@ -312,6 +316,7 @@ export default function UsersPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      {ConfirmDialog}
     </>
   );
 }
