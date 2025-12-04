@@ -22,14 +22,14 @@ import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 
 @Service
-public class CsvServicee {
+public class CsvService {
     private final UserService userService;
     private final CourseService courseService;
     private final SecureRandom secureRandom;
     private final PdfService pdfService;
-    private static final Logger log = LoggerFactory.getLogger(CsvServicee.class);
+    private static final Logger log = LoggerFactory.getLogger(CsvService.class);
 
-    public CsvServicee(UserService userService, CourseService courseService, SecureRandom secureRandom,
+    public CsvService(UserService userService, CourseService courseService, SecureRandom secureRandom,
             PdfService pdfService) {
         this.userService = userService;
         this.courseService = courseService;
@@ -101,18 +101,24 @@ public class CsvServicee {
                 User savedUser = userService.create(user, true);
 
                 if (className != null) {
-                    if (!courseService.isExistedByName(className)) {
-                        log.warn("Course '{}' does not exist for user {} {}", className, firstName, lastName);
-                    } else {
-                        if ((savedUser.getRole() == Role.TEACHER || savedUser.getRole() == Role.ADMIN)
-                                && className.contains(",")) {
-                            String[] courseNames = className.split(",");
-                            for (String courseName : courseNames) {
-                                courseService.getByName(courseName.trim()).ifPresent(course -> {
+                    if ((savedUser.getRole() == Role.TEACHER || savedUser.getRole() == Role.ADMIN)
+                            && className.contains(",")) {
+                        String[] courseNames = className.split(",");
+                        for (String courseName : courseNames) {
+                            String trimmedCourseName = courseName.trim();
+                            if (!courseService.isExistedByName(trimmedCourseName)) {
+                                log.warn("Course '{}' does not exist for user {} {}", trimmedCourseName, firstName,
+                                        lastName);
+                            } else {
+                                courseService.getByName(trimmedCourseName).ifPresent(course -> {
                                     courseService.addStudent(course, savedUser);
                                     savedUser.getCourses().add(course);
                                 });
                             }
+                        }
+                    } else {
+                        if (!courseService.isExistedByName(className)) {
+                            log.warn("Course '{}' does not exist for user {} {}", className, firstName, lastName);
                         } else {
                             courseService.getByName(className.trim()).ifPresent(course -> {
                                 courseService.addStudent(course, savedUser);

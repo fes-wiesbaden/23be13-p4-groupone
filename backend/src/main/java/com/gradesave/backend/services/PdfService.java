@@ -1,5 +1,6 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.models.Course;
 import com.gradesave.backend.models.User;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
@@ -13,6 +14,7 @@ import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service for generating PDF documents for user credentials
@@ -161,12 +163,12 @@ public class PdfService {
                 if (user.getCourses().size() == 1) {
                     addTableRow(table, "Course:", user.getCourses().iterator().next().getCourseName());
                 } else if (user.getCourses().size() > 1) {
-                    StringBuilder stringBuilder = new StringBuilder();
+                    String result = user.getCourses()
+                            .stream()
+                            .map(Course::getCourseName)
+                            .collect(Collectors.joining(","));
+                    addTableRow(table, "Courses:", result);
 
-                    for (var course : user.getCourses()) {
-                        stringBuilder.append(course.getCourseName()).append(", ");
-                    }
-                    addTableRow(table, "Courses:", stringBuilder.toString().trim());
                 } else {
                     addTableRow(table, "Courses:", "None");
                 }

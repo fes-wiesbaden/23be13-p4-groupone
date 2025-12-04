@@ -19,5 +19,7 @@ bin/
 .DS_Store
 Thumbs.db
 
+#pdfs
+*user_credentials*.pdf
 # Secrets
 .env

@@ -1,6 +1,6 @@
 package com.gradesave.backend.controller;
 
-import com.gradesave.backend.services.CsvServicee;
+import com.gradesave.backend.services.CsvService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +24,9 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/csv")
 public class CsvController {
-    private final CsvServicee csvServicee;
+    private final CsvService csvServicee;
 
-    public CsvController(CsvServicee csvServicee) {
+    public CsvController(CsvService csvServicee) {
         this.csvServicee = csvServicee;
     }
 
