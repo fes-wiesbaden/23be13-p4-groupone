@@ -29,6 +29,7 @@ interface FileUploadProps {
   select_name?: string;
   type: CsvType;
   url: string;
+  doAfterUpload?: () => void;
 }
 
 const SingleFileUploader = (props: FileUploadProps) => {
@@ -64,6 +65,9 @@ const SingleFileUploader = (props: FileUploadProps) => {
     } catch (error) {
       console.error(error);
     }
+
+    if (props.doAfterUpload != undefined)
+      props.doAfterUpload();
   };
 
   return (

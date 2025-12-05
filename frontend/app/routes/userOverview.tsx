@@ -223,7 +223,8 @@ export default function UsersPage() {
         type={CsvType.USERS}
         url={`${API_CONFIG.BASE_URL}/api/csv/upload`}
         upload_name={"Hochladen der CSV"}
-        select_name={"Wählen sie eine Nutzer CSV aus"}
+        select_name={"Wählen Sie eine Nutzer-CSV aus"}
+        doAfterUpload={load}
       />
       <DataGridWithAdd<UserRow>
         columns={columns}
