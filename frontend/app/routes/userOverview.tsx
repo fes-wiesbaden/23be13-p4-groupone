@@ -6,8 +6,12 @@
  * @Edited by Kebba Ceesay
  * @Date: 03/12/2025
  * Snackbar integration completed
+ * 
+ * @Edited by Noah Bach
+ * @Date: 05/12/2025
+ * Better usability for CSV import
+ * (Snackbar, remove file from form on submit, reload on succes)
  */
-import * as React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -204,7 +208,6 @@ export default function UsersPage() {
       });
 
       if (!res.ok) {
-        // alert("Aktualisieren fehlgeschlagen.");
         console.error("Fehler beim Aktualisieren des Benutzers:", res.statusText);
 
         setSnackbarMessage(`Fehler beim Bearbeiten! Code: ${res.status}`);
@@ -233,7 +236,6 @@ export default function UsersPage() {
         body: JSON.stringify(createRequest),
       });
       if (!res.ok) {
-        // alert("Erstellen fehlgeschlagen.");
         console.error("Fehler beim Erstellen des Benutzers:", res.statusText);
 
         setSnackbarMessage(`Fehler beim Erstellen! Code: ${res.status}`);
