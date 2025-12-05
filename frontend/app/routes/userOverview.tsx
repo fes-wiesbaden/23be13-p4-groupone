@@ -164,15 +164,19 @@ export default function UsersPage() {
       method: "DELETE",
       credentials: "include",
     });
-    if (res.ok) {
-      setRows((prev) => prev.filter((r) => r.id !== id));
-      setOpen(false);
-      setSnackbarMessage("Benutzer wurde erfolgreich gelöscht!");
-      setSnackbarSeverity("success");
+    if (!res.ok) {
+      console.error("Fehler beim Löschen des Benutzers:", res.statusText);
+
+      setSnackbarMessage(`Fehler beim Löschen! Code: ${res.status}`);
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
-    } else {
-      alert("Löschen fehlgeschlagen.");
+      return;
     }
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    setOpen(false);
+    setSnackbarMessage("Benutzer wurde erfolgreich gelöscht!");
+    setSnackbarSeverity("success");
+    setSnackbarOpen(true);
   };
 
   const onSave = async () => {
@@ -199,15 +203,20 @@ export default function UsersPage() {
         body: JSON.stringify(updateRequest),
       });
 
-      if (res.ok) {
-        await load();
-        setOpen(false);
-        setSnackbarMessage("Benutzer wurde erfolgreich bearbeitet!");
-        setSnackbarSeverity("success");
+      if (!res.ok) {
+        // alert("Aktualisieren fehlgeschlagen.");
+        console.error("Fehler beim Aktualisieren des Benutzers:", res.statusText);
+
+        setSnackbarMessage(`Fehler beim Bearbeiten! Code: ${res.status}`);
+        setSnackbarSeverity("error");
         setSnackbarOpen(true);
-      } else {
-        alert("Aktualisieren fehlgeschlagen.");
+        return;
       }
+      await load();
+      setOpen(false);
+      setSnackbarMessage("Benutzer wurde erfolgreich bearbeitet!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } else {
       const createRequest: CreateUserRequest = {
         username: form.username,
@@ -224,14 +233,19 @@ export default function UsersPage() {
         body: JSON.stringify(createRequest),
       });
       if (res.ok) {
-        await load();
-        setOpen(false);
-        setSnackbarMessage("Benutzer wurde erfolgreich erstellt!");
-        setSnackbarSeverity("success");
+        // alert("Erstellen fehlgeschlagen.");
+        console.error("Fehler beim Erstellen des Benutzers:", res.statusText);
+
+        setSnackbarMessage(`Fehler beim Erstellen! Code: ${res.status}`);
+        setSnackbarSeverity("error");
         setSnackbarOpen(true);
-      } else {
-        alert("Erstellen fehlgeschlagen.");
+        return;
       }
+      await load();
+      setOpen(false);
+      setSnackbarMessage("Benutzer wurde erfolgreich erstellt!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     }
   };
 

@@ -97,20 +97,20 @@ export default function Subject() {
         method: "DELETE",
         credentials: "include"
       });
-      if (res.ok) {
-        setAllSubjects((prev) => prev.filter((subject) => subject.id !== id));
-        setSnackbarMessage("Der Eintrag wurde erfolgreich gelöscht!");
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
-      } else {
-        setSnackbarMessage("Fehler beim Löschen!");
+      if (!res.ok) {
+        setSnackbarMessage(`Fehler beim Löschen: ${res.status}`);
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
         alert("Löschen fehlgeschlagen.");
+        return;
       }
-    } catch (err) {
+      setAllSubjects((prev) => prev.filter((subject) => subject.id !== id));
+      setSnackbarMessage("Der Eintrag wurde erfolgreich gelöscht!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (err: any) {
       console.error("Error deleting subject:", err);
-      setSnackbarMessage("Fehler beim Löschen!");
+      setSnackbarMessage(`Fehler beim Löschen: ${err.message}`);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
       alert("Löschen fehlgeschlagen.");

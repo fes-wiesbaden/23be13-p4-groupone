@@ -165,15 +165,20 @@ export default function Question() {
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        const newQuestion = await res.json();
-        setAllQuestions((prev) => [...prev, newQuestion]);
-        setSnackbarMessage("Die Frage wurde erfolgreich erstellt!");
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
-        handleCloseDialog();
+      if (!res.ok) {
+        console.error("Fehler beim Speichern der Frage:", res.statusText);
 
+        setSnackbarMessage(`Fehler beim Speichern! Code: ${res.status}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
       }
+      const newQuestion = await res.json();
+      setAllQuestions((prev) => [...prev, newQuestion]);
+      setSnackbarMessage("Die Frage wurde erfolgreich erstellt!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      handleCloseDialog();
     } catch (err) {
       console.error("Error sending form to Backend:", err);
     }

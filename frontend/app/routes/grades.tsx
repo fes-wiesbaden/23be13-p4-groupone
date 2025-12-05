@@ -117,21 +117,24 @@ export default function Grades() {
             if (!res.ok) {
                 console.error("Fehler beim Speichern der Noten:", res.statusText);
 
-                setSnackbarMessage("Fehler beim Speichern!");
+                setSnackbarMessage(`Fehler beim Speichern! Code: ${res.status}`);
                 setSnackbarSeverity("error");
                 setSnackbarOpen(true);
                 return;
             }
-            console.log("Noten erfolgreich gespeichert!");
             setUpdatedGrades([]);
 
             setSnackbarMessage("Noten erfolgreich gespeichert!");
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
 
-        } catch (err) {
-            console.error(err);
-        }        
+        } catch (err: any) {
+            console.error("Fehler beim Speichern der Noten:", err.message);
+
+            setSnackbarMessage(`Fehler beim Speichern!: ${err.message}`);
+            setSnackbarSeverity("error"); 
+            setSnackbarOpen(true);
+        }
     };
 
     const reset = () => {
