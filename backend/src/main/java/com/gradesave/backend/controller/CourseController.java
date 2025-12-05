@@ -26,14 +26,14 @@ import com.gradesave.backend.dto.course.CourseSelectionDto;
 
 /**
  * @author: Noah Bach, Daniel Hess
- * <p>
- * Controller for handling Course ("Klassen") REST endpoints.
- * Provides endpoints to create, retrieve, update, and delete courses.
- * </p>
- * Create, List, Delete function from Noah Bach rest updated by Daniel
- * Hess
- * <p>
- * DTO changes by Paul Geisthardt
+ *          <p>
+ *          Controller for handling Course ("Klassen") REST endpoints.
+ *          Provides endpoints to create, retrieve, update, and delete courses.
+ *          </p>
+ *          Create, List, Delete function from Noah Bach rest updated by Daniel
+ *          Hess
+ *          <p>
+ *          DTO changes by Paul Geisthardt
  **/
 
 @RestController
@@ -59,7 +59,7 @@ public class CourseController {
             Course course = new Course();
             course.setCourseName(req.courseName());
             course.setClassTeacher(teacher.get());
-            Course createdCourse = courseService.create(course);
+            Course createdCourse = courseService.createOrUpdate(course);
             return new ResponseEntity<>(createdCourse, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             log.warn("IllegalArgumentException when creating course: {}", e.getMessage(), e);
@@ -78,7 +78,7 @@ public class CourseController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Course> updateCourse(@PathVariable UUID id,
-                                               @Valid @RequestBody UpdateCourseRequest req) {
+            @Valid @RequestBody UpdateCourseRequest req) {
         if (req.teacherId() != null) {
             if (!userService.exists(req.teacherId())) {
                 return ResponseEntity.badRequest().build();
@@ -122,7 +122,6 @@ public class CourseController {
             course.setClassTeacher(null);
         }
 
-
         List<User> teachers = userService.getUsersByIds(req.teacherIds());
         List<User> students = userService.getUsersByIds(req.studentIds());
 
@@ -134,7 +133,7 @@ public class CourseController {
             course.getUsers().add(classTeacher);
         }
 
-        courseService.create(course);
+        courseService.createOrUpdate(course);
         return ResponseEntity.ok().build();
     }
 
@@ -173,14 +172,15 @@ public class CourseController {
 
         if (!course.getUsers().contains(teacher)) {
             course.getUsers().add(teacher);
-            courseService.create(course); // updates it but is bad name
+            courseService.createOrUpdate(course); // updates it but is bad name
         }
 
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("{id}/teachers/remove")
-    public ResponseEntity<Void> removeTeacher(@PathVariable UUID id, @Valid @RequestBody TeacherAddRemoveToGroupDTO req) {
+    public ResponseEntity<Void> removeTeacher(@PathVariable UUID id,
+            @Valid @RequestBody TeacherAddRemoveToGroupDTO req) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
             return ResponseEntity.notFound().build();
@@ -198,7 +198,7 @@ public class CourseController {
         boolean removed = course.getUsers().removeIf(t -> t.getId().equals(teacher.getId()));
 
         if (removed)
-            courseService.create(course); // updates but is bad name
+            courseService.createOrUpdate(course); // updates but is bad name
 
         return ResponseEntity.ok().build();
     }
@@ -221,14 +221,15 @@ public class CourseController {
 
         if (!course.getUsers().contains(student)) {
             course.getUsers().add(student);
-            courseService.create(course); // updates it but is bad name
+            courseService.createOrUpdate(course); // updates it but is bad name
         }
 
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("{id}/students/remove")
-    public ResponseEntity<Void> removeStudent(@PathVariable UUID id, @Valid @RequestBody StudentAddRemoveToGroupDTO req) {
+    public ResponseEntity<Void> removeStudent(@PathVariable UUID id,
+            @Valid @RequestBody StudentAddRemoveToGroupDTO req) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
             return ResponseEntity.notFound().build();
@@ -246,11 +247,10 @@ public class CourseController {
         boolean removed = course.getUsers().removeIf(t -> t.getId().equals(student.getId()));
 
         if (removed)
-            courseService.create(course); // updates but is bad name
+            courseService.createOrUpdate(course); // updates but is bad name
 
         return ResponseEntity.ok().build();
     }
-
 
     @GetMapping("/all/bare")
     public ResponseEntity<CourseBareDTO[]> getAllCoursesBare() {
@@ -260,8 +260,9 @@ public class CourseController {
                 .map(c -> new CourseBareDTO(
                         c.getId(),
                         c.getCourseName(),
-                        (c.getClassTeacher() != null ? c.getClassTeacher().getFirstName() + " " + c.getClassTeacher().getLastName() : "No Teacher")
-                ))
+                        (c.getClassTeacher() != null
+                                ? c.getClassTeacher().getFirstName() + " " + c.getClassTeacher().getLastName()
+                                : "No Teacher")))
                 .toArray(CourseBareDTO[]::new);
 
         return ResponseEntity.ok(dtos);
@@ -283,10 +284,8 @@ public class CourseController {
                         s.getId(),
                         s.getUsername(),
                         s.getFirstName(),
-                        s.getLastName()
-                ))
+                        s.getLastName()))
                 .toArray(StudentDTO[]::new);
-
 
         return ResponseEntity.ok(students);
     }
@@ -318,7 +317,7 @@ public class CourseController {
             classTeacher.ifPresent(course::setClassTeacher);
         }
 
-        courseService.create(course);
+        courseService.createOrUpdate(course);
         return ResponseEntity.ok().build();
     }
 
