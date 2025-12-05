@@ -7,6 +7,7 @@ import {
     type GridColDef,
     type GridColumnGroupingModel
 } from "@mui/x-data-grid";
+import CustomizedSnackbars from '../components/snackbar';
 
 /**
  * @author Michael Holl
@@ -15,6 +16,9 @@ import {
  * - Select course, project, and group
  * - Fetch and display grades in an editable DataGrid
  * - Supports resetting and saving grades
+ * 
+ * @Edited by Kebba Ceesay
+ * Snackbar integration completed
  */
 
 export interface GroupOption { id: string; name: string; }
@@ -70,6 +74,13 @@ export default function Grades() {
     const [updatedGrades, setUpdatedGrades] = useState<UpdateGradeRequest[]>([]);
     const [projectError, setProjectError] = useState(false);
     const [courseError, setCourseError] = useState(false);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
 
     // Fetch dropdown options
     useEffect(() => {
@@ -91,34 +102,52 @@ export default function Grades() {
     }, []);
 
     const saveGrades = async () => {
-        if (updatedGrades.length > 0) {
-            try {
-                const url = `${API_CONFIG.BASE_URL}/api/grade/save`;
+        if (updatedGrades.length <= 0)
+            return;
+        try {
+            const url = `${API_CONFIG.BASE_URL}/api/grade/save`;
+            
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(updatedGrades),
+            });
 
-                const res = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify(updatedGrades),
-                });
+            if (!res.ok) {
+                console.error("Fehler beim Speichern der Noten:", res.statusText);
 
-                if (!res.ok) {
-                    //TO DO Snackbar einbauen: Speichern fehlgeschlagen!
-                    console.error("Fehler beim Speichern der Noten:", res.statusText);
-                    return;
-                }
-                //TO DO Snackbar einbauen: Erfolgreich gespeichert!
-                console.log("Noten erfolgreich gespeichert!");
-                setUpdatedGrades([]);
-
-            } catch (err) {
-                console.error(err);
+                setSnackbarMessage(`Fehler beim Speichern! Code: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
+                return;
             }
+            setUpdatedGrades([]);
+
+            setSnackbarMessage("Noten erfolgreich gespeichert!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+
+        } catch (err: any) {
+            console.error("Fehler beim Speichern der Noten:", err.message);
+
+            setSnackbarMessage(`Fehler beim Speichern!: ${err.message}`);
+            setSnackbarSeverity("error"); 
+            setSnackbarOpen(true);
         }
     };
 
     const reset = () => {
+    if (!gradeOverviewBackup) {
+        setSnackbarMessage("Zurücksetzen fehlgeschlagen!");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+    }
         setGradeOverview(gradeOverviewBackup)
+        setSnackbarMessage("Änderungen wurden erfolgreich zurückgesetzt!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
     }
 
     const loadGrades = async () => {
@@ -343,6 +372,12 @@ export default function Grades() {
                         Zurücksetzen
                     </Button>
                 </Box>
+                <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+                />
             </Box>
     );
 }
