@@ -232,7 +232,7 @@ export default function UsersPage() {
         credentials: "include",
         body: JSON.stringify(createRequest),
       });
-      if (res.ok) {
+      if (!res.ok) {
         // alert("Erstellen fehlgeschlagen.");
         console.error("Fehler beim Erstellen des Benutzers:", res.statusText);
 
