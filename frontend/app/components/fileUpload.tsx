@@ -55,19 +55,20 @@ const SingleFileUploader = (props: FileUploadProps) => {
     );
 
     try {
+      setFile(null); // am besten wäre, wenn der Button disabled wäre, bis der Promise resolved ist, und dann erst entweder den Button zu enablen oder die Datei zu entfernen (aber dauert halt, ne)
+
       const result = await fetch(url, {
         method: "POST",
         credentials: "include",
         body: formData,
       });
 
-      const data = await result.json();
+      if (props.doAfterUpload != undefined)
+        props.doAfterUpload();
     } catch (error) {
       console.error(error);
     }
 
-    if (props.doAfterUpload != undefined)
-      props.doAfterUpload();
   };
 
   return (
