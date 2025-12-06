@@ -3,6 +3,7 @@ package com.gradesave.backend.controller;
 import java.util.List;
 import java.util.UUID;
 
+import com.gradesave.backend.dto.grade.CalculateSubjectGradeDto;
 import com.gradesave.backend.dto.grade.UpdateGradeRequest;
 import com.gradesave.backend.services.GradeService;
 import org.springframework.web.bind.annotation.*;
@@ -36,5 +37,10 @@ public class GradeController {
     @PostMapping("/save")
     public void saveGradeOverview(@RequestBody List<UpdateGradeRequest> request) {
         gradeService.saveGradeOverview(request);
+    }
+
+    @PostMapping("/calculateSubjectGrade")
+    public Double calculateSubjectGrade(@RequestBody List<CalculateSubjectGradeDto> newGrades) {
+        return gradeService.calculateSubjectGrade(newGrades);
     }
 }

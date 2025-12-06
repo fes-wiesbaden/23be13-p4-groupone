@@ -3,21 +3,19 @@ package com.gradesave.backend.repositories;
 import java.util.List;
 import java.util.UUID;
 
+import com.gradesave.backend.models.ProjectSubject;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import com.gradesave.backend.models.Performance;
 import org.springframework.stereotype.Repository;
 
 /**
  * @author: Michael Holl
  * <p>
- * Handles database requests for performances
+ * Handles database requests for question table
  * </p>
  *
  *
  */
-
 @Repository
-public interface PerformanceRepository extends JpaRepository<Performance, UUID> {
-    List<Performance> findByProjectSubject_Subject_Id(UUID subjectId);
+public interface ProjectSubjectRepository extends JpaRepository<ProjectSubject, UUID> {
+    List<ProjectSubject> findByProjectId(UUID projectId);
 }

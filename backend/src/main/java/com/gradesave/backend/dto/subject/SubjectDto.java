@@ -9,6 +9,7 @@ public record SubjectDto(
         UUID id,
         String name,
         String shortName,
+        int duration,
         List<PerformanceDto> performances
         ) {
 
