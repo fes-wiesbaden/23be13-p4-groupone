@@ -1,4 +1,12 @@
 package com.gradesave.backend.dto.performance;
 
-public record newPerformanceRequest() {
+import java.util.UUID;
+
+public record NewPerformanceRequest(
+        UUID projectSubjectId,
+        String name,
+        String shortName,
+        double weight
+) {
+
 }

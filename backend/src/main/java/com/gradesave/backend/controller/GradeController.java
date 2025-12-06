@@ -1,5 +1,6 @@
 package com.gradesave.backend.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ import com.gradesave.backend.dto.grade.GradeOverviewDto;
 /**
  * @author: Michael Holl
  * <p>
- *       Controller for handling User REST endpoints.
+ *       Controller for handling Grade REST endpoints.
  *       Provides endpoints to create, retrieve and update grades.
  * </p>
  *
@@ -40,7 +41,7 @@ public class GradeController {
     }
 
     @PostMapping("/calculateSubjectGrade")
-    public Double calculateSubjectGrade(@RequestBody List<CalculateSubjectGradeDto> newGrades) {
+    public BigDecimal calculateSubjectGrade(@RequestBody List<CalculateSubjectGradeDto> newGrades) {
         return gradeService.calculateSubjectGrade(newGrades);
     }
 }

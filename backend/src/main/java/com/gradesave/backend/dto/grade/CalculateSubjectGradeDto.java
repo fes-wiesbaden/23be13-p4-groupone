@@ -1,4 +1,6 @@
 package com.gradesave.backend.dto.grade;
 
-public record CalculateSubjectGradeDto(double grade, Double weight) {
+import java.math.BigDecimal;
+
+public record CalculateSubjectGradeDto(BigDecimal grade, Double weight) {
 }

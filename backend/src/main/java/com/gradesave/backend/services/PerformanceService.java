@@ -1,6 +1,8 @@
 package com.gradesave.backend.services;
 
+import com.gradesave.backend.dto.performance.NewPerformanceRequest;
 import com.gradesave.backend.models.Performance;
+import com.gradesave.backend.models.ProjectSubject;
 import com.gradesave.backend.repositories.PerformanceRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -106,4 +108,9 @@ public class PerformanceService implements CrudService<Performance, UUID> {
     public long count() {
         return performanceRepository.count();
     }
+
+    public Optional<Performance> findById(UUID performanceId) {
+        return performanceRepository.findById(performanceId);
+    }
+
 }

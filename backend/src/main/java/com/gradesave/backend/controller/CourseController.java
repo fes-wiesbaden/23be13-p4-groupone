@@ -323,7 +323,7 @@ public class CourseController {
     }
 
     @GetMapping("/findGradeOverviewOptions")
-    public List<CourseSelectionDto> findGradeOverviewOptions() {
-        return courseService.findGradeOverviewOptions();
+    public List<CourseSelectionDto> findGradeOverviewOptions(@Valid @RequestParam UUID userId) {
+        return courseService.findGradeOverviewOptions(userId);
     }
 }

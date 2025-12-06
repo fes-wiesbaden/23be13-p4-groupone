@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 /**
  * @author: Michael Holl
  * <p>
- * Handles database requests for question table
+ * Handles database requests for project_Subject table
  * </p>
  *
  *

@@ -1,6 +1,8 @@
 
 package com.gradesave.backend.services;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -101,7 +103,7 @@ public class GradeService implements CrudService<Grade, UUID>{
         List<SubjectDto> subjects = projectSubjectRepository.findByProjectId(projectId).stream()
                 .map(projectSubject -> {
                     List<PerformanceDto> performances = performanceRepository
-                            .findByProjectSubject_Subject_Id(projectSubject.getSubject().getId())
+                            .findByProjectSubjectId(projectSubject.getId())
                             .stream()
                             .map(p -> new PerformanceDto(
                                     p.getId(),
@@ -110,11 +112,11 @@ public class GradeService implements CrudService<Grade, UUID>{
                                     p.getWeight() * 100
                             ))
                             .toList();
-                    return new SubjectDto(projectSubject.getId(), projectSubject.getSubject().getName(), projectSubject.getSubject().getShortName(), projectSubject.getDuration(), performances);
+                    return new SubjectDto(projectSubject.getId(), projectSubject.getSubject().getName(), projectSubject.getSubject().getShortName(), projectSubject.getDuration(), projectSubject.getSubject().isLearningField(), performances);
                 })
                 .toList();
 
-        // load all students
+        // load students
         List<User> users = (groupId != null)
                 ? userRepository.findByGroups_IdAndRole(groupId, Role.STUDENT)
                 : userRepository.findByCourses_Projects_IdAndRole(projectId, Role.STUDENT);
@@ -190,13 +192,23 @@ public class GradeService implements CrudService<Grade, UUID>{
         });
     }
 
-    public double calculateSubjectGrade(List<CalculateSubjectGradeDto> newGrades) {
-        double total = 0;
-        double totalWeight = 0;
+    public BigDecimal calculateSubjectGrade(List<CalculateSubjectGradeDto> newGrades) {
+        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal totalWeight = BigDecimal.ZERO;
+
         for (CalculateSubjectGradeDto gradeWithWeight : newGrades) {
-            total += gradeWithWeight.grade() * gradeWithWeight.weight()/100;
-            totalWeight += gradeWithWeight.weight()/100;
+            BigDecimal grade = gradeWithWeight.grade();
+            BigDecimal weight = BigDecimal.valueOf(gradeWithWeight.weight())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+            total = total.add(grade.multiply(weight));
+            totalWeight = totalWeight.add(weight);
         }
-        return total/totalWeight;
+
+        if (totalWeight.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return total.divide(totalWeight, 2, RoundingMode.HALF_UP);
     }
 }

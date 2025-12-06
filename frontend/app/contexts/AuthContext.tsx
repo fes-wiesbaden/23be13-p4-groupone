@@ -6,6 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import type {Role} from "~/types/models";
 
 /**
  * @author: Daniel Hess
@@ -17,8 +18,9 @@ import {
  **/
 
 interface User {
-  username: string;
-  role: string;
+    id: string;
+    username: string;
+    role: Role;
 }
 
 interface AuthContextType {
@@ -47,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (res.ok) {
         const userData = await res.json();
+        console.log("userData",userData)
         setUser(userData);
       } else {
         setUser(null);

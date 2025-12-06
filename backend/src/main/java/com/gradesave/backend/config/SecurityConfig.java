@@ -37,6 +37,8 @@ public class SecurityConfig {
                                                                 "/api/courses/**",
                                                                 "/api/subjects/**",
                                                                 "/api/groups/**",
+                                                                "/api/performance/**",
+                                                                "/api/projectSubject/**",
                                                                 "/api/questions/**")
                                                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
 

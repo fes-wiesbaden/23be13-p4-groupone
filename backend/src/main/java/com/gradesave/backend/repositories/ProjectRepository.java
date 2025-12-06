@@ -3,8 +3,10 @@ package com.gradesave.backend.repositories;
 import java.util.UUID;
 import java.util.List;
 
+import com.gradesave.backend.models.Grade;
 import com.gradesave.backend.models.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**

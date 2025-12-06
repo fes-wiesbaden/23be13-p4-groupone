@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Avatar from '@mui/material/Avatar';
+import type {Role} from "~/types/models";
 
 /**
  * @author: Daniel Hess
@@ -42,10 +43,11 @@ export default function Login(): React.ReactElement {
 
             if (res.ok) {
                 const data: LoginResponse = await res.json();
-
+                console.log("LOGIN", data)
                 login({
+                    id: data.id || "",
                     username: data.username || data.user?.username || "",
-                    role: data.role || data.user?.role || "",
+                    role: data.role as Role || data.user?.role as Role
                 });
 
                 navigate("/");

@@ -167,10 +167,6 @@ public class ProjectController {
     public ResponseEntity<ProjectSummaryDTO[]> getProjects() {
         List<Project> projects = projectService.getAll();
 
-//        public record ProjectSummaryDTO(UUID projectId, String projectName, ProjectStartDateDTO startDate, UUID courseId, String courseName, String teacherName) {
-
-//        public record ProjectStartDateDTO(int year, int month, int day) { }
-
         ProjectSummaryDTO[] dto = projects.stream()
                 .map(p -> new ProjectSummaryDTO(
                         p.getId(),
@@ -313,17 +309,30 @@ public class ProjectController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Project not found: " + projectId));
 
-        Optional<Subject> subjectOpt = subjectService.getById(req.subjectId());
-        if (subjectOpt.isEmpty())
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Subject not found: " + req.subjectId()));
+
+        Subject subject;
+
+        if (req.subjectId() != null) {
+            Optional<Subject> subjectOpt = subjectService.getById(req.subjectId());
+
+            if (subjectOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Subject not found: " + req.subjectId()));
+            }
+
+            subject = subjectOpt.get();
+        } else {
+            Subject s = new Subject();
+            s.setName(req.name());
+            s.setShortName(req.shortName());
+            s.setLearningField(req.isLearningField());
+            subject = subjectService.create(s);
+        }
 
         Project project = projectOpt.get();
-        Subject subject = subjectOpt.get();
-
 
         boolean alreadyExists = project.getProjectSubjects().stream()
-                .anyMatch(ps -> ps.getSubject().getId().equals(req.subjectId()));
+                .anyMatch(ps -> ps.getSubject().getId().equals(subject.getId()));
 
         if (alreadyExists)
             return ResponseEntity.badRequest()
