@@ -17,14 +17,20 @@ import {
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
 import {QuestionType} from "~/components/fragebogen";
+import CustomizedSnackbars from "../components/snackbar";
 
 /**
  * @author: Michael Holl
  * <p>
  *   Component to add, edit & delete questions for questionnaire
  * </p>
- *
+ * 
+ * @Edited by Kebba Ceesay
+ * <p>
+ *    Snackbar integration completed
+ * </p>
  **/
+
 interface Subject {
   id: string;
   name: string;
@@ -63,6 +69,10 @@ export default function Question() {
   const [openDialog, setOpenDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editQuestion, setEditQuestion] = useState<Question | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const handleSnackbarClose = () => { setSnackbarOpen(false);};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -126,9 +136,15 @@ export default function Question() {
       );
       const questionsData = await resQuestions.json();
       setAllQuestions(questionsData);
+      setSnackbarMessage("Die Frage wurde erfolgreich gelöscht!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);     
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error deleting question:", err);
+      setSnackbarMessage(`Fehler beim Bearbeiten der Frage: ${err.message}`);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
   };
 
@@ -151,10 +167,20 @@ export default function Question() {
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        const newQuestion = await res.json();
-        setAllQuestions((prev) => [...prev, newQuestion]);
+      if (!res.ok) {
+        console.error("Fehler beim Speichern der Frage:", res.statusText);
+
+        setSnackbarMessage(`Fehler beim Speichern! Code: ${res.status}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
       }
+      const newQuestion = await res.json();
+      setAllQuestions((prev) => [...prev, newQuestion]);
+      setSnackbarMessage("Die Frage wurde erfolgreich erstellt!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      handleCloseDialog();
     } catch (err) {
       console.error("Error sending form to Backend:", err);
     }
@@ -188,8 +214,16 @@ export default function Question() {
           credentials: "include" });
       const questionsData = await resQuestions.json();
       setAllQuestions(questionsData);
-    } catch (err) {
+      setSnackbarMessage("Die Frage wurde erfolgreich bearbeitet!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      handleCloseEditDialog();
+
+    } catch (err: any) {
       console.error("Error updating question:", err);
+      setSnackbarMessage(`Fehler beim Bearbeiten der Frage: ${err.message}`);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
     handleCloseEditDialog();
   };
@@ -327,6 +361,12 @@ export default function Question() {
           </Button>
         </DialogActions>
       </Dialog>
+      <CustomizedSnackbars
+          open={snackbarOpen}
+          message={snackbarMessage}
+          severity={snackbarSeverity}
+          onClose={handleSnackbarClose}
+      />
     </>
   );
 }

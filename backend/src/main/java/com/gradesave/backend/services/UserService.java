@@ -22,21 +22,40 @@ public class UserService implements CrudService<User, UUID> {
     private final com.gradesave.backend.repositories.UserRepository repo;
     private final PasswordEncoder encoder;
     private final CourseService courseService;
+    private final PdfService pdfService;
 
-    public UserService(com.gradesave.backend.repositories.UserRepository repo, PasswordEncoder encoder, CourseService courseService) {
+    public UserService(com.gradesave.backend.repositories.UserRepository repo, PasswordEncoder encoder,
+            CourseService courseService, PdfService pdfService) {
         this.repo = repo;
         this.encoder = encoder;
         this.courseService = courseService;
+        this.pdfService = pdfService;
     }
 
-    public User findByUsername(String username){
+    public User findByUsername(String username) {
         return repo.findByUsername(username).orElse(null);
     }
 
     @Override
     public User create(User entity) {
+        return create(entity, false);
+    }
+
+    public User create(User entity, boolean bulkCreate) {
+        String plainPassword = entity.getPassword();
         entity.setPassword(encoder.encode(entity.getPassword()));
-        return repo.save(entity);
+        User saved = repo.save(entity);
+
+        if (!bulkCreate) {
+            try {
+                pdfService.generateUserCredentialsPdf(saved, plainPassword);
+            } catch (Exception e) {
+                System.err.println("Failed to generate PDF for user " + saved.getUsername() + ": " + e.getMessage());
+                // Continue even if PDF generation fails
+            }
+        }
+
+        return saved;
     }
 
     @Override
@@ -63,7 +82,8 @@ public class UserService implements CrudService<User, UUID> {
 
     @Override
     public User update(UUID id, User patch) {
-        User existing = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
+        User existing = repo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id));
 
         existing.setUsername(patch.getUsername());
         existing.setFirstName(patch.getFirstName());
@@ -83,7 +103,8 @@ public class UserService implements CrudService<User, UUID> {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id);
 
         if (!courseService.removeUserFromAllCourses(id))
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to remove User from all courses");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to remove User from all courses");
 
         repo.deleteById(id);
     }
@@ -113,7 +134,7 @@ public class UserService implements CrudService<User, UUID> {
         return repo.count();
     }
 
-    public List<User> GetUsersByRole(Role role){
+    public List<User> GetUsersByRole(Role role) {
         return repo.findByRole(role);
     }
 
