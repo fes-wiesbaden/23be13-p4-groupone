@@ -311,7 +311,7 @@ export default function Fragebogen({
     }
 
     const handleReset = () => {
-        if (!window.confirm("Willst du wirklich deine jetzigen Änderungen zurücksetzten?"))
+        if (window.confirm("Willst du wirklich deine jetzigen Änderungen zurücksetzten?"))
             setDraftQuestions([])
     }
 
@@ -323,7 +323,7 @@ export default function Fragebogen({
         return (
             <>
                 <Typography>
-                    You do not belong here, it is still being editied by teachers
+                    Dieser Fragebogen ist noch nicht für die Beantwortung freigegeben
                 </Typography>
                 <Button variant="contained" onClick={() => {
                     navigate("/fragebogen")
@@ -338,7 +338,7 @@ export default function Fragebogen({
         return (
             <>
                 <Typography>
-                    DU hast diesen Fragebogen bereits geantwortet
+                    Du hast diesen Fragebogen bereits geantwortet
                 </Typography>
                 <Button variant="contained" onClick={() => {
                     navigate("/fragebogen")
@@ -395,7 +395,7 @@ export default function Fragebogen({
 
                         <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
                             <Button variant="contained" onClick={handleReset}>
-                                Zurücksetzten
+                                Zurücksetzen
                             </Button>
                             <Button variant="contained" onClick={handleSubmit}>
                                 Speichern

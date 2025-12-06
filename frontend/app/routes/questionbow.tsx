@@ -3,7 +3,8 @@ import {Role} from "~/types/models";
 import {useEffect, useState} from "react";
 import FragebogenTable, {
     type FragebogenRow,
-    type FragebogenStudent, NO_GRADE_SELECTED,
+    type FragebogenStudent,
+    NO_GRADE_SELECTED,
     QuestionnaireActivityStatus,
     QuestionType,
     ViewType
@@ -67,6 +68,7 @@ export interface DetailedProjectQuestionAnswerDTO {
 export interface DetailedProjectQuestionAnswersDTO {
     questions: DetailedProjectQuestionAnswerDTO[]
 }
+
 export interface StudentGradeAverageDTO {
     studentId: string,
     studentName: string,
@@ -84,7 +86,6 @@ export default function Questionbow() {
     let {projectId} = useParams<{ projectId: string }>();
     const {user, isAuthenticated, isLoading} = useAuth();
 
-    const [previewAsStudent, setPreviewAsStudent] = useState(false);
     const [projectGroups, setProjectGroups] = useState<ProjectDetailGroup[] | null>(null);
     const [selectedGroup, setSelectedGroup] = useState<ProjectDetailGroup | null>(null);
     const [projectQuestions, setProjectQuestions] = useState<FragebogenRow[]>([]);
@@ -101,7 +102,9 @@ export default function Questionbow() {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
-    const handleSnackbarClose = () => { setSnackbarOpen(false);};
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
 
     const navigate = useNavigate();
 
@@ -263,6 +266,8 @@ export default function Questionbow() {
     useEffect(() => {
         if (viewMode === ViewType.STUDENT_ANSWERS && projectId) {
             const fetchAverages = async () => {
+                if (loadingAverages) return
+
                 setLoadingAverages(true);
                 try {
                     const res = await fetch(
@@ -297,6 +302,8 @@ export default function Questionbow() {
     if (!isAuthenticated) return <>:( unauthenticated</>
 
     const saveQuestions = async (rows: FragebogenRow[], status: QuestionnaireActivityStatus) => {
+        if (saving) return;
+
         setSaving(true);
 
         try {
@@ -336,10 +343,7 @@ export default function Questionbow() {
     }
 
     const submitAnswers = async (rows: FragebogenRow[]) => {
-        if (user?.role != Role.STUDENT) return
-
-        console.log("SUBMITTIII")
-        console.log(rows)
+        if (user?.role !== Role.STUDENT) return
 
         try {
             const payload: ProjectQuestionAnswersDTO = {

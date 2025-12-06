@@ -3,7 +3,6 @@ package com.gradesave.backend.services;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +24,7 @@ public class UserService implements CrudService<User, UUID> {
     private final PdfService pdfService;
 
     public UserService(com.gradesave.backend.repositories.UserRepository repo, PasswordEncoder encoder,
-            CourseService courseService, PdfService pdfService) {
+                       CourseService courseService, PdfService pdfService) {
         this.repo = repo;
         this.encoder = encoder;
         this.courseService = courseService;

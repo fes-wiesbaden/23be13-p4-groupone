@@ -537,7 +537,7 @@ public class ProjectController {
             return ResponseEntity.status(401).body("Already Submitted");
 
         if (!answerService.answerQuestions(project, user, req))
-            return ResponseEntity.status(401).body("FAiled to answer questions");
+            return ResponseEntity.status(401).body("Failed to answer questions");
 
         return ResponseEntity.ok().build();
     }
@@ -557,7 +557,7 @@ public class ProjectController {
         Group group = groupOpt.get();
 
         if (!project.getGroups().contains(group))
-            return ResponseEntity.badRequest().body("Gruppe gehört nicht zuum projekt");
+            return ResponseEntity.badRequest().body("Gruppe gehört nicht zum projekt");
 
         DetailedProjectQuestionAnswersDTO answers = answerService.getDetailedAnswersForGroup(project, group);
         return ResponseEntity.ok(answers);
@@ -574,6 +574,4 @@ public class ProjectController {
         ProjectGradeAveragesDTO averages = answerService.getGradeAveragesForProject(project);
         return ResponseEntity.ok(averages);
     }
-
-//            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}/fragebogenAnswers`, {
 }

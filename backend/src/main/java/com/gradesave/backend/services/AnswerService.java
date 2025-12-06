@@ -213,8 +213,6 @@ public class AnswerService {
                     Double peerAssessment = peerGrades.isEmpty() ? null :
                             peerGrades.stream().mapToInt(Integer::intValue).average().orElse(0.0);
 
-                    System.out.println(grades);
-
                     return new StudentGradeAverageDTO(
                             studentId,
                             student.getFirstName() + " " + student.getLastName(),

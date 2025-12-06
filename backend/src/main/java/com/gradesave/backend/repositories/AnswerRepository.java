@@ -1,7 +1,6 @@
 package com.gradesave.backend.repositories;
 
 import com.gradesave.backend.models.Answer;
-import com.gradesave.backend.models.Course;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
