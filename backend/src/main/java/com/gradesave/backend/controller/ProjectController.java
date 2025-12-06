@@ -367,45 +367,6 @@ public class ProjectController {
         return ResponseEntity.ok(Map.of("message", "Subject removed successfully"));
     }
 
-    @GetMapping("with-questions")
-    public ResponseEntity<ProjectWithQuestionsDTO[]> getWithQuestions() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() ||
-                authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser")) {
-            return ResponseEntity.status(401).build();
-        }
-
-        String username = authentication.getName();
-        User user = userService.findByUsername(username);
-
-        if (user == null)
-            return ResponseEntity.notFound().build();
-
-        Role role = user.getRole();
-        List<Project> projects = null;
-
-        if (role == Role.STUDENT) {
-            projects = user.getCourses().stream()
-                    .flatMap(c -> c.getProjects().stream())
-                    .filter(p -> !p.getProjectQuestions().isEmpty())
-                    .toList();
-
-
-        } else if (role == Role.ADMIN) {
-            projects = projectService.getAll().stream()
-                    .filter(p -> !p.getProjectQuestions().isEmpty())
-                    .toList();
-        }
-
-
-        if (projects == null)
-            return ResponseEntity.notFound().build();
-
-        ProjectWithQuestionsDTO[] dtos = ProjectWithQuestionsDTO.fromEntity(projects);
-        return ResponseEntity.ok(dtos);
-    }
-
     @GetMapping("{projectId}/fragebogen")
     public ResponseEntity<Void> getFragebogen(@PathVariable UUID projectId) {
         Optional<Project> projectOpt = projectService.getById(projectId);

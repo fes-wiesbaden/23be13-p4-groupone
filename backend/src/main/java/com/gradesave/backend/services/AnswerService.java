@@ -36,10 +36,8 @@ public class AnswerService {
     }
 
     public boolean answerQuestions(Project project, User user, @Valid ProjectQuestionAnswersDTO req) {
-        log.info("answerQuestions called for user {}", user.getId());
 
         if (hasUserSubmitted(project, user)) {
-            log.warn("User {} already submitted", user.getId());
             return false;
         }
 
@@ -47,18 +45,12 @@ public class AnswerService {
                 .filter(g -> g.getUsers().contains(user)).findFirst();
 
         if (myGroupOpt.isEmpty()) {
-            log.warn("User {} not in any group", user.getId());
             return false;
         }
-
-        Group myGroup = myGroupOpt.get();
-        log.info("User is in group {}", myGroup.getId());
 
         Set<ProjectQuestion> projectQuestions = project.getProjectQuestions();
 
         if (req.questions().length != projectQuestions.size()) {
-            log.warn("Question count mismatch: req={} expected={}",
-                    req.questions().length, projectQuestions.size());
             return false;
         }
 
@@ -66,12 +58,9 @@ public class AnswerService {
         List<Answer> answersToSave = new ArrayList<>();
 
         for (ProjectQuestionAnswerDTO q : req.questions()) {
-            log.info("Checking question {}", q.questionId());
-
 
             Optional<Question> questionOpt = questionService.getById(q.questionId());
             if (questionOpt.isEmpty()) {
-                log.warn("Question {} not found in DB", q.questionId());
                 return false;
             }
             Question question = questionOpt.get();
@@ -81,31 +70,25 @@ public class AnswerService {
                     .findFirst();
 
             if (projectQuestionOpt.isEmpty()) {
-                log.warn("ProjectQuestion not found for question {}", question.getId());
                 return false;
             }
 
             ProjectQuestion projectQuestion = projectQuestionOpt.get();
 
             for (StudentAnswerDTO a : q.answers()) {
-                log.info("Checking answer by {} for {}", user.getId(), a.studentId());
 
                 Optional<User> recipientOpt = userService.getById(a.studentId());
                 if (recipientOpt.isEmpty()) {
-                    log.warn("Recipient {} not found", a.studentId());
                     return false;
                 }
 
                 Object ans = a.answer();
-                log.info("Answer object type = {}", ans.getClass().getName());
 
                 if (question.getType() == QuestionType.GRADE && !(ans instanceof Number)) {
-                    log.warn("Expected grade but got: {}", ans);
                     return false;
                 }
 
                 if (question.getType() == QuestionType.TEXT && !(ans instanceof String)) {
-                    log.warn("Expected text but got: {}", ans);
                     return false;
                 }
 
@@ -121,16 +104,9 @@ public class AnswerService {
                 }
 
                 answersToSave.add(answer);
-
-                log.info("Saving answer: qType={} recipient={} value={}",
-                        question.getType(),
-                        recipientOpt.get().getId(),
-                        ans
-                );
             }
         }
 
-        log.info("Saving {} answers", answersToSave.size());
         answerRepository.saveAll(answersToSave);
 
         return true;
