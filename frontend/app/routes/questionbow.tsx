@@ -16,6 +16,7 @@ import type {ProjectDetailGroup} from "~/routes/createOrEditProject";
 import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
 import {useNavigate} from "react-router";
+import CustomizedSnackbars from '~/components/snackbar';
 
 
 interface ProjectWithQuestionAndGroups {
@@ -97,6 +98,10 @@ export default function Questionbow() {
     const [gradeAverages, setGradeAverages] = useState<StudentGradeAverageDTO[]>([])
     const [loadingAverages, setLoadingAverages] = useState(false)
     const [submittedAnswers, setSubmittedAnswers] = useState(false)
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+    const handleSnackbarClose = () => { setSnackbarOpen(false);};
 
     const navigate = useNavigate();
 
@@ -148,7 +153,13 @@ export default function Questionbow() {
                         : `${API_CONFIG.BASE_URL}/api/project/${projectId}/groups`;
 
                 const res = await fetch(url, {credentials: "include"});
-                if (!res.ok) return;
+
+                if (!res.ok) {
+                    setSnackbarMessage(`Fehler beim Laden vom Projekt: ${res.status}`);
+                    setSnackbarSeverity("error");
+                    setSnackbarOpen(true);
+                    return;
+                }
 
                 const data: ProjectWithQuestionAndGroups = await res.json();
 
@@ -171,8 +182,11 @@ export default function Questionbow() {
                 setProjectQuestions(questions)
 
                 setQuestionBowStatus(data.status)
-            } catch (err) {
+            } catch (err: any) {
                 console.error(err);
+                setSnackbarMessage(`Fehler beim Laden vom Projekt: ${err.message}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
             } finally {
                 setLoadingProject(false)
             }
@@ -190,7 +204,12 @@ export default function Questionbow() {
                         `${API_CONFIG.BASE_URL}/api/project/${projectId}/group/${selectedGroup.groupId}/fragebogenAnswers`,
                         {credentials: "include"}
                     );
-                    if (!res.ok) return;
+                    if (!res.ok) {
+                        setSnackbarMessage(`Fehler beim Laden vom Fragebogen: ${res.status}`);
+                        setSnackbarSeverity("error");
+                        setSnackbarOpen(true);
+                        return;
+                    }
 
                     const data: DetailedProjectQuestionAnswersDTO = await res.json();
 
@@ -227,8 +246,11 @@ export default function Questionbow() {
                             return q;
                         })
                     );
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err);
+                    setSnackbarMessage(`Fehler beim Laden vom Fragebogen: ${err.message}`);
+                    setSnackbarSeverity("error");
+                    setSnackbarOpen(true);
                 } finally {
                     setLoadingAnswers(false);
                 }
@@ -247,12 +269,20 @@ export default function Questionbow() {
                         `${API_CONFIG.BASE_URL}/api/project/${projectId}/gradeAverages`,
                         {credentials: "include"}
                     );
-                    if (!res.ok) return;
+                    if (!res.ok) {
+                        setSnackbarMessage(`Fehler beim Laden von Noten: ${res.status}`);
+                        setSnackbarSeverity("error");
+                        setSnackbarOpen(true);
+                        return;
+                    }
 
                     const data: ProjectGradeAveragesDTO = await res.json();
                     setGradeAverages(data.studentAverages);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err);
+                    setSnackbarMessage(`Fehler beim Laden von Noten: ${err.message}`);
+                    setSnackbarSeverity("error");
+                    setSnackbarOpen(true);
                 } finally {
                     setLoadingAverages(false);
                 }
@@ -286,10 +316,20 @@ export default function Questionbow() {
                 body: JSON.stringify(payload)
             });
             if (!res.ok) {
+                setSnackbarMessage(`Fehler beim Speichern vom Fragebogen: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 return
             }
+
+            setSnackbarMessage(`Erfolgreich Gespeichert`);
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
         } catch (err: any) {
             console.error(err)
+            setSnackbarMessage(`Fehler beim Speichern vom Fragebogen: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
         } finally {
             setSaving(false)
         }
@@ -320,12 +360,22 @@ export default function Questionbow() {
             });
 
             if (!res.ok) {
+                setSnackbarMessage(`Fehler beim Speichern den Antworten: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 return;
             }
 
             setSubmittedAnswers(true)
+
+            setSnackbarMessage(`Erfolgreich Gespeichert`);
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
         } catch (err: any) {
             console.error(err)
+            setSnackbarMessage(`Fehler beim Speichern den Antworten: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
         } finally {
 
         }
@@ -469,6 +519,12 @@ export default function Questionbow() {
                     </>
                 )
             }
+            <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+            />
         </>
     )
 }

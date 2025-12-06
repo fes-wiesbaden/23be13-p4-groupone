@@ -3,6 +3,7 @@ import API_CONFIG from "~/apiConfig";
 import {useNavigate} from "react-router";
 import {DataGrid} from "@mui/x-data-grid";
 import {Autocomplete, Box, TextField} from "@mui/material";
+import CustomizedSnackbars from "~/components/snackbar";
 
 interface CourseFilter {
     id: string;
@@ -47,6 +48,12 @@ export default function QuestionbowSelection() {
     const [courses, setCourses] = useState<CourseFilter[]>([]);
     const [selectedCourse, setSelectedCourse] = useState<CourseFilter | null>(null);
     const [selectedProject, setSelectedProject] = useState<ProjectFilter | null>(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
 
     const [allRows, setAllRows] = useState<QuestionbowRow[]>([]);
     const [rows, setRows] = useState<QuestionbowRow[]>([]);
@@ -58,7 +65,13 @@ export default function QuestionbowSelection() {
                 credentials: "include",
             });
 
-            if (!res.ok) return;
+            if (!res.ok) {
+                setSnackbarMessage(`Fehler beim Laden von den Fragebögen: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
+                console.error(`Fehler beim Laden von den Fragebögen: ${res.status}`)
+                return;
+            }
             const data: QuestionnaireResponse = await res.json();
 
             setCourses(data.courses);
@@ -78,8 +91,11 @@ export default function QuestionbowSelection() {
 
             setAllRows(rows);
             setRows(rows);
-        } catch (err) {
+        } catch (err: any) {
             console.error("Failed to fetch questionnaires:", err);
+            setSnackbarMessage(`Fehler beim Laden von den Fragebögen: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
         }
     };
 
@@ -152,6 +168,12 @@ export default function QuestionbowSelection() {
                     sx={{width: "100%", cursor: "pointer"}}
                 />
             </Box>
+            <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+            />
         </>
     );
 }
