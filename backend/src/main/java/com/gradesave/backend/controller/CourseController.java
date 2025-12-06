@@ -1,7 +1,5 @@
 package com.gradesave.backend.controller;
 
-import com.gradesave.backend.dto.course.CreateCourseRequest;
-import com.gradesave.backend.dto.course.UpdateCourseRequest;
 import com.gradesave.backend.dto.course.*;
 import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.Course;
@@ -16,24 +14,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.gradesave.backend.dto.course.CourseSelectionDto;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author: Noah Bach, Daniel Hess
- *          <p>
- *          Controller for handling Course ("Klassen") REST endpoints.
- *          Provides endpoints to create, retrieve, update, and delete courses.
- *          </p>
- *          Create, List, Delete function from Noah Bach rest updated by Daniel
- *          Hess
- *          <p>
- *          DTO changes by Paul Geisthardt
+ * <p>
+ * Controller for handling Course ("Klassen") REST endpoints.
+ * Provides endpoints to create, retrieve, update, and delete courses.
+ * </p>
+ * Create, List, Delete function from Noah Bach rest updated by Daniel
+ * Hess
+ * <p>
+ * DTO changes by Paul Geisthardt
  **/
 
 @RestController
@@ -78,7 +73,7 @@ public class CourseController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Course> updateCourse(@PathVariable UUID id,
-            @Valid @RequestBody UpdateCourseRequest req) {
+                                               @Valid @RequestBody UpdateCourseRequest req) {
         if (req.teacherId() != null) {
             if (!userService.exists(req.teacherId())) {
                 return ResponseEntity.badRequest().build();
@@ -110,7 +105,7 @@ public class CourseController {
             try {
                 UUID classTeacherId = UUID.fromString(req.classTeacherId());
                 Optional<User> classTeacherOpt = userService.getById(classTeacherId);
-                if (classTeacherOpt.isEmpty() || classTeacherOpt.get().getRole() != Role.TEACHER)
+                if (classTeacherOpt.isEmpty() || (classTeacherOpt.get().getRole() != Role.TEACHER && classTeacherOpt.get().getRole() != Role.ADMIN))
                     return ResponseEntity.badRequest().build();
 
                 classTeacher = classTeacherOpt.get();
@@ -167,7 +162,7 @@ public class CourseController {
             return ResponseEntity.notFound().build();
 
         User teacher = teacherOpt.get();
-        if (teacher.getRole() != Role.TEACHER)
+        if (teacher.getRole() != Role.TEACHER && teacher.getRole() != Role.ADMIN)
             return ResponseEntity.badRequest().build();
 
         if (!course.getUsers().contains(teacher)) {
@@ -180,7 +175,7 @@ public class CourseController {
 
     @PostMapping("{id}/teachers/remove")
     public ResponseEntity<Void> removeTeacher(@PathVariable UUID id,
-            @Valid @RequestBody TeacherAddRemoveToGroupDTO req) {
+                                              @Valid @RequestBody TeacherAddRemoveToGroupDTO req) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
             return ResponseEntity.notFound().build();
@@ -192,7 +187,7 @@ public class CourseController {
             return ResponseEntity.notFound().build();
 
         User teacher = teacherOpt.get();
-        if (teacher.getRole() != Role.TEACHER)
+        if (teacher.getRole() != Role.TEACHER && teacher.getRole() != Role.ADMIN)
             return ResponseEntity.badRequest().build();
 
         boolean removed = course.getUsers().removeIf(t -> t.getId().equals(teacher.getId()));
@@ -229,7 +224,7 @@ public class CourseController {
 
     @PostMapping("{id}/students/remove")
     public ResponseEntity<Void> removeStudent(@PathVariable UUID id,
-            @Valid @RequestBody StudentAddRemoveToGroupDTO req) {
+                                              @Valid @RequestBody StudentAddRemoveToGroupDTO req) {
         Optional<Course> courseOpt = courseService.getById(id);
         if (courseOpt.isEmpty())
             return ResponseEntity.notFound().build();

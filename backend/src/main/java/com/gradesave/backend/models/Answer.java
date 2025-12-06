@@ -43,7 +43,7 @@ public class Answer {
     @Min(1)
     @Max(6)
     @Column(name = "answer_grade")
-    private int answerGrade;
+    private Integer answerGrade;
 
     @Column(name = "answer_text")
     private String answerText;
@@ -64,7 +64,7 @@ public class Answer {
         return recipient;
     }
 
-    public int getAnswerGrade() {
+    public Integer getAnswerGrade() {
         return answerGrade;
     }
 
@@ -88,7 +88,7 @@ public class Answer {
         this.recipient = recipient;
     }
 
-    public void setAnswerGrade(int answerGrade) {
+    public void setAnswerGrade(Integer answerGrade) {
         this.answerGrade = answerGrade;
     }
 
