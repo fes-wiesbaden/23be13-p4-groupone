@@ -5,5 +5,7 @@ import java.util.UUID;
 public record FragebogenProjectDTO(
         UUID id,
         String name,
-        int questionCount
+        int questionCount,
+        int totalStudent,
+        int submittedAnswers
 ) {}

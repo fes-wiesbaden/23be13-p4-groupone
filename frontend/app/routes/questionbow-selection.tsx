@@ -23,6 +23,8 @@ interface QuestionbowRow {
     courseId: string;
     courseName: string;
     questionCount: number;
+    amountStudents: number,
+    amountSubmitted: number
 }
 
 type QuestionnaireResponse = {
@@ -33,6 +35,8 @@ type QuestionnaireResponse = {
             id: string;
             name: string;
             questionCount: number;
+            totalStudent: number;
+            submittedAnswers: number;
         }[];
     }[];
 };
@@ -67,6 +71,8 @@ export default function QuestionbowSelection() {
                     courseId: course.id,
                     courseName: course.name,
                     questionCount: project.questionCount,
+                    amountStudents: project.totalStudent,
+                    amountSubmitted: project.submittedAnswers
                 }))
             );
 
@@ -136,6 +142,8 @@ export default function QuestionbowSelection() {
                         {field: "projectName", headerName: "Projekt", flex: 1},
                         {field: "courseName", headerName: "Kurs", flex: 1},
                         {field: "questionCount", headerName: "Anzahl Fragen", flex: 1},
+                        {field: "amountStudents", headerName: "Anzahl Schüler", flex: 1},
+                        {field: "amountSubmitted", headerName: "Antworten", flex: 1}
                     ]}
                     rows={rows}
                     getRowId={(row) => row.id}

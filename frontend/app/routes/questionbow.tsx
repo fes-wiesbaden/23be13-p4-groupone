@@ -1,19 +1,21 @@
 import {useAuth} from "~/contexts/AuthContext";
 import {Role} from "~/types/models";
 import {useEffect, useState} from "react";
-import Button from "@mui/material/Button";
 import FragebogenTable, {
     type FragebogenRow,
-    type FragebogenStudent,
+    type FragebogenStudent, NO_GRADE_SELECTED,
     QuestionnaireActivityStatus,
-    QuestionType
+    QuestionType,
+    ViewType
 } from "~/components/fragebogen";
 import Box from "@mui/material/Box";
 import {useParams} from "react-router-dom";
-import {Autocomplete, TextField} from "@mui/material";
+import {Autocomplete, LinearProgress, TextField, ToggleButton, ToggleButtonGroup, Typography} from "@mui/material";
 import API_CONFIG from "~/apiConfig";
 import type {ProjectDetailGroup} from "~/routes/createOrEditProject";
 import Divider from "@mui/material/Divider";
+import Button from "@mui/material/Button";
+import {useNavigate} from "react-router";
 
 
 interface ProjectWithQuestionAndGroups {
@@ -50,6 +52,33 @@ export interface ProjectQuestionAnswersDTO {
     questions: ProjectQuestionAnswerDTO[]
 }
 
+export interface DetailedStudentAnswerDTO {
+    authorId: string,
+    recipientId: string,
+    answer: string | number
+}
+
+export interface DetailedProjectQuestionAnswerDTO {
+    questionId: string,
+    answers: DetailedStudentAnswerDTO[]
+}
+
+export interface DetailedProjectQuestionAnswersDTO {
+    questions: DetailedProjectQuestionAnswerDTO[]
+}
+export interface StudentGradeAverageDTO {
+    studentId: string,
+    studentName: string,
+    averageGrade: number | null,
+    totalGrades: number,
+    selfAssessment: number | null,
+    peerAssessment: number | null
+}
+
+export interface ProjectGradeAveragesDTO {
+    studentAverages: StudentGradeAverageDTO[]
+}
+
 export default function Questionbow() {
     let {projectId} = useParams<{ projectId: string }>();
     const {user, isAuthenticated, isLoading} = useAuth();
@@ -61,6 +90,15 @@ export default function Questionbow() {
     const [saving, setSaving] = useState(false);
     const [loadingProject, setLoadingProject] = useState(false)
     const [questionBowStatus, setQuestionBowStatus] = useState<QuestionnaireActivityStatus | null>(null)
+    const [viewMode, setViewMode] = useState<ViewType>(ViewType.EDIT)
+    const [loadingAnswers, setLoadingAnswers] = useState(false)
+    const [selectedStudentFilter, setSelectedStudentFilter] = useState<string | null>(null)
+    const [submissionStatus, setSubmissionStatus] = useState<Map<string, boolean>>(new Map())
+    const [gradeAverages, setGradeAverages] = useState<StudentGradeAverageDTO[]>([])
+    const [loadingAverages, setLoadingAverages] = useState(false)
+    const [submittedAnswers, setSubmittedAnswers] = useState(false)
+
+    const navigate = useNavigate();
 
     const groupMembers: FragebogenStudent[] = (() => {
         if (!selectedGroup) return [];
@@ -84,7 +122,8 @@ export default function Questionbow() {
 
             return {
                 studentName: studentName,
-                studentId: member.studentId
+                studentId: member.studentId,
+                hasSubmitted: submissionStatus.get(member.studentId) ?? false
             }
         });
 
@@ -142,7 +181,86 @@ export default function Questionbow() {
         fetchProjectData();
     }, [projectId, user]);
 
-    const togglePreview = () => setPreviewAsStudent(prev => !prev);
+    useEffect(() => {
+        if (viewMode === ViewType.STUDENT_ANSWERS && selectedGroup && projectId) {
+            const fetchAnswers = async () => {
+                setLoadingAnswers(true);
+                try {
+                    const res = await fetch(
+                        `${API_CONFIG.BASE_URL}/api/project/${projectId}/group/${selectedGroup.groupId}/fragebogenAnswers`,
+                        {credentials: "include"}
+                    );
+                    if (!res.ok) return;
+
+                    const data: DetailedProjectQuestionAnswersDTO = await res.json();
+
+                    const statusMap = new Map<string, boolean>();
+                    if (selectedGroup.members) {
+                        selectedGroup.members.forEach(member => {
+                            const hasSubmitted = data.questions.some(q =>
+                                q.answers.some(a =>
+                                    a.authorId === member.studentId &&
+                                    ((typeof a.answer === 'number' && a.answer !== NO_GRADE_SELECTED) ||
+                                        (typeof a.answer === 'string' && a.answer.trim() !== ''))
+                                )
+                            );
+                            statusMap.set(member.studentId, hasSubmitted);
+                        });
+                    }
+                    setSubmissionStatus(statusMap);
+
+                    setProjectQuestions(prevQuestions =>
+                        prevQuestions.map(q => {
+                            const answerData = data.questions.find(qa => qa.questionId === q.id);
+                            if (answerData) {
+                                const answersByRecipient = answerData.answers.map(a => ({
+                                    studentId: a.recipientId,
+                                    authorId: a.authorId,
+                                    answer: a.answer
+                                }));
+
+                                return {
+                                    ...q,
+                                    answer: answersByRecipient
+                                };
+                            }
+                            return q;
+                        })
+                    );
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    setLoadingAnswers(false);
+                }
+            };
+
+            fetchAnswers();
+        }
+    }, [viewMode, selectedGroup, projectId]);
+
+    useEffect(() => {
+        if (viewMode === ViewType.STUDENT_ANSWERS && projectId) {
+            const fetchAverages = async () => {
+                setLoadingAverages(true);
+                try {
+                    const res = await fetch(
+                        `${API_CONFIG.BASE_URL}/api/project/${projectId}/gradeAverages`,
+                        {credentials: "include"}
+                    );
+                    if (!res.ok) return;
+
+                    const data: ProjectGradeAveragesDTO = await res.json();
+                    setGradeAverages(data.studentAverages);
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    setLoadingAverages(false);
+                }
+            };
+
+            fetchAverages();
+        }
+    }, [viewMode, projectId]);
 
     if (isLoading) return <>Loading User...</>
     if (loadingProject) return <>Loading Project...</>
@@ -186,7 +304,7 @@ export default function Questionbow() {
         try {
             const payload: ProjectQuestionAnswersDTO = {
                 questions: rows.map(r => ({
-                    questionId:  r.id,
+                    questionId: r.id,
                     answers: (r.answer || []).map(a => ({
                         studentId: a.studentId,
                         answer: a.answer ? a.answer : (r.type === QuestionType.GRADE ? 0 : "")
@@ -204,11 +322,36 @@ export default function Questionbow() {
             if (!res.ok) {
                 return;
             }
+
+            setSubmittedAnswers(true)
         } catch (err: any) {
             console.error(err)
         } finally {
 
         }
+    }
+
+    const submitted = groupMembers.filter(m => m.hasSubmitted).length;
+    const total = groupMembers.length;
+    const percentage = (submitted / total) * 100;
+
+    if (submittedAnswers) {
+        return (
+            <>
+                <Typography>
+                    Erfolgreich abgeschickt
+                </Typography>
+
+                <Button
+                    variant="contained"
+                    onClick={() => {
+                        navigate("/fragebogen")
+                    }}
+                >
+                    Zurück zu Fragebogen Auswahl
+                </Button>
+            </>
+        )
     }
 
     return (
@@ -218,34 +361,96 @@ export default function Questionbow() {
                         px={2}
                         py={2}
                     >
-                        <Button onClick={togglePreview} variant="contained">
-                            {previewAsStudent ? "Edit Mode" : "Preview as Student"}
-                        </Button>
+                        <ToggleButtonGroup
+                            value={viewMode}
+                            exclusive
+                            onChange={(_, newMode) => {
+                                if (newMode !== null) setViewMode(newMode);
+                            }}
+                        >
+                            <ToggleButton value={ViewType.EDIT}>Fragen bearbeiten</ToggleButton>
+                            <ToggleButton value={ViewType.PREVIEW}>Vorschau als Schüler</ToggleButton>
+                            <ToggleButton value={ViewType.STUDENT_ANSWERS}>Schüler Antworten</ToggleButton>
+                        </ToggleButtonGroup>
 
                         <Box py={2}>
                             <Divider/>
                         </Box>
 
-                        {previewAsStudent && (
-                            <Autocomplete
-                                value={selectedGroup}
-                                options={projectGroups || []}
-                                getOptionLabel={(option) => option.groupName}
-                                onChange={(_, v) => setSelectedGroup(v)}
-                                renderInput={(params) =>
-                                    <TextField {...params} label="Gruppe"/>}
-                                sx={{minWidth: 200}}
-                            />
+                        {(viewMode === ViewType.PREVIEW || viewMode === ViewType.STUDENT_ANSWERS) && (
+                            <Box display="flex" gap={2} flexWrap="wrap">
+                                <Autocomplete
+                                    value={selectedGroup}
+                                    options={projectGroups || []}
+                                    getOptionLabel={(option) => option.groupName}
+                                    onChange={(_, v) => {
+                                        setSelectedGroup(v);
+                                        setSelectedStudentFilter(null);
+                                    }}
+                                    renderInput={(params) =>
+                                        <TextField {...params} label="Gruppe"/>}
+                                    sx={{minWidth: 200, flexGrow: 1}}
+                                />
+                                {viewMode === ViewType.STUDENT_ANSWERS && selectedGroup && (
+                                    <Autocomplete
+                                        value={groupMembers.find(m => m.studentId === selectedStudentFilter) || null}
+                                        options={groupMembers}
+                                        getOptionLabel={(option) => {
+                                            const statusIcon = option.hasSubmitted ? "👍" : "👎";
+                                            return `${statusIcon} ${option.studentName}`;
+                                        }}
+                                        onChange={(_, v) => setSelectedStudentFilter(v?.studentId || null)}
+                                        renderInput={(params) =>
+                                            <TextField {...params} label="Nach Schüler filtern"/>}
+                                        sx={{minWidth: 250, flexGrow: 1}}
+                                        renderOption={(props, option) => (
+                                            <li {...props}>
+                                                <Box display="flex" alignItems="center" gap={1}>
+                                                    <span>{option.studentName}</span>
+                                                    <span style={{fontSize: '0.85em', color: '#666'}}>
+                                                        {option.hasSubmitted ? "(Eingereicht)" : "(Nicht Eingereicht)"}
+                                                    </span>
+                                                </Box>
+                                            </li>
+                                        )}
+                                    />
+                                )}
+                            </Box>
                         )}
-                        {(selectedGroup && previewAsStudent || !previewAsStudent) && (
-                            <FragebogenTable
-                                rows={projectQuestions}
-                                onSubmit={saveQuestions}
-                                students={groupMembers}
-                                editView={!previewAsStudent}
-                                status={questionBowStatus || QuestionnaireActivityStatus.ARCHIVED}
-                                isPreview={true}
-                            />
+
+                        {viewMode === ViewType.STUDENT_ANSWERS && selectedGroup && !loadingAnswers && (
+
+                            <Box mt={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+                                <Typography variant="subtitle2" gutterBottom>
+                                    Einreich Status
+                                </Typography>
+
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Typography>{submitted}/{total}</Typography>
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={percentage}
+                                        sx={{flexGrow: 1, borderRadius: 1, height: 8}}
+                                    />
+                                </Box>
+                            </Box>
+                        )}
+
+                        {(selectedGroup && (viewMode === ViewType.PREVIEW || viewMode === ViewType.STUDENT_ANSWERS) || viewMode === ViewType.EDIT) && (
+                            loadingAnswers ? (
+                                <div>Loading answers...</div>
+                            ) : (
+                                <FragebogenTable
+                                    rows={projectQuestions}
+                                    onSubmit={saveQuestions}
+                                    students={groupMembers}
+                                    editView={viewMode === ViewType.EDIT}
+                                    status={questionBowStatus || QuestionnaireActivityStatus.ARCHIVED}
+                                    viewMode={viewMode}
+                                    selectedStudentFilter={selectedStudentFilter}
+                                    gradeAverages={gradeAverages}
+                                />
+                            )
                         )}
                     </Box>
                 )
@@ -258,7 +463,8 @@ export default function Questionbow() {
                             onSubmit={submitAnswers}
                             editView={false}
                             status={questionBowStatus || QuestionnaireActivityStatus.ARCHIVED}
-                            isPreview={false}
+                            viewMode={ViewType.PREVIEW}
+                            selectedStudentFilter={null}
                         />
                     </>
                 )

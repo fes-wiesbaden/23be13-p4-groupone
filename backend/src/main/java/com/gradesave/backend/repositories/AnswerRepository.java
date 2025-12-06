@@ -11,4 +11,7 @@ import java.util.UUID;
 public interface AnswerRepository extends JpaRepository<Answer, UUID> {
     @Query("SELECT a FROM Answer a WHERE a.author.id = ?1 AND a.projectQuestion.project.id = ?2")
     List<Answer> findByAuthorIdAndProjectId(UUID userId, UUID projectId);
+
+    @Query("SELECT a FROM Answer a WHERE a.projectQuestion.project.id = ?1")
+    List<Answer> findByProjectId(UUID projectId);
 }

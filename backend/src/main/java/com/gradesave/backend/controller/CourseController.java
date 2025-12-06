@@ -110,7 +110,7 @@ public class CourseController {
             try {
                 UUID classTeacherId = UUID.fromString(req.classTeacherId());
                 Optional<User> classTeacherOpt = userService.getById(classTeacherId);
-                if (classTeacherOpt.isEmpty() || classTeacherOpt.get().getRole() != Role.TEACHER)
+                if (classTeacherOpt.isEmpty() || !(classTeacherOpt.get().getRole() != Role.TEACHER || classTeacherOpt.get().getRole() != Role.ADMIN))
                     return ResponseEntity.badRequest().build();
 
                 classTeacher = classTeacherOpt.get();
@@ -168,7 +168,7 @@ public class CourseController {
             return ResponseEntity.notFound().build();
 
         User teacher = teacherOpt.get();
-        if (teacher.getRole() != Role.TEACHER)
+        if (teacher.getRole() != Role.TEACHER || teacher.getRole() != Role.ADMIN)
             return ResponseEntity.badRequest().build();
 
         if (!course.getUsers().contains(teacher)) {
@@ -192,7 +192,7 @@ public class CourseController {
             return ResponseEntity.notFound().build();
 
         User teacher = teacherOpt.get();
-        if (teacher.getRole() != Role.TEACHER)
+        if (teacher.getRole() != Role.TEACHER || teacher.getRole() != Role.ADMIN)
             return ResponseEntity.badRequest().build();
 
         boolean removed = course.getUsers().removeIf(t -> t.getId().equals(teacher.getId()));

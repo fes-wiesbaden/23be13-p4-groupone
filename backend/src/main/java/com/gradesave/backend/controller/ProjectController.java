@@ -445,16 +445,25 @@ public class ProjectController {
 
         List<Course> courses = courseService.getAllWithUser(user);
 
-
         List<FragebogenCourseDTO> dtoCourses = courses.stream()
                 .map(c -> new FragebogenCourseDTO(
                         c.getId(),
                         c.getCourseName(),
                         c.getProjects().stream()
+                                .filter(p -> {
+                                    if (role == Role.STUDENT) {
+                                        return p.getActivityStatus() == QuestionnaireActivityStatus.READY_FOR_ANSWERING
+                                                && !answerService.hasUserSubmitted(p, user);
+                                    }
+                                    return true;
+                                })
                                 .map(p -> new FragebogenProjectDTO(
                                         p.getId(),
                                         p.getName(),
-                                        p.getProjectQuestions().size()
+                                        p.getProjectQuestions().size(),
+                                        (int) c.getUsers().stream().filter(s -> s.getRole() == Role.STUDENT).count(),
+                                        (int) c.getUsers().stream().filter(s -> s.getRole() == Role.STUDENT)
+                                                .filter(s -> answerService.hasUserSubmitted(p, s)).count()
                                 ))
                                 .toList()
                 ))
@@ -490,7 +499,7 @@ public class ProjectController {
         QuestionnaireActivityStatus status = project.getActivityStatus();
 
         if (status == QuestionnaireActivityStatus.READY_FOR_ANSWERING && answerService.hasUserSubmitted(project, user))
-            status = QuestionnaireActivityStatus.ARCHIVED;
+            status = QuestionnaireActivityStatus.ALREADY_ANSWERED;
 
         ProjectQuestionnaireDetailDTO dto = ProjectQuestionnaireDetailDTO.fromEntity(project, List.of(group), status);
 
@@ -531,6 +540,39 @@ public class ProjectController {
             return ResponseEntity.status(401).body("FAiled to answer questions");
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("{projectId}/group/{groupId}/fragebogenAnswers")
+    public ResponseEntity<?> getGroupAnswers(@PathVariable UUID projectId, @PathVariable UUID groupId) {
+        Optional<Project> projectOpt = projectService.getById(projectId);
+        if (projectOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Project project = projectOpt.get();
+
+        Optional<Group> groupOpt = groupService.getById(groupId);
+        if (groupOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Group group = groupOpt.get();
+
+        if (!project.getGroups().contains(group))
+            return ResponseEntity.badRequest().body("Gruppe gehört nicht zuum projekt");
+
+        DetailedProjectQuestionAnswersDTO answers = answerService.getDetailedAnswersForGroup(project, group);
+        return ResponseEntity.ok(answers);
+    }
+
+    @GetMapping("{projectId}/gradeAverages")
+    public ResponseEntity<?> getProjectGradeAverages(@PathVariable UUID projectId) {
+        Optional<Project> projectOpt = projectService.getById(projectId);
+        if (projectOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Project project = projectOpt.get();
+
+        ProjectGradeAveragesDTO averages = answerService.getGradeAveragesForProject(project);
+        return ResponseEntity.ok(averages);
     }
 
 //            const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/${projectId}/fragebogenAnswers`, {

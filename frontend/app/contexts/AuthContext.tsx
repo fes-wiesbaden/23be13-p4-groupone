@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (import.meta.env as any).VITE_API_URL ?? "http://localhost:8080";
 
   const checkAuth = useCallback(async () => {
+    setIsLoading(true)
     try {
       const res = await fetch(`${apiUrl}/api/users/me`, {
         credentials: "include",
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await res.json();
         setUser(userData);
       } else {
+        console.error("Auth check failed:");
         setUser(null);
       }
     } catch (error) {
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [apiUrl]);
 
   useEffect(() => {
+    setIsLoading(true)
     checkAuth();
   }, [checkAuth]);
 
