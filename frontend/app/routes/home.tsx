@@ -17,6 +17,7 @@ import GradeIcon from "@mui/icons-material/Grade";
 import QuizIcon from "@mui/icons-material/Quiz";
 import ProjectIcon from "@mui/icons-material/Work";
 import LearningIcon from "@mui/icons-material/MenuBook";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 interface DashboardCard {
   title: string;
@@ -86,6 +87,13 @@ export default function Home() {
       path: "/lernbereich",
       color: "#0288d1",
       roles: ["ADMIN", "TEACHER", "STUDENT"],
+    },{
+      title: "Pdf Benutzer Daten",
+      description: "Übersicht und Download Ihrer PDF-Dateien aus der Erstellung von Benutzern",
+      icon: <PictureAsPdfIcon sx={{ fontSize: 40 }} />,
+      path: "/pdfs",
+      color: "#0288d1",
+      roles: ["ADMIN"],
     },
   ];
 
