@@ -1,6 +1,5 @@
 package com.gradesave.backend.dto.project;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 public record ProjectSummaryDTO(
