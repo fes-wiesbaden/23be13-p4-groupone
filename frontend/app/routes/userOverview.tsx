@@ -10,8 +10,12 @@
  * @Edited by Kebba Ceesay
  * @Date: 08/12/2025
  * Add dialog integration
+ * 
+ * @Edited by Noah Bach
+ * @Date: 05/12/2025
+ * Better usability for CSV import
+ * (Snackbar, remove file from form on submit, reload on success)
  */
-import * as React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -212,7 +216,6 @@ export default function UsersPage() {
       });
 
       if (!res.ok) {
-        // alert("Aktualisieren fehlgeschlagen.");
         console.error("Fehler beim Aktualisieren des Benutzers:", res.statusText);
 
         setSnackbarMessage(`Fehler beim Bearbeiten! Code: ${res.status}`);
@@ -262,7 +265,8 @@ export default function UsersPage() {
         type={CsvType.USERS}
         url={`${API_CONFIG.BASE_URL}/api/csv/upload`}
         upload_name={"Hochladen der CSV"}
-        select_name={"Wählen sie eine Nutzer CSV aus"}
+        select_name={"Wählen Sie eine Nutzer-CSV aus"}
+        doAfterUpload={load}
       />
       <DataGridWithAdd<UserRow>
         columns={columns}
