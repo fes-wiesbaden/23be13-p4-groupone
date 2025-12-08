@@ -296,14 +296,15 @@ export default function Grades() {
 
     const rows = gradeOverview?.users.map((u, i) => {
         const row: any = { id: u.id, nr: i + 1, nachname: u.lastName, vorname: u.firstName, gruppe: u.group };
-        if (!showGrades) {
-            return [];
+
+        if (showGrades) {
+            u.grades.forEach(g => {
+                if (g.performanceId === "ZV") row[`${g.projectSubjectId}-ZV`] = g.grade;
+                else if (!g.performanceId && g.projectSubjectId) row[`${g.projectSubjectId}-Z`] = g.grade;
+                else if (g.performanceId) row[g.performanceId] = g.grade;
+            });
         }
-        u.grades.forEach(g => {
-            if (g.performanceId === "ZV") row[`${g.projectSubjectId}-ZV`] = g.grade;
-            else if (!g.performanceId && g.projectSubjectId) row[`${g.projectSubjectId}-Z`] = g.grade;
-            else if (g.performanceId) row[g.performanceId] = g.grade;
-        });
+
         return row;
     }) || [];
 
@@ -324,11 +325,14 @@ export default function Grades() {
                     )}
 
                     <Autocomplete
-                        options={selectedCourse?.projects || []}
+                        options={selectedCourse?.projects && selectedCourse.projects.length > 0
+                            ? selectedCourse.projects
+                            : [{ id: "none", name: "Keine Projekte vorhanden", groups: [] }]}
                         getOptionLabel={o => o.name}
+                        getOptionDisabled={o => o.id === "none"}
                         renderInput={params => <TextField {...params} label="Projekt" error={projectError} />}
-                        onChange={(_, v) => setSelectedProject(v)}
-                        disabled={!selectedCourse}
+                        onChange={(_, v) => setSelectedProject(v?.id === "none" ? null : v)}
+                        disabled={!selectedCourse && !isStudent}
                         sx={{ minWidth: 200, flex: 1 }}
                     />
 
