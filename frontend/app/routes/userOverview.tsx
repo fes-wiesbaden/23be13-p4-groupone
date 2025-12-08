@@ -2,6 +2,14 @@
  * @Author: Daniel Hess
  * @Date: 09/09/2024
  * Creates overview of all users with actions to edit, delete and add new users
+ *
+ * @Edited by Kebba Ceesay
+ * @Date: 03/12/2025
+ * Snackbar integration completed
+ *
+ * @Edited by Kebba Ceesay
+ * @Date: 08/12/2025
+ * Add dialog integration
  */
 import * as React from "react";
 import {
@@ -23,6 +31,7 @@ import API_CONFIG from "~/apiConfig";
 import FileUpload from "~/components/fileUpload";
 import CsvType from "~/types/csvType";
 import alertDialog from "~/components/youSurePopup";
+import CustomizedSnackbars from "../components/snackbar";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
 
@@ -60,6 +69,10 @@ const columns: Column[] = [
 export default function UsersPage() {
   const [rows, setRows] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const handleSnackbarClose = () => { setSnackbarOpen(false);};
 
   const [editRow, setEditRow] = useState<UserRow | null>(null);
   const [open, setOpen] = useState(false);
@@ -159,11 +172,19 @@ export default function UsersPage() {
       method: "DELETE",
       credentials: "include",
     });
-    if (res.ok) {
-      setRows((prev) => prev.filter((r) => r.id !== id));
-    } else {
-      alert("Löschen fehlgeschlagen.");
+    if (!res.ok) {
+      console.error("Fehler beim Löschen des Benutzers:", res.statusText);
+
+      setSnackbarMessage(`Fehler beim Löschen! Code: ${res.status}`);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
     }
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    setOpen(false);
+    setSnackbarMessage("Benutzer wurde erfolgreich gelöscht!");
+    setSnackbarSeverity("success");
+    setSnackbarOpen(true);
   };
 
   const onSave = async () => {
@@ -190,12 +211,20 @@ export default function UsersPage() {
         body: JSON.stringify(updateRequest),
       });
 
-      if (res.ok) {
-        await load();
-        setOpen(false);
-      } else {
-        alert("Aktualisieren fehlgeschlagen.");
+      if (!res.ok) {
+        // alert("Aktualisieren fehlgeschlagen.");
+        console.error("Fehler beim Aktualisieren des Benutzers:", res.statusText);
+
+        setSnackbarMessage(`Fehler beim Bearbeiten! Code: ${res.status}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
       }
+      await load();
+      setOpen(false);
+      setSnackbarMessage("Benutzer wurde erfolgreich bearbeitet!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } else {
       const createRequest: CreateUserRequest = {
         username: form.username,
@@ -211,12 +240,18 @@ export default function UsersPage() {
         credentials: "include",
         body: JSON.stringify(createRequest),
       });
-      if (res.ok) {
-        await load();
-        setOpen(false);
-      } else {
-        alert("Erstellen fehlgeschlagen.");
+      if (!res.ok) {
+        console.error("Fehler beim Erstellen des Benutzers:", res.statusText);
+        setSnackbarMessage(`Fehler beim Erstellen! Code: ${res.status}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
       }
+      await load();
+      setOpen(false);
+      setSnackbarMessage("Benutzer wurde erfolgreich erstellt!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     }
   };
 
@@ -316,6 +351,12 @@ export default function UsersPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      <CustomizedSnackbars
+          open={snackbarOpen}
+          message={snackbarMessage}
+          severity={snackbarSeverity}
+          onClose={handleSnackbarClose}
+      />
       {ConfirmDialog}
     </>
   );
