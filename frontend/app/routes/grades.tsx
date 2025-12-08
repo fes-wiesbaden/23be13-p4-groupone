@@ -6,7 +6,19 @@ import { useAuth } from "../contexts/AuthContext";
 import { DataGrid, type GridColDef, type GridColumnGroupingModel, type GridSingleSelectColDef } from "@mui/x-data-grid";
 import { Role } from "~/types/models";
 import FormDialog from "~/components/addColumn";
+import CustomizedSnackbars from '../components/snackbar';
 
+/**
+ * @author Michael Holl
+ *
+ * Displays grade overview
+ * - Select course, project, and group
+ * - Fetch and display grades in an editable DataGrid
+ * - Supports resetting and saving grades
+ *
+ * @Edited by Kebba Ceesay
+ * Snackbar integration completed
+ */
 
 export interface GroupOption { id: string; name: string; }
 export interface ProjectOption { id: string; name: string; groups: GroupOption[]; }
@@ -35,6 +47,13 @@ export default function Grades() {
     const [performancesColumns, setPerformancesColumns] = useState<GridColDef[]>([]);
     const [projectError, setProjectError] = useState(false);
     const [courseError, setCourseError] = useState(false);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
 
     const isStudent = user?.role === Role.STUDENT;
 
@@ -213,9 +232,18 @@ export default function Grades() {
                 credentials: "include",
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) throw new Error(res.statusText);
+            if (!res.ok) {
+                console.error("Fehler beim Speichern der Noten:", res.statusText);
+
+                setSnackbarMessage(`Fehler beim Speichern! Code: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
+                return;            }
             setUpdatedGrades([]);
             console.log("Noten erfolgreich gespeichert!");
+            setSnackbarMessage("Noten erfolgreich gespeichert!");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
         } catch (err) { console.error(err); }
     };
 
@@ -387,6 +415,12 @@ export default function Grades() {
                     </Box>}
                 </>
             )}
+            <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+            />
         </Box>
     );
 }
