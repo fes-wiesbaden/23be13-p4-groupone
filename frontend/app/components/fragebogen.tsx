@@ -119,9 +119,9 @@ export default function Fragebogen({
 
     if (!user) return <>Fehler beim Authentifizieren, bitte lade die Seite neu</>;
 
-    const myId: string = user.userId
+    const myId = user.userId
 
-    if (!myId.trim()) return <>Fehler beim Authentifizieren, bitte lade die Seite neu</>;
+    if (!myId || !myId.trim()) return <>Fehler beim Authentifizieren, bitte lade die Seite neu</>;
 
 
     const initializeAnswers = (row: FragebogenRow): FragebogenRow => {
@@ -168,7 +168,7 @@ export default function Fragebogen({
     const [dialogOpen, setDialogOpen] = useState(false)
     const [newQuestion, setNewQuestion] = useState("")
     const [newType, setNewType] = useState<QuestionType>(QuestionType.GRADE)
-    const [dialogMode, setDialogMode] = useState<"new" | "premade" | "">("")
+    const [dialogMode, setDialogMode] = useState<"new" | "premade" | "">("new")
     const [draftQuestions, setDraftQuestions] = useState<Question[]>([])
     const [selectedPremade, setSelectedPremade] = useState<Question>()
     const [editingQuestion, setEditingQuestion] = useState<FragebogenRow | null>(null)
@@ -229,7 +229,7 @@ export default function Fragebogen({
         setEditingQuestion(null)
         setNewQuestion("")
         setNewType(QuestionType.GRADE)
-        setDialogMode("")
+        setDialogMode("new")
         setDialogOpen(true)
     }
 
@@ -283,7 +283,7 @@ export default function Fragebogen({
 
         setDialogOpen(false);
         setNewQuestion("");
-        setDialogMode("");
+        setDialogMode("new");
         setSelectedPremade(undefined);
         setIsEditMode(false);
         setEditingQuestion(null);
@@ -419,7 +419,7 @@ export default function Fragebogen({
                                     onChange={(e) => setDialogMode(e.target.value as "new" | "premade")}
                                 >
                                     <MenuItem value="new">Neue Frage erstellen</MenuItem>
-                                    <MenuItem value="premade">Bestehende auswählen</MenuItem>
+                                    <MenuItem value="premade" disabled={true}>Bestehende auswählen</MenuItem>
                                 </TextField>
                             )}
 
