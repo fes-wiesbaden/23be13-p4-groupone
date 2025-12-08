@@ -80,10 +80,10 @@ class CourseServiceTest {
     }
 
     @Test
-    void testCreate_Success() {
+    void testCreateOrUpdate_Success() {
         when(courseRepository.save(any(Course.class))).thenReturn(testCourse);
 
-        Course result = courseService.create(testCourse);
+        Course result = courseService.createOrUpdate(testCourse);
 
         assertNotNull(result);
         assertEquals("Test Course", result.getCourseName());
@@ -177,11 +177,13 @@ class CourseServiceTest {
     void testAddStudent_Success() {
         when(userRepository.existsById(testStudent.getId())).thenReturn(true);
         when(courseRepository.existsById(testCourse.getId())).thenReturn(true);
+        when(courseRepository.save(any(Course.class))).thenReturn(testCourse);
 
         boolean result = courseService.addStudent(testCourse, testStudent);
 
         assertTrue(result);
         assertTrue(testCourse.getUsers().contains(testStudent));
+        verify(courseRepository, times(1)).save(testCourse);
     }
 
     @Test
@@ -234,6 +236,24 @@ class CourseServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals("Test Course", result.get().getCourseName());
+    }
+
+    @Test
+    void testIsExistedByName_True() {
+        when(courseRepository.findByCourseName("Test Course")).thenReturn(Optional.of(testCourse));
+
+        boolean exists = courseService.isExistedByName("Test Course");
+
+        assertTrue(exists);
+    }
+
+    @Test
+    void testIsExistedByName_False() {
+        when(courseRepository.findByCourseName("Nonexistent Course")).thenReturn(Optional.empty());
+
+        boolean exists = courseService.isExistedByName("Nonexistent Course");
+
+        assertFalse(exists);
     }
 
     @Test
