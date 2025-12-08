@@ -46,11 +46,12 @@ public class PdfController {
     public ResponseEntity<Resource> downloadPdf(@PathVariable String filename) {
         try {
             Resource resource = pdfService.getPdfFile(filename);
+            String sanitizedFilename = sanitizeFilename(resource.getFilename());
 
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + resource.getFilename() + "\"")
+                            "attachment; filename=\"" + sanitizedFilename + "\"")
                     .body(resource);
 
         } catch (SecurityException ex) {
@@ -60,5 +61,35 @@ public class PdfController {
             log.error("Error downloading PDF file: {}", filename, ex);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+
+    /**
+     * Sanitizes a filename to prevent HTTP header injection attacks.
+     * Removes or replaces characters that could be used for header injection.
+     *
+     * @param filename the original filename
+     * @return sanitized filename safe for use in HTTP headers
+     */
+    private String sanitizeFilename(String filename) {
+        if (filename == null) {
+            return "download.pdf";
+        }
+
+        // Remove any characters that could break the quotes or inject headers
+        // (quotes, backslashes, newlines, carriage returns, semicolons)
+        String sanitized = filename
+                .replace("\\", "")
+                .replace("\"", "")
+                .replace("\n", "")
+                .replace("\r", "")
+                .replace(";", "")
+                .trim();
+
+        // If sanitization removed everything, use a default name
+        if (sanitized.isEmpty()) {
+            sanitized = "download.pdf";
+        }
+
+        return sanitized;
     }
 }

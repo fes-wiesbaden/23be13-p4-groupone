@@ -87,8 +87,9 @@ export default function Home() {
       path: "/lernbereich",
       color: "#0288d1",
       roles: ["ADMIN", "TEACHER", "STUDENT"],
-    },{
-      title: "Pdf Benutzer Daten",
+    },
+    {
+      title: "PDF Benutzer Daten",
       description: "Übersicht und Download Ihrer PDF-Dateien aus der Erstellung von Benutzern",
       icon: <PictureAsPdfIcon sx={{ fontSize: 40 }} />,
       path: "/pdfs",
