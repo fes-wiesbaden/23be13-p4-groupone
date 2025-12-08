@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import API_CONFIG from "~/apiConfig";
+import type {Role} from "~/types/models";
 
 /**
  * @author: Daniel Hess
@@ -18,8 +19,9 @@ import API_CONFIG from "~/apiConfig";
  **/
 
 interface User {
-  username: string;
-  role: string;
+    id: string;
+    username: string;
+    role: Role;
 }
 
 interface AuthContextType {
