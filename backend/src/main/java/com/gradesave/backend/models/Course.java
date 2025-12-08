@@ -5,6 +5,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -20,9 +22,9 @@ import jakarta.validation.constraints.Size;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates course table
- * </p>
+ *          <p>
+ *          Creates course table
+ *          </p>
  */
 
 @Entity
@@ -42,14 +44,10 @@ public class Course {
     private User classTeacher;
 
     @ManyToMany
-    @JoinTable(
-            name = "course_membership",
-            joinColumns = @JoinColumn(name = "course_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
+    @JoinTable(name = "course_membership", joinColumns = @JoinColumn(name = "course_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users = new HashSet<>();
 
-    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<Project> projects = new HashSet<>();
 

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,9 +20,9 @@ import jakarta.validation.constraints.Size;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates subject table
- * </p>
+ *          <p>
+ *          Creates subject table
+ *          </p>
  *
  *
  */
@@ -51,7 +52,7 @@ public class Subject {
     @Column(name = "is_learning_field")
     private boolean learningField;
 
-    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<ProjectSubject> projectSubjects = new HashSet<>();
 

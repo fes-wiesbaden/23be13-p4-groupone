@@ -16,9 +16,9 @@ import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates grade table
- * </p>
+ *          <p>
+ *          Creates grade table
+ *          </p>
  *
  *
  */
@@ -32,12 +32,12 @@ public class Grade {
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "performance_id")
+    @JoinColumn(name = "performance_id", nullable = true)
     private Performance performance;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "project_subject_id")
+    @JoinColumn(name = "project_subject_id", nullable = true)
     private ProjectSubject projectSubject;
 
     @DecimalMin(value = "1.0", inclusive = true, message = "grade must be greater or equal to 1")
@@ -46,9 +46,8 @@ public class Grade {
     private Double grade;
 
     @ManyToOne
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = true)
     private User student;
-
 
     public UUID getId() {
         return id;

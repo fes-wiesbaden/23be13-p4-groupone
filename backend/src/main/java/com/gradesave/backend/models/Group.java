@@ -16,9 +16,9 @@ import jakarta.validation.constraints.NotBlank;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates group table
- * </p>
+ *          <p>
+ *          Creates group table
+ *          </p>
  *
  *
  */
@@ -31,18 +31,14 @@ public class Group {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "project_id", nullable = false)
+    @JoinColumn(name = "project_id", nullable = true)
     private Project project;
 
     @NotBlank
     private String name;
 
     @ManyToMany
-    @JoinTable(
-            name = "group_membership",
-            joinColumns = @JoinColumn(name = "group_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
+    @JoinTable(name = "group_membership", joinColumns = @JoinColumn(name = "group_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users = new HashSet<>();
 
     public UUID getId() {

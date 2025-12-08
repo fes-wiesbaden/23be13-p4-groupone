@@ -13,9 +13,9 @@ import jakarta.validation.constraints.NotNull;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates project table
- * </p>
+ *          <p>
+ *          Creates project table
+ *          </p>
  *
  *
  */
@@ -29,7 +29,7 @@ public class Project {
 
     @ManyToOne
     @JsonIgnore
-    @JoinColumn(name = "course_id", nullable = false)
+    @JoinColumn(name = "course_id", nullable = true)
     private Course course;
 
     @NotBlank
@@ -39,7 +39,7 @@ public class Project {
     @Column(name = "project_start")
     private LocalDate projectStart;
 
-    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<ProjectQuestion> projectQuestions = new HashSet<>();
 

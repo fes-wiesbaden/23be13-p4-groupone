@@ -19,13 +19,15 @@ public class UserService implements CrudService<User, UUID> {
     private final com.gradesave.backend.repositories.UserRepository repo;
     private final PasswordEncoder encoder;
     private final CourseService courseService;
+    private final GroupService groupService;
     private final PdfService pdfService;
 
     public UserService(com.gradesave.backend.repositories.UserRepository repo, PasswordEncoder encoder,
-            CourseService courseService, PdfService pdfService) {
+            CourseService courseService, GroupService groupService, PdfService pdfService) {
         this.repo = repo;
         this.encoder = encoder;
         this.courseService = courseService;
+        this.groupService = groupService;
         this.pdfService = pdfService;
     }
 
@@ -102,6 +104,10 @@ public class UserService implements CrudService<User, UUID> {
         if (!courseService.removeUserFromAllCourses(id))
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Failed to remove User from all courses");
+
+        if (!groupService.removeUserFromAllGroups(id))
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to remove User from all groups");
 
         repo.deleteById(id);
     }

@@ -12,9 +12,9 @@ import jakarta.validation.constraints.NotNull;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates project_subject table
- * </p>
+ *          <p>
+ *          Creates project_subject table
+ *          </p>
  *
  *
  */
@@ -27,11 +27,11 @@ public class ProjectSubject {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "project_id", nullable = false)
+    @JoinColumn(name = "project_id", nullable = true)
     private Project project;
 
     @ManyToOne
-    @JoinColumn(name = "subject_id", nullable = false)
+    @JoinColumn(name = "subject_id", nullable = true)
     private Subject subject;
 
     @NotNull(message = "Duration is required")

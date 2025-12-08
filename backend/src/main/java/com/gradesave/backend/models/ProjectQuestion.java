@@ -11,9 +11,9 @@ import jakarta.persistence.Table;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates project_question table
- * </p>
+ *          <p>
+ *          Creates project_question table
+ *          </p>
  *
  *
  */
@@ -26,11 +26,11 @@ public class ProjectQuestion {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "project_id", nullable = false)
+    @JoinColumn(name = "project_id", nullable = true)
     private Project project;
 
     @ManyToOne
-    @JoinColumn(name = "question_id", nullable = false)
+    @JoinColumn(name = "question_id", nullable = true)
     private Question question;
 
     public UUID getId() {

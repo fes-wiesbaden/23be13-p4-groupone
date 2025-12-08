@@ -14,9 +14,9 @@ import jakarta.validation.constraints.Min;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates answer table
- * </p>
+ *          <p>
+ *          Creates answer table
+ *          </p>
  *
  *
  */
@@ -29,15 +29,15 @@ public class Answer {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "project_question_id", nullable = false)
+    @JoinColumn(name = "project_question_id", nullable = true)
     private ProjectQuestion projectQuestion;
 
     @ManyToOne
-    @JoinColumn(name = "author_id", nullable = false)
+    @JoinColumn(name = "author_id", nullable = true)
     private User author;
 
     @ManyToOne
-    @JoinColumn(name = "recipient_id", nullable = false)
+    @JoinColumn(name = "recipient_id", nullable = true)
     private User recipient;
 
     @Min(1)

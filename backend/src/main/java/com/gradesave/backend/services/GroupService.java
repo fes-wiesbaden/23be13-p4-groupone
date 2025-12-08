@@ -12,9 +12,9 @@ import java.util.UUID;
 
 /**
  * @author: Paul Geisthardt
- * <p>
- * GroupService
- * </p>
+ *          <p>
+ *          GroupService
+ *          </p>
  */
 
 @Service
@@ -98,5 +98,16 @@ public class GroupService implements CrudService<Group, UUID> {
         }
 
         repo.deleteAll(groups);
+    }
+
+    public boolean removeUserFromAllGroups(UUID userId) {
+        List<Group> groups = repo.findAllByUserId(userId);
+
+        for (Group group : groups) {
+            group.getUsers().removeIf(user -> user.getId().equals(userId));
+            repo.save(group);
+        }
+
+        return true;
     }
 }

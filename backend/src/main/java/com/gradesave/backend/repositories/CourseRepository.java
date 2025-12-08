@@ -10,14 +10,12 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
-
 /**
  * @author: Daniel Hess
  *          <p>
  *          Handles database requests for courses
  *          </p>
  **/
-
 
 @Repository
 public interface CourseRepository extends JpaRepository<Course, UUID> {
@@ -28,4 +26,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
 
     @Query("SELECT c FROM Course c WHERE c.id = ?1")
     Optional<Course> findByIdTest(UUID uuid);
+
+    List<Course> findByClassTeacherId(UUID teacherId);
 }

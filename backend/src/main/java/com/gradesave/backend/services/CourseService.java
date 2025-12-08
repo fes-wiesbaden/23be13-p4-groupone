@@ -128,13 +128,20 @@ public class CourseService {
             return false;
 
         User user = userTemp.get();
-        List<Course> courses = courseRepository.findAllByUserId(userId);
 
+        // Remove user from regular course membership
+        List<Course> courses = courseRepository.findAllByUserId(userId);
         boolean removed = true;
         for (Course course : courses) {
             if (!course.getUsers().remove(user))
                 removed = false;
+            courseRepository.save(course);
+        }
 
+        // Remove user as class teacher from any courses
+        List<Course> coursesAsTeacher = courseRepository.findByClassTeacherId(userId);
+        for (Course course : coursesAsTeacher) {
+            course.setClassTeacher(null);
             courseRepository.save(course);
         }
 
@@ -171,7 +178,8 @@ public class CourseService {
     }
 
     public List<CourseSelectionDto> findGradeOverviewOptions(UUID userId) {
-        User currentUser = userRepo.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
+        User currentUser = userRepo.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
 
         List<Course> courses = courseRepository.findAllByUserId(currentUser.getId());
 

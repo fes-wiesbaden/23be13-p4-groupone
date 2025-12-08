@@ -3,6 +3,7 @@ package com.gradesave.backend.models;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -20,9 +21,9 @@ import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * @author: Michael Holl
- * <p>
- * Creates performance table
- * </p>
+ *          <p>
+ *          Creates performance table
+ *          </p>
  */
 @Entity
 @Table(name = "performance")
@@ -41,11 +42,11 @@ public class Performance {
     String shortName;
 
     @ManyToOne
-    @JoinColumn(name = "project_subject_id", nullable = false)
+    @JoinColumn(name = "project_subject_id", nullable = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private ProjectSubject projectSubject;
 
-    @OneToMany(mappedBy = "performance")
+    @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Grade> grades;
 
     @NotNull(message = "Weight is required")
