@@ -33,6 +33,7 @@ import QuizIcon from '@mui/icons-material/Quiz';
 import HomeIcon from '@mui/icons-material/Home';
 import ProjectIcon from '@mui/icons-material/Work';
 import LearningIcon from '@mui/icons-material/MenuBook';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import Menu from '@mui/material/Menu';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
@@ -222,16 +223,12 @@ export default function SideAppBar({children}: SideAppBarProps) {
     const menuItems: MenuItem[] = [
         {text: 'Startseite', icon: <HomeIcon/>, path: '/'},
         {text: 'Klassen', icon: <SchoolIcon/>, path: '/klassen', roles: [Role.ADMIN, Role.TEACHER]},
+        {text: 'PDFs', icon: <PictureAsPdfIcon/>, path: '/pdfs', roles: [Role.ADMIN]},
         {text: 'Benutzer', icon: <PeopleIcon/>, path: '/user', roles: [Role.ADMIN]},
         {text: 'Fragen', icon: <QuizIcon/>, path: '/fragen', roles: [Role.ADMIN, Role.TEACHER]},
         {text: 'Noten', icon: <GradeIcon/>, path: '/noten', roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]},
         {text: 'Projekte', icon: <ProjectIcon/>, path: '/projekte', roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]},
-        {
-            text: 'Lernbereich',
-            icon: <LearningIcon/>,
-            path: '/lernbereich',
-            roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]
-        },
+        {text: 'Lernbereich', icon: <LearningIcon/>, path: '/lernbereich', roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]},
         {text: 'Fragebogen', icon: <PollIcon/>, path: '/fragebogen', roles: [Role.STUDENT, Role.TEACHER, Role.ADMIN]},
     ];
 

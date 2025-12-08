@@ -16,6 +16,7 @@ import {
   RadioGroup,
   TextField,
 } from "@mui/material";
+import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
 
 /**
@@ -23,10 +24,15 @@ import CustomizedSnackbars from "../components/snackbar";
  * <p>
  *   Component to add, edit & delete subjects
  * </p>
- * 
+ *
  * @Edited by Kebba Ceesay
  * <p>
  *    Snackbar integration completed
+ * </p>
+ *
+ * @Edited by Noah Bach
+ * <p>
+ *    Add Dialog integration
  * </p>
  *
  **/
@@ -44,6 +50,7 @@ export default function Subject() {
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [originalSubject, setOriginalSubject] = useState<Subject | null>(null);
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie das Fach wirklich löschen?");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
@@ -91,6 +98,9 @@ export default function Subject() {
   };
 
   const handleDeleteClick = async (id: string) => {
+    if (!await confirm())
+      return;
+
     try {
       //delete subject
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/subject/${id}`, {
@@ -151,7 +161,7 @@ export default function Subject() {
             prev.map((s) => (s.id === updated.id ? updated : s))
           );
           showSnackbar(`Das ${updated.learningField ? "Lernfeld" : "Schulfach"} "${updated.name}" wurde erfolgreich bearbeitet!`);
-        } 
+        }
       } else {
         // Create subject
         res = await fetch(`${API_CONFIG.BASE_URL}/api/subject`, {
@@ -286,6 +296,7 @@ export default function Subject() {
         severity={snackbarSeverity}
         onClose={() => setSnackbarOpen(false)}
       />
+      {ConfirmDialog}
     </>
   );
 }

@@ -9,13 +9,23 @@ import com.lowagie.text.pdf.PdfWriter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 
 import java.awt.Color;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -200,8 +210,61 @@ public class PdfService {
     }
 
     /**
-     * Helper method to add a row to the PDF table
+     * Lists all PDF files in the PDF directory
+     * 
+     * @return List of maps containing file information (name, size, lastModified)
+     * @throws IOException if directory cannot be read
      */
+    public List<Map<String, Object>> listAllPdfFiles() throws IOException {
+        Path pdfStorageLocation = Paths.get(PDF_OUTPUT_DIR).toAbsolutePath().normalize();
+        List<Map<String, Object>> pdfFiles = new ArrayList<>();
+
+        if (!Files.exists(pdfStorageLocation)) {
+            log.warn("PDF directory does not exist: {}", pdfStorageLocation);
+            return pdfFiles;
+        }
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(pdfStorageLocation, "*.pdf")) {
+            for (Path entry : stream) {
+                Map<String, Object> fileInfo = new HashMap<>();
+                fileInfo.put("name", entry.getFileName().toString());
+                fileInfo.put("size", Files.size(entry));
+                fileInfo.put("lastModified", Files.getLastModifiedTime(entry).toMillis());
+                pdfFiles.add(fileInfo);
+            }
+        }
+
+        log.info("Found {} PDF files", pdfFiles.size());
+        return pdfFiles;
+    }
+
+    /**
+     * Retrieves a PDF file as a Resource
+     * 
+     * @param filename The name of the PDF file to retrieve
+     * @return Resource object representing the PDF file
+     * @throws IOException       if file cannot be read
+     * @throws SecurityException if file is outside the PDF directory
+     */
+    public Resource getPdfFile(String filename) throws IOException, SecurityException {
+        Path pdfStorageLocation = Paths.get(PDF_OUTPUT_DIR).toAbsolutePath().normalize();
+        Path filePath = pdfStorageLocation.resolve(filename).normalize();
+
+        if (!filePath.startsWith(pdfStorageLocation)) {
+            log.warn("Attempted to access file outside PDF directory: {}", filename);
+            throw new SecurityException("Access denied: File is outside PDF directory");
+        }
+
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (!resource.exists() || !resource.isReadable()) {
+            log.warn("PDF file not found or not readable: {}", filename);
+            throw new IOException("File not found or not readable: " + filename);
+        }
+
+        return resource;
+    }
+
     private void addTableRow(PdfPTable table, String label, String value) {
         Font labelFont = new Font(Font.HELVETICA, 12, Font.BOLD);
         Font valueFont = new Font(Font.HELVETICA, 12);

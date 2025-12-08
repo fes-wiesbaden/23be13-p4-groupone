@@ -17,17 +17,23 @@ import {
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
 import {QuestionType} from "~/components/fragebogen";
-import CustomizedSnackbars from "../components/snackbar";
+import useAlertDialog from "~/components/youSurePopup";
+import CustomizedSnackbars from "~/components/snackbar";
 
 /**
  * @author: Michael Holl
  * <p>
  *   Component to add, edit & delete questions for questionnaire
  * </p>
- * 
+ *
  * @Edited by Kebba Ceesay
  * <p>
  *    Snackbar integration completed
+ * </p>
+ *
+ * @Edited by Noah Bach
+ * <p>
+ *    Added dialaog integration
  * </p>
  **/
 
@@ -73,6 +79,7 @@ export default function Question() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const handleSnackbarClose = () => { setSnackbarOpen(false);};
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Frage wirklich löschen?");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,26 +110,29 @@ export default function Question() {
   }, []);
 
   const handleAddClick = () => setOpenDialog(true);
-  
+
   const handleCloseDialog = () => {
     setSelectedSubjects([]);
     setOpenDialog(false);
   };
-  
+
     const handleCloseEditDialog = () => {
     setSelectedSubjects([]);
     setOpenEditDialog(false);
   };
-  
+
   const handleEditClick = (row: QuestionRow) => {
     const question = row.original;
-  
+
     setEditQuestion(question);
     setSelectedSubjects(question.subjects);
     setOpenEditDialog(true);
   };
 
   const handleDeleteClick = async (id: string) => {
+    if (!await confirm())
+      return;
+
     try {
       await fetch(`${API_CONFIG.BASE_URL}/api/question/${id}`, {
         method: "DELETE",
@@ -138,7 +148,7 @@ export default function Question() {
       setAllQuestions(questionsData);
       setSnackbarMessage("Die Frage wurde erfolgreich gelöscht!");
       setSnackbarSeverity("success");
-      setSnackbarOpen(true);     
+      setSnackbarOpen(true);
 
     } catch (err: any) {
       console.error("Error deleting question:", err);
@@ -322,7 +332,7 @@ export default function Question() {
               defaultValue={editQuestion?.text || ""}
             />
             {/* blendet die Question ID aus */}
-            <input 
+            <input
               id="id"
               name="id"
               defaultValue={editQuestion?.id || ""}
@@ -367,6 +377,7 @@ export default function Question() {
           severity={snackbarSeverity}
           onClose={handleSnackbarClose}
       />
+      {ConfirmDialog}
     </>
   );
 }
