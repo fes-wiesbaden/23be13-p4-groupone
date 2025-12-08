@@ -240,10 +240,8 @@ export default function UsersPage() {
         credentials: "include",
         body: JSON.stringify(createRequest),
       });
-      if (res.ok) {
-        // alert("Erstellen fehlgeschlagen.");
+      if (!res.ok) {
         console.error("Fehler beim Erstellen des Benutzers:", res.statusText);
-
         setSnackbarMessage(`Fehler beim Erstellen! Code: ${res.status}`);
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
