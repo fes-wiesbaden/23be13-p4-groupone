@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import {useEffect, useState} from "react";
 import API_CONFIG from "~/apiConfig";
+import CustomizedSnackbars from "~/components/snackbar";
 
 interface DialogProps {
     open: boolean;
@@ -36,7 +37,7 @@ interface ProjectSubject {
 export interface Performance {
     id: string;
     name: string;
-    shortName: string;
+    shortName?: string;
     weight: number;
 }
 
@@ -63,6 +64,13 @@ export interface NewProjectSubjectRequest {
     learningField?: boolean;
 }
 
+export interface EditProjecSubject {
+    id: string,
+    shortName: string,
+    duration: number,
+    learningField: boolean,
+}
+
 export default function FormDialog({open, onClose, projectId, projectSubjects, onSubmitSuccess}: DialogProps) {
     const [isSubject, setIsSubject] = useState<boolean>(false);
     const [selectedProjectSubjectId, setSelectedProjectSubjectId] = useState<string | undefined>(undefined);
@@ -71,12 +79,20 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
 
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [shortName, setShortName] = useState<string | undefined>();
-    const [weight, setWeight] = useState<number | undefined>();
+    const [displayWeight, setDisplayWeight] = useState<string | undefined>();
     const [performanceOptions, setPerformanceOptions] = useState<Performance[] | undefined>();
     const [subjectOptions, setSubjectOptions] = useState<ProjectSubject[] | undefined>();
     const [columnAction, setColumnAction] = useState<string>("add");
     const [learningField, setLearningField] = useState<String | undefined>("true");
     const [createMore, setCreateMore] = useState<boolean>(false);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
 
     const optionsList = isSubject
         ? (subjectOptions ?? []).map(s => ({id: s.id, name: s.name}))
@@ -89,29 +105,34 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
     ) || null
         : performanceOptions?.find(p => p.id === selectedPerformanceId) || null;
 
-
     useEffect(() => {
         fetchSubjects();
     }, []);
 
     useEffect(() => {
-        if (!isSubject && columnAction !== "add" && selectedOption) {
-            setShortName(selectedOption.shortName);
-            setWeight(selectedOption.weight);
+        if (!selectedOption) return;
+        if (!isSubject && columnAction !== "add") {
+            setShortName(selectedOption.shortName ?? "");
+            setDisplayWeight(String(selectedOption.weight ?? ""));
         }
     }, [selectedOption, columnAction, isSubject]);
 
     useEffect(() => {
-        setWeight(undefined);
-        setShortName(undefined)
-        setSelectedSubjectId(undefined);
-        setSelectedProjectSubjectId(undefined);
-        setSelectedProjectSubjectId(undefined)
-        setLearningField(undefined);
-    }, [isSubject, columnAction, open]);
+        setShortName("");
+        setDisplayWeight("");
+    }, [selectedSubjectId, selectedProjectSubjectId, isSubject]);
 
     useEffect(() => {
-        console.log("isSubject",isSubject)
+        setSelectedSubjectId(undefined);
+        setSelectedProjectSubjectId(undefined);
+        setSelectedPerformanceId(undefined);
+        setShortName("");
+        setDisplayWeight("");
+        setLearningField("true");
+    }, [isSubject, columnAction, open]);
+
+
+    useEffect(() => {
         if (columnAction === "add" && isSubject) {
             setSubjectOptions(
                 subjects.map(subject => ({
@@ -133,12 +154,10 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
         if (isSubject) {
             if (columnAction !== "add") {
                 const projectSubject = projectSubjects.find(ps => ps.id === selectedProjectSubjectId);
-                console.log("projectSubject", projectSubject)
                 if (projectSubject) {
                     setShortName(projectSubject?.shortName || undefined)
-                    console.log("projectSubject.learningField", projectSubject.learningField)
                     setLearningField(projectSubject.learningField ? "true" : "false");
-                    setWeight(projectSubject?.weight || undefined)
+                    setDisplayWeight(String(projectSubject?.weight) || undefined);
                 }
 
             } else if (selectedSubjectId) {
@@ -148,18 +167,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                     setLearningField(subject.learningField ? "true" : "false");
                 }
             }
-        } else if (columnAction !== "add" && selectedOption !== null) {
-            const allPerformances = projectSubjects.flatMap(ps => ps.performances);
-            console.log("allPerformances",allPerformances)
-
-            const performance = allPerformances.find(p => p?.id === selectedOption?.id);
-            console.log("performance",performance)
-
-            setShortName(performance?.shortName || undefined)
-
-            setWeight(performance?.weight || undefined)
         }
-    }, [selectedSubjectId, selectedProjectSubjectId, isSubject, selectedPerformanceId]);
+    }, [selectedSubjectId, selectedProjectSubjectId]);
 
     const fetchSubjects = async () => {
         try {
@@ -169,7 +178,6 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
             });
             if (!res.ok) throw new Error(res.statusText);
             const data = await res.json();
-            console.log("res", data)
             setSubjects(data)
         } catch (err) {
             console.error(err);
@@ -177,6 +185,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
     };
 
     const handleClose = () => {
+        setCreateMore(false);
         setSelectedSubjectId("");
         onClose();
     };
@@ -184,268 +193,303 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        console.log("formData", new FormData(e.currentTarget))
         const formData = new FormData(e.currentTarget);
         const formJson = Object.fromEntries(formData.entries()) as Record<string, string>;
 
-        let controller;
-        let endpoint;
-        let method;
-        let payload: NewPerformanceRequest | NewProjectSubjectRequest | undefined = undefined;
-        if (!selectedOption) {
-            return
-        }
-        if (columnAction == "add") {
-            method = "POST"
-            if (isSubject) {
+        let controller: string | undefined;
+        let endpoint: string | undefined;
+        let method: "POST" | "PUT" | "DELETE" | undefined;
+        let payload: NewPerformanceRequest | NewProjectSubjectRequest | Performance | EditProjecSubject | undefined;
 
-                controller = "project";
-                endpoint = `${projectId}/add/subject`;
+        switch (columnAction) {
+            case "add":
+                method = "POST";
+                if (isSubject) {
+                    controller = "project";
+                    endpoint = `${projectId}/add/subject`;
 
-                if (selectedSubjectId !== undefined) {
+                    payload = selectedSubjectId
+                        ? { subjectId: selectedSubjectId, duration: Number(formJson.weight.replace(",",".")) }
+                        : {
+                            subjectId: formJson.subject ?? undefined,
+                            name: formJson.subjectName,
+                            shortName: formJson.shortName,
+                            duration: Number(formJson.weight.replace(",",".")),
+                            learningField: formJson.isLearningField === "true",
+                        };
+                } else {
+                    controller = "performance";
+                    endpoint = "save";
                     payload = {
-                        subjectId: selectedSubjectId,
-                        duration: Number(formJson.weight),
+                        projectSubjectId: formJson.subject ?? "",
+                        name: formJson.name,
+                        shortName: formJson.shortName,
+                        weight: Number(formJson.weight.replace(",",".")) / 100,
+                    };
+                }
+                break;
+
+            case "delete":
+                if (!selectedOption) return;
+
+                method = "DELETE";
+                endpoint = `remove/${selectedOption.id || ""}`;
+                controller = isSubject ? "projectSubject" : "performance";
+                break;
+
+            case "edit":
+                if (!selectedOption) return;
+
+                method = "PUT";
+                endpoint = "edit";
+
+                if (isSubject) {
+                    controller = "projectSubject";
+                    payload = {
+                        id: selectedOption.id,
+                        shortName: formJson.shortName,
+                        duration: Number(formJson.weight.replace(",",".")),
+                        learningField: formJson.learningField === "true",
                     };
                 } else {
+                    controller = "performance";
                     payload = {
-                        subjectId: formJson.subject ?? undefined,
-                        name: formJson.subjectName,
+                        id: selectedOption.id,
+                        name: selectedOption.name,
                         shortName: formJson.shortName,
-                        duration: Number(formJson.weight),
-                        learningField: formJson.isLearningField === "true",
+                        weight: Number(formJson.weight.replace(",",".")) / 100,
                     };
                 }
-            } else {
-                controller = "performance"
-                endpoint = `${projectId}/add/subject`;
-                payload = {
-                    projectSubjectId: formJson.subject ?? "",
-                    name: formJson.name,
-                    shortName: formJson.shortName,
-                    weight: Number(formJson.weight),
-                };
-            }
+                break;
+
+            default:
+                console.error("Unknown action:", columnAction);
+                return;
         }
-        if (columnAction == "delete") {
-            method = "DELETE"
-            endpoint = `remove/${selectedOption.id || ""}`;
-            if (isSubject) {
-                controller = "projectSubject";
+        try {
+            const url = `${API_CONFIG.BASE_URL}/api/${controller}/${endpoint}`;
 
-            } else {
-                controller = "performance";
+            const res = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: payload ? JSON.stringify(payload) : undefined,
+            });
+
+            if (!res.ok) {
+                console.error("Fehler beim Speichern:", res.statusText);
+                const errorText = await res.text();
+                setSnackbarMessage(errorText);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
+                return;
             }
-
-
-            console.log("endpoint", endpoint)
-
-            console.log("payload", payload)
-
-            try {
-                const url = `${API_CONFIG.BASE_URL}/api/${controller}/${endpoint}`;
-
-                const res = await fetch(url, {
-                    method: method,
-                    headers: {"Content-Type": "application/json"},
-                    credentials: "include",
-                    body: payload ? JSON.stringify(payload) : undefined,
-                });
-
-                if (!res.ok) {
-                    console.error("Fehler beim Speichern der Leistung:", res.statusText);
-                    return;
-                }
-
-                console.log("Leistung erfolgreich gespeichert!");
-                if (onSubmitSuccess) onSubmitSuccess();
-
-            } catch (err) {
-                console.error(err);
-            }
-            fetchSubjects();
-
+            console.log("Erfolgreich gespeichert!");
+            setSnackbarMessage("Änderungen wurden gespeichert");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+            if (onSubmitSuccess) onSubmitSuccess();
+            setSelectedProjectSubjectId(undefined);
             setSelectedSubjectId(undefined);
-            setShortName(undefined);
-            setSelectedSubjectId(undefined);
-            if (!createMore) {
-                handleClose();
-            }
+            setShortName("");
+            setDisplayWeight("");
+        } catch (err) {
+            console.error(err);
+        }
+
+        await fetchSubjects();
+        setSelectedProjectSubjectId(undefined);
+        setSelectedSubjectId(undefined);
+        setShortName("");
+        setDisplayWeight("");
+        if (!createMore) {
+            handleClose();
         }
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-            <DialogTitle>Spalten anpassen</DialogTitle>
+        <div>
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+                <DialogTitle>Tabelle anpassen</DialogTitle>
 
-            <form onSubmit={handleSubmit} id="newPerformanceForm">
-                <DialogContent>
-                    <Box sx={{minWidth: 500, mb: 2}}>
-                        <FormControl fullWidth>
-                            <InputLabel>Aktion</InputLabel>
-                            <Select
-                                value={columnAction}
-                                label="Aktion"
-                                onChange={(e) => setColumnAction(e.target.value)}
-                            >
-                                <MenuItem value="add">Hinzufügen</MenuItem>
-                                <MenuItem value="edit">Bearbeiten</MenuItem>
-                                <MenuItem value="delete">Löschen</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Box>
-                    <Box sx={{minWidth: 500, mb: 2}}>
-                        <FormControl fullWidth>
-                            <InputLabel>Spalte anpassen</InputLabel>
-                            <Select
-                                value={isSubject ? "true" : "false"}
-                                label="Spalte anpassen"
-                                onChange={(e) => setIsSubject(e.target.value === "true")}
-                            >
-                                <MenuItem value="true">Bildungsbereich</MenuItem>
-                                <MenuItem value="false">Leistungsnachweis</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Box>
+                <form onSubmit={handleSubmit} id="newPerformanceForm">
+                    <DialogContent>
+                        <Box sx={{ display: "grid", gap: 2 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>Aktion</InputLabel>
+                                <Select
+                                    value={columnAction}
+                                    label="Aktion"
+                                    onChange={(e) => setColumnAction(e.target.value)}
+                                >
+                                    <MenuItem value="add">Hinzufügen</MenuItem>
+                                    <MenuItem value="edit">Bearbeiten</MenuItem>
+                                    <MenuItem value="delete">Löschen</MenuItem>
+                                </Select>
+                            </FormControl>
 
-                    {!isSubject && (
-                        <FormControl fullWidth margin="dense">
-                            <InputLabel>Bildungsbereich</InputLabel>
-                            <Select
-                                required
-                                name="subject"
-                                value={selectedProjectSubjectId ?? ""}
-                                onChange={(e) => setSelectedProjectSubjectId(e.target.value)}
-                            >
-                                {subjectOptions && subjectOptions.length > 0 ? (
-                                    subjectOptions.map(option => (
-                                        <MenuItem key={option.id} value={option.id}>
-                                            {option.name}
-                                        </MenuItem>
-                                    ))
-                                ) : (
-                                    <MenuItem disabled>
-                                        Es existiert kein Bildungsbereich im Projekt
-                                    </MenuItem>
-                                )}
-                            </Select>
-                        </FormControl>
-                    )}
+                            <FormControl fullWidth>
+                                <InputLabel>Spalte anpassen</InputLabel>
+                                <Select
+                                    value={isSubject ? "true" : "false"}
+                                    label="Spalte anpassen"
+                                    onChange={(e) => setIsSubject(e.target.value === "true")}
+                                >
+                                    <MenuItem value="true">Bildungsbereich</MenuItem>
+                                    <MenuItem value="false">Leistungsnachweis</MenuItem>
+                                </Select>
+                            </FormControl>
 
-                    {!isSubject && columnAction === "add" && (
-                        <TextField
-                            autoFocus
-                            required
-                            margin="dense"
-                            name="name"
-                            label="Name"
-                            fullWidth
-                            variant="standard"
-                        />
-                    )}
+                            {!isSubject && (
+                                <FormControl fullWidth>
+                                    <InputLabel>Bildungsbereich</InputLabel>
+                                    <Select
+                                        required
+                                        name="subject"
+                                        value={selectedProjectSubjectId ?? ""}
+                                        onChange={(e) => {
+                                            const newId = e.target.value;
+                                            setSelectedProjectSubjectId(newId);
 
-                    {(isSubject || columnAction !== "add") && (
-                        <Autocomplete
-                            freeSolo={columnAction === "add"}
-                            options={optionsList}
-                            getOptionLabel={(option) =>
-                                typeof option === "string" ? option : option?.name ?? ""
-                            }
-                            value={selectedOption}
-                            onChange={(_, newValue) => {
-                                if (newValue && typeof newValue === "object") {
-                                    if (columnAction !== "add") {
-                                        if (isSubject) {
-                                            setSelectedProjectSubjectId(newValue.id)
-                                        } else setSelectedPerformanceId(newValue.id)
-                                    } else
-                                        setSelectedSubjectId(newValue.id);
-                                } else {
-                                    setSelectedProjectSubjectId(undefined);
-                                    setSelectedSubjectId(undefined);
-                                    setShortName(undefined);
-                                }
-                            }}
-                            renderInput={(params) => (
-                                <TextField {...params} label="Name" required name="subjectName"/>
+                                            setShortName("");
+                                            setDisplayWeight("");
+                                        }}
+                                    >
+                                        {subjectOptions && subjectOptions.length > 0 ? (
+                                            subjectOptions.map((option) => (
+                                                <MenuItem key={option.id} value={option.id}>
+                                                    {option.name}
+                                                </MenuItem>
+                                            ))
+                                        ) : (
+                                            <MenuItem disabled>Es existiert kein Bildungsbereich im Projekt</MenuItem>
+                                        )}
+                                    </Select>
+                                </FormControl>
                             )}
-                            fullWidth
-                        />
-                    )}
 
-                    <TextField
-                        required
-                        margin="dense"
-                        name="shortName"
-                        label="Kürzel"
-                        disabled={selectedSubjectId !== undefined || columnAction !== "add"}
-                        value={shortName ?? ""}
-                        onChange={(e) => setShortName(e.target.value)}
-                        fullWidth
-                        variant="standard"
-                    />
-
-                    <TextField
-                        required
-                        margin="dense"
-                        name="weight"
-                        value={weight ?? ""}
-                        disabled={columnAction !== "add"}
-                        label={isSubject ? "Dauer" : "Gewichtung"}
-                        fullWidth
-                        variant="standard"
-                    />
-
-                    {isSubject && (
-                        <FormControl>
-                            <FormLabel required id="type-label">
-                                Typ
-                            </FormLabel>
-                            <RadioGroup
-                                row
-                                name="learningField"
-                                aria-labelledby="type-label"
-                                value={learningField !== undefined ? String(learningField) : ""}
-                                onChange={(e) => setLearningField(e.target.value)}
-                            >
-                                <FormControlLabel
-                                    value="true"
-                                    disabled={selectedSubjectId !== undefined || columnAction !== "add"}
-                                    control={<Radio/>}
-                                    label="Lernfeld"
+                            {!isSubject && columnAction === "add" && (
+                                <TextField
+                                    autoFocus
+                                    required
+                                    name="name"
+                                    label="Name"
+                                    fullWidth
+                                    variant="outlined"
                                 />
-                                <FormControlLabel
-                                    value="false"
-                                    disabled={selectedSubjectId !== undefined || columnAction !== "add"}
-                                    control={<Radio/>}
-                                    label="Schulfach"
-                                />
-                            </RadioGroup>
-                        </FormControl>
-                    )}
-                </DialogContent>
+                            )}
 
-                <DialogActions>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={createMore}
-                                onChange={(e) => setCreateMore(e.target.checked)}
+                            {(isSubject || columnAction !== "add") && (
+                                <Autocomplete
+                                    freeSolo={columnAction === "add"}
+                                    options={optionsList}
+                                    getOptionLabel={(option) =>
+                                        typeof option === "string" ? option : option?.name ?? ""
+                                    }
+                                    value={selectedOption}
+                                    onChange={(_, newValue) => {
+                                        if (newValue && typeof newValue === "object") {
+                                            if (columnAction !== "add") {
+                                                if (isSubject) setSelectedProjectSubjectId(newValue.id);
+                                                else setSelectedPerformanceId(newValue.id);
+                                            } else setSelectedSubjectId(newValue.id);
+                                        } else {
+                                            setSelectedProjectSubjectId(undefined);
+                                            setSelectedSubjectId(undefined);
+                                            setShortName(undefined);
+                                        }
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Name" required name="subjectName" variant="outlined"/>
+                                    )}
+                                    fullWidth
+                                />
+                            )}
+
+                            <TextField
+                                required
+                                name="shortName"
+                                label="Kürzel"
+                                disabled={selectedSubjectId !== undefined || columnAction === "delete"}
+                                value={shortName}
+                                onChange={(e) => setShortName(e.target.value)}
+                                fullWidth
+                                variant="outlined"
                             />
-                        }
-                        label="mehrere Spalten anpassen"
-                    />
-                    <Button onClick={handleClose}>Schließen</Button>
-                    <Button type="submit" form="newPerformanceForm" variant="contained">
-                        {columnAction === "add" ? "Hinzufügen"
-                            : columnAction === "edit" ? "Bearbeiten"
-                                : columnAction === "delete" ? "Löschen" :
-                                    null
-                        }
-                    </Button>
 
-                </DialogActions>
-            </form>
-        </Dialog>
+                            <TextField
+                                required
+                                name="weight"
+                                label={isSubject ? "Dauer in Stunden" : "Gewichtung in %"}
+                                value={displayWeight} // "" statt undefined
+                                disabled={columnAction === "delete"}
+                                type="text"
+                                onChange={(e) => {
+                                    const raw = e.target.value;
+                                    setDisplayWeight(raw);
+                                }}
+                                fullWidth
+                                variant="outlined"
+                                InputLabelProps={{
+                                    shrink: Boolean(displayWeight && displayWeight !== ""),
+                                }}
+                            />
+
+                            {isSubject && (
+                                <FormControl component="fieldset">
+                                    <FormLabel component="legend" required>Typ</FormLabel>
+                                    <RadioGroup
+                                        row
+                                        name="learningField"
+                                        value={learningField !== undefined ? String(learningField) : ""}
+                                        onChange={(e) => setLearningField(e.target.value)}
+                                    >
+                                        <FormControlLabel
+                                            value="true"
+                                            disabled={selectedSubjectId !== undefined || columnAction === "delete"}
+                                            control={<Radio />}
+                                            label="Lernfeld"
+                                        />
+                                        <FormControlLabel
+                                            value="false"
+                                            disabled={selectedSubjectId !== undefined || columnAction === "delete"}
+                                            control={<Radio />}
+                                            label="Schulfach"
+                                        />
+                                    </RadioGroup>
+                                </FormControl>
+                            )}
+                        </Box>
+                    </DialogContent>
+
+                    <DialogActions sx={{ justifyContent: "space-between", padding: "16px" }}>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={createMore}
+                                    onChange={(e) => setCreateMore(e.target.checked)}
+                                />
+                            }
+                            label="mehrere Spalten anpassen"
+                        />
+                        <Box>
+                            <Button onClick={handleClose} sx={{ mr: 1 }}>Schließen</Button>
+                            <Button type="submit" form="newPerformanceForm" variant="contained">
+                                {columnAction === "add" ? "Hinzufügen" :
+                                    columnAction === "edit" ? "Bearbeiten" :
+                                        columnAction === "delete" ? "Löschen" : null}
+                            </Button>
+                        </Box>
+                    </DialogActions>
+                </form>
+            </Dialog>
+            <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+            />
+        </div>
+
     );
 }

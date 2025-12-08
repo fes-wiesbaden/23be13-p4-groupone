@@ -16,15 +16,6 @@ public class ProjectSubjectService {
         this.projectSubjectRepository = projectSubjectRepository;
     }
 
-    public ProjectSubject findProjectSubjectById(UUID id) {
-        Optional<ProjectSubject> projectSubject = projectSubjectRepository.findById(id);
-        if (projectSubject.isPresent()) {
-            return projectSubject.get();
-        }
-        else  {
-            return null;
-        }
-    }
 
     public void deleteById(UUID projectSubjectId) {
         projectSubjectRepository.deleteById(projectSubjectId);
@@ -32,6 +23,10 @@ public class ProjectSubjectService {
 
     public Optional<ProjectSubject> findById(UUID projectSubjectId) {
         return projectSubjectRepository.findById(projectSubjectId);
+    }
+
+    public ProjectSubject update(ProjectSubject entity) {
+        return projectSubjectRepository.save(entity);
     }
 
 }

@@ -105,12 +105,17 @@ public class GradeService implements CrudService<Grade, UUID>{
                     List<PerformanceDto> performances = performanceRepository
                             .findByProjectSubjectId(projectSubject.getId())
                             .stream()
-                            .map(p -> new PerformanceDto(
-                                    p.getId(),
-                                    p.getName(),
-                                    p.getShortName(),
-                                    p.getWeight() * 100
-                            ))
+                            .map(p -> {
+                                BigDecimal weight = BigDecimal.valueOf(p.getWeight())
+                                        .multiply(BigDecimal.valueOf(100))
+                                        .setScale(2, RoundingMode.HALF_UP);
+                                return new PerformanceDto(
+                                        p.getId(),
+                                        p.getName(),
+                                        p.getShortName(),
+                                        weight.doubleValue()
+                                );
+                            })
                             .toList();
                     return new SubjectDto(projectSubject.getId(), projectSubject.getSubject().getName(), projectSubject.getSubject().getShortName(), projectSubject.getDuration(), projectSubject.getSubject().isLearningField(), performances);
                 })

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import API_CONFIG from "../apiConfig";
 import Tooltip from "@mui/material/Tooltip";
-import { Autocomplete, Box, Button, FormControlLabel, Switch, TextField } from "@mui/material";
+import { Autocomplete, Box, Button, FormControlLabel, Paper, Stack, Switch, TextField } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import { DataGrid, type GridColDef, type GridColumnGroupingModel, type GridSingleSelectColDef } from "@mui/x-data-grid";
 import { Role } from "~/types/models";
@@ -57,9 +57,6 @@ export default function Grades() {
 
     const isStudent = user?.role === Role.STUDENT;
 
-    const subjectsForDialog = useMemo(() =>
-        gradeOverview?.subjects.map(s => ({ id: s.id, name: s.name })) || [], [gradeOverview]);
-
     const filterUser = (overview: GradeOverview, userId: string) => ({
         ...overview,
         users: overview.users.filter(u => u.id === userId)
@@ -90,7 +87,7 @@ export default function Grades() {
         }
     };
 
-    const calculateAllZV = async (overview: GradeOverview) => {
+    const calculateGradeSuggestions = async (overview: GradeOverview) => {
         const newUsers = await Promise.all(
             overview.users.map(async user => {
                 const grades = [...user.grades];
@@ -200,9 +197,22 @@ export default function Grades() {
 
     }, [gradeOverview, showPerformances, showGrades]);
 
-    const loadGrades = async () => {
-        if (!selectedCourse && !isStudent) { setCourseError(true); setProjectError(true); return; }
-        if (!selectedProject) { setProjectError(true); return; }
+    const loadGrades = async (showSnackbar: boolean) => {
+        if (!selectedCourse && !isStudent) {
+            setCourseError(true);
+            setProjectError(true);
+            setSnackbarMessage("Laden der Notenübersicht fehlgeschlagen. Bitte wählen Sie eine Klasse aus");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
+            return;
+        }
+        if (!selectedProject) {
+            setProjectError(true);
+            setSnackbarMessage("Laden der Notenübersicht fehlgeschlagen. Bitte wählen Sie ein Projekt aus");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
+            return;
+        }
 
         try {
             const url = `${API_CONFIG.BASE_URL}/api/grade/overview?projectId=${selectedProject.id}${selectedGroup ? `&groupId=${selectedGroup.id}` : ""}`;
@@ -214,9 +224,19 @@ export default function Grades() {
 
 
             setGradeOverview(data);
-            await calculateAllZV(data);
+            await calculateGradeSuggestions(data);
             setRenderGradeTable(true);
-        } catch (err) { console.error(err); }
+            if (showSnackbar) {
+                setSnackbarMessage("Notenübersicht erfolgreich geladen");
+                setSnackbarSeverity("success");
+                setSnackbarOpen(true);
+            }
+        } catch (err) {
+            console.error(err);
+            setSnackbarMessage("Laden der Notenübersicht gescheitert");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
+        }
     };
 
     const saveGrades = async () => {
@@ -263,7 +283,7 @@ export default function Grades() {
         },
         ...(gradeOverview?.subjects.map(subject => ({
             groupId: subject.id,
-            headerName: `${subject.shortName} (${subject.duration})`,
+            headerName: `${subject.name.length < 15 ? subject.name : subject.shortName} (${subject.duration})`,
             description: `Name: ${subject.name}`,
             children: [
                 ...(subject.performances.length ? subject.performances.map(p => ({ field: p.id })) : [{ field: `${subject.id}-empty` }]),
@@ -288,104 +308,133 @@ export default function Grades() {
 
     return (
         <Box p={3} width="100%">
-            <Box display="flex" gap={2} mb={2}>
-                {!isStudent && <Autocomplete
-                    options={gradeOverviewOptions}
-                    getOptionLabel={o => o.name}
-                    renderInput={params => <TextField {...params} label="Klasse" error={projectError} />}
-                    onChange={(_, v) => setSelectedCourse(v)}
-                    sx={{ minWidth: 200 }}
-                />}
-                <Autocomplete
-                    options={selectedCourse?.projects || []}
-                    getOptionLabel={o => o.name}
-                    onChange={(_, v) => setSelectedProject(v)}
-                    renderInput={params => <TextField {...params} label="Projekt" error={projectError} />}
-                    sx={{ minWidth: 200 }}
-                    disabled={!selectedCourse}
-                />
-                {!isStudent && <Autocomplete
-                    options={selectedProject?.groups || []}
-                    getOptionLabel={o => o.name}
-                    onChange={(_, v) => setSelectedGroup(v)}
-                    renderInput={params => <TextField {...params} label="Gruppe" />}
-                    sx={{ minWidth: 200 }}
-                    disabled={!selectedProject}
-                />}
-                <Button variant="contained" onClick={loadGrades}>Anzeigen</Button>
-                {!isStudent && (
-                    <>
-                        <FormControlLabel
-                            control={<Switch defaultChecked />}
-                            label="Noten anzeigen"
-                            onChange={(_, checked) => setShowGrades(checked)}
+            <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+                    {!isStudent && (
+                        <Autocomplete
+                            options={gradeOverviewOptions}
+                            getOptionLabel={o => o.name}
+                            renderInput={params => (
+                                <TextField {...params} label="Klasse" error={projectError} />
+                            )}
+                            onChange={(_, v) => setSelectedCourse(v)}
+                            sx={{ minWidth: 200, flex: 1 }}
                         />
-                        <FormControlLabel
-                            control={<Switch defaultChecked />}
-                            label="Leistungen anzeigen"
-                            onChange={(_, checked) => setShowPerformances(checked)}
+                    )}
+
+                    <Autocomplete
+                        options={selectedCourse?.projects || []}
+                        getOptionLabel={o => o.name}
+                        renderInput={params => <TextField {...params} label="Projekt" error={projectError} />}
+                        onChange={(_, v) => setSelectedProject(v)}
+                        disabled={!selectedCourse}
+                        sx={{ minWidth: 200, flex: 1 }}
+                    />
+
+                    {!isStudent && (
+                        <Autocomplete
+                            options={selectedProject?.groups || []}
+                            getOptionLabel={o => o.name}
+                            renderInput={params => <TextField {...params} label="Gruppe" />}
+                            onChange={(_, v) => setSelectedGroup(v)}
+                            disabled={!selectedProject}
+                            sx={{ minWidth: 200, flex: 1 }}
                         />
-                    </>
-                )}
-            </Box>
+                    )}
+
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => loadGrades(true)}
+                        sx={{ height: 56 }}
+                    >
+                        Anzeigen
+                    </Button>
+                </Stack>
+            </Paper>
 
             {renderGradeTable && (
-                <>
+                <Paper elevation={2} sx={{ p: 2 }}>
+                    {!isStudent && (
+                        <Stack direction="row" justifyContent="space-between" mb={2} alignItems="center">
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => setDialogOpen(true)}
+                            >
+                                Tabelle anpassen
+                            </Button>
+
+                            <Stack direction="row" spacing={4}>
+                                <FormControlLabel
+                                    control={<Switch defaultChecked />}
+                                    label="Noten anzeigen"
+                                    onChange={(_, checked) => setShowGrades(checked)}
+                                />
+                                <FormControlLabel
+                                    control={<Switch defaultChecked />}
+                                    label="Leistungen anzeigen"
+                                    onChange={(_, checked) => setShowPerformances(checked)}
+                                />
+                            </Stack>
+                        </Stack>
+                    )}
+
                     <DataGrid
                         rows={rows}
                         columns={columns}
                         columnGroupingModel={columnGroupingModel}
                         disableRowSelectionOnClick
-                        onProcessRowUpdateError={console.log}
                         processRowUpdate={async updatedRow => {
                             if (!gradeOverview) return updatedRow;
 
-                            const newUsers = await Promise.all(gradeOverview.users.map(async user => {
-                                if (user.id !== updatedRow.id) return user;
-                                const grades = [...(user.grades ?? [])];
+                            const newUsers = await Promise.all(
+                                gradeOverview.users.map(async user => {
+                                    if (user.id !== updatedRow.id) return user;
+                                    const grades = [...(user.grades ?? [])];
 
-                                for (const key of Object.keys(updatedRow)) {
-                                    if (["id", "nr", "nachname", "vorname", "gruppe"].includes(key)) continue;
-                                    if (typeof updatedRow[key] !== "string") continue;
+                                    for (const key of Object.keys(updatedRow)) {
+                                        if (["id", "nr", "nachname", "vorname", "gruppe"].includes(key)) continue;
+                                        if (typeof updatedRow[key] !== "string") continue;
 
-                                    console.log("updatedRow",updatedRow)
-                                    const isSubjectGrade = key.endsWith("-Z");
-                                    const perfId = isSubjectGrade ? undefined : key;
-                                    const subjId = isSubjectGrade ? key.replace("-Z", "") : undefined;
-                                    const newValue = updatedRow[key] === "" ? undefined : Number(updatedRow[key]);
+                                        const isSubjectGrade = key.endsWith("-Z");
+                                        const perfId = isSubjectGrade ? undefined : key;
+                                        const subjId = isSubjectGrade ? key.replace("-Z", "") : undefined;
+                                        const newValue = updatedRow[key] === "" ? undefined : Number(updatedRow[key]);
 
-                                    console.log("perfId",perfId)
-                                    console.log("subjId",subjId)
-                                    console.log("grades", grades)
-                                    const editedGrade = grades.find(g =>
-                                        (perfId && g.performanceId === perfId) || (subjId && g.projectSubjectId === subjId && g.performanceId !== "ZV")
-                                    );
-                                    console.log("editedGrade",editedGrade)
-                                    if (editedGrade) editedGrade.grade = newValue ?? null;
-                                    else grades.push({ performanceId: perfId, projectSubjectId: subjId, grade: newValue ?? null });
+                                        const editedGrade = grades.find(g =>
+                                            (perfId && g.performanceId === perfId) ||
+                                            (subjId && g.projectSubjectId === subjId && g.performanceId !== "ZV")
+                                        );
+                                        if (editedGrade) editedGrade.grade = newValue ?? null;
+                                        else grades.push({ performanceId: perfId, projectSubjectId: subjId, grade: newValue ?? null });
 
-                                    if (!isSubjectGrade && perfId) {
-                                        const subject = gradeOverview.subjects.find(s => s.performances.some(p => p.id === perfId));
-                                        if (!subject) continue;
+                                        if (!isSubjectGrade && perfId) {
+                                            const subject = gradeOverview.subjects.find(s => s.performances.some(p => p.id === perfId));
+                                            if (!subject) continue;
 
-                                        const allGrades = subject.performances.map(p => ({
-                                            grade: grades.find(gr => gr.performanceId === p.id)?.grade ?? undefined,
-                                            weight: p.weight
-                                        }));
+                                            const allGrades = subject.performances.map(p => ({
+                                                grade: grades.find(gr => gr.performanceId === p.id)?.grade ?? undefined,
+                                                weight: p.weight
+                                            }));
 
-                                        if (allGrades.every(g => g.grade !== undefined)) {
-                                            const subjectGrade = await calculateSubjectGrade(allGrades);
-                                            const zvEntry = grades.find(g => g.projectSubjectId === subject.id && g.performanceId === "ZV");
-                                            if (zvEntry) zvEntry.grade = subjectGrade;
-                                            else grades.push({ projectSubjectId: subject.id, performanceId: "ZV", grade: subjectGrade });
-                                            updatedRow[`${subject.id}-ZV`] = subjectGrade ?? undefined;
+                                            if (allGrades.every(g => g.grade !== undefined)) {
+                                                const subjectGrade = await calculateSubjectGrade(allGrades);
+                                                const zvEntry = grades.find(g => g.projectSubjectId === subject.id && g.performanceId === "ZV");
+                                                if (zvEntry) zvEntry.grade = subjectGrade;
+                                                else grades.push({ projectSubjectId: subject.id, performanceId: "ZV", grade: subjectGrade });
+                                                updatedRow[`${subject.id}-ZV`] = subjectGrade ?? undefined;
+                                            }
                                         }
                                     }
-                                }
 
-                                setUpdatedGrades(prev => [...prev.filter(g => g.studentId !== updatedRow.id), { studentId: updatedRow.id, grades }]);
-                                return { ...user, grades };
-                            }));
+                                    setUpdatedGrades(prev => [
+                                        ...prev.filter(g => g.studentId !== updatedRow.id),
+                                        { studentId: updatedRow.id, grades }
+                                    ]);
+                                    return { ...user, grades };
+                                })
+                            );
 
                             setGradeOverview({ ...gradeOverview, users: newUsers });
                             return updatedRow;
@@ -399,21 +448,37 @@ export default function Grades() {
                             "& .MuiDataGrid-columnHeaderGroup .MuiDataGrid-columnHeaderTitleContainer": { justifyContent: "center" },
                         }}
                     />
-                    {!isStudent && <Box display="flex" gap={2} py={2}>
-                        <Button variant="contained" onClick={saveGrades}>Speichern</Button>
-                        <Button variant="contained" onClick={() => setDialogOpen(true)}>Spalten anpassen</Button>
-                        <FormDialog
-                            open={dialogOpen}
-                            onClose={() => setDialogOpen(false)}
-                            projectId={selectedProject?.id}
-                            projectSubjects={gradeOverview?.subjects.map(s => ({ id: s.id, name: s.name, shortName: s.shortName, learningField: s.isLearningField, weight: s.duration, performances: s.performances})) ?? []}
-                            onSubmitSuccess={async () => {
-                                await loadGrades();
-                                await fetchOptions();
-                            }}
-                        />
-                    </Box>}
-                </>
+
+                    {!isStudent && (
+                        <Stack direction="row" justifyContent="flex-end" mt={3}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={saveGrades}
+                            >
+                                Speichern
+                            </Button>
+                        </Stack>
+                    )}
+
+                    <FormDialog
+                        open={dialogOpen}
+                        onClose={() => setDialogOpen(false)}
+                        projectId={selectedProject?.id}
+                        projectSubjects={gradeOverview?.subjects.map(s => ({
+                            id: s.id,
+                            name: s.name,
+                            shortName: s.shortName,
+                            learningField: s.isLearningField,
+                            weight: s.duration,
+                            performances: s.performances
+                        })) ?? []}
+                        onSubmitSuccess={async () => {
+                            await loadGrades(false);
+                            await fetchOptions();
+                        }}
+                    />
+                </Paper>
             )}
             <CustomizedSnackbars
                 open={snackbarOpen}

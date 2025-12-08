@@ -49,6 +49,7 @@ public class SubjectService implements CrudService<Subject, UUID> {
         return subjectRepository.save(subject);
     }
 
+
     @Override
     public void deleteById(UUID id) {
         subjectRepository.deleteById(id);

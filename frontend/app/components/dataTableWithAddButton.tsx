@@ -6,11 +6,10 @@ import {
 } from "@mui/x-data-grid";
 import {deDE} from "@mui/x-data-grid/locales";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
-import {Stack, IconButton, Tooltip, Button} from "@mui/material";
+import {Stack, IconButton, Tooltip, Button, Paper} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
-import Typography from "@mui/material/Typography";
 
 /**
  * @author: Michael Holl
@@ -110,8 +109,8 @@ export default function DataGridWithAdd<TRow extends DataRow>({
 
     return (
         <ThemeProvider theme={theme}>
-            <div style={{width: "100%"}}>
-                <Stack direction="row" justifyContent="flex-end" sx={{mb: 1}}  alignItems="center" spacing={1} px={2} py={1}>
+            <Paper elevation={3} sx={{ p: 2, width: "100%" }}>
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1} mb={2}>
                     <Button
                         onClick={onAddClick}
                         variant="contained"
@@ -122,6 +121,7 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                         Hinzufügen
                     </Button>
                 </Stack>
+
                 <DataGrid
                     rows={rows}
                     columns={gridColumns}
@@ -129,12 +129,9 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                     disableRowSelectionOnClick
                     autoHeight
                     localeText={deDE.components.MuiDataGrid.defaultProps?.localeText}
-
-                    onRowClick={(params) => {
-                        onRowClick?.(params.row)
-                    }}
+                    onRowClick={(params) => onRowClick?.(params.row)}
                 />
-            </div>
+            </Paper>
         </ThemeProvider>
     );
 }
