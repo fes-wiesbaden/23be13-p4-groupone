@@ -27,6 +27,13 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=5432
+      - APP_INIT_DEFAULT_USERS=${APP_INIT_DEFAULT_USERS:-true}
+      - APP_DEFAULT_ADMIN_USERNAME=${APP_DEFAULT_ADMIN_USERNAME:-admin}
+      - APP_DEFAULT_ADMIN_PASSWORD=${APP_DEFAULT_ADMIN_PASSWORD:-admin}
+      - APP_DEFAULT_TEACHER_USERNAME=${APP_DEFAULT_TEACHER_USERNAME:-teacher}
+      - APP_DEFAULT_TEACHER_PASSWORD=${APP_DEFAULT_TEACHER_PASSWORD:-teacher}
+      - APP_DEFAULT_STUDENT_USERNAME=${APP_DEFAULT_STUDENT_USERNAME:-student}
+      - APP_DEFAULT_STUDENT_PASSWORD=${APP_DEFAULT_STUDENT_PASSWORD:-student}
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
