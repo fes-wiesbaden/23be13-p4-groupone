@@ -33,6 +33,7 @@ import CustomizedSnackbars from "../components/snackbar";
  * @Edited by Noah Bach
  * <p>
  *    Added dialaog integration
+ *    Form Validation
  * </p>
  **/
 interface Subject {

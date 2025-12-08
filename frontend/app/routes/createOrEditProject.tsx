@@ -17,6 +17,8 @@ import useAlertDialog from "~/components/youSurePopup";
  *
  * Editing/Creating projects and assigning groups/students
  *
+ * @Edited by Noah Bach
+ *    Form Validation
  */
 
 interface Student {

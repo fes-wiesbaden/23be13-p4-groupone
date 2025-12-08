@@ -13,6 +13,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
  *
  * Editing/Creating courses and assigning students
  *
+ * @Edited by Noah Bach
+ *    Form Validation
  */
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
