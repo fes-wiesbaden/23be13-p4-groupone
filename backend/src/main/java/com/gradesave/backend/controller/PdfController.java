@@ -10,6 +10,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +24,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/pdfs")
-@CrossOrigin(origins = "*")
 public class PdfController {
 
     private static final Logger log = LoggerFactory.getLogger(PdfController.class);
@@ -57,9 +59,15 @@ public class PdfController {
         } catch (SecurityException ex) {
             log.warn("Security violation attempting to access: {}", filename);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (Exception ex) {
-            log.error("Error downloading PDF file: {}", filename, ex);
+        } catch (FileNotFoundException | NoSuchFileException ex) {
+            log.warn("PDF file not found: {}", filename);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (IOException ex) {
+            log.error("I/O error reading PDF file: {}", filename, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception ex) {
+            log.error("Unexpected error downloading PDF file: {}", filename, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
