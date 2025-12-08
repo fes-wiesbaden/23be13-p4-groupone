@@ -33,6 +33,7 @@ public class Project {
     private Course course;
 
     @NotBlank
+    @Size(max = 100, message = "name must not exceed 100 characters")
     private String name;
 
     @NotNull(message = "projectStart is required")

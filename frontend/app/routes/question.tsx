@@ -78,6 +78,7 @@ export default function Question() {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const handleSnackbarClose = () => { setSnackbarOpen(false);};
   const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Frage wirklich löschen?");
+  const [questionTextError, setQuestionTextError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,11 +111,13 @@ export default function Question() {
   const handleAddClick = () => setOpenDialog(true);
   
   const handleCloseDialog = () => {
+    setQuestionTextError("");
     setSelectedSubjects([]);
     setOpenDialog(false);
   };
   
-    const handleCloseEditDialog = () => {
+  const handleCloseEditDialog = () => {
+    setQuestionTextError("");
     setSelectedSubjects([]);
     setOpenEditDialog(false);
   };
@@ -161,6 +164,12 @@ export default function Question() {
     const formData = new FormData(event.currentTarget);
     const formJson = Object.fromEntries((formData as any).entries());
 
+    if (formJson.question.length > 1000){
+      setQuestionTextError("Frage darf nicht länger als 1000 sein");
+      console.log(questionTextError)
+      return
+    }
+
     const payload = {
       text: formJson.question,
       type: formJson.type.toUpperCase(),
@@ -199,6 +208,12 @@ export default function Question() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const formJson = Object.fromEntries((formData as any).entries());
+
+    if (formJson.question.length > 1000){
+      setQuestionTextError("Frage darf nicht länger als 1000 sein");
+      console.log(questionTextError)
+      return
+    }
 
     const payload = {
       text: formJson.question,
@@ -271,6 +286,8 @@ export default function Question() {
               type="text"
               fullWidth
               multiline
+              helperText={questionTextError}
+              error={Boolean(questionTextError)}
             />
 
             <Autocomplete
@@ -328,6 +345,8 @@ export default function Question() {
               fullWidth
               multiline
               defaultValue={editQuestion?.text || ""}
+              helperText={questionTextError}
+              error={Boolean(questionTextError)}
             />
             {/* blendet die Question ID aus */}
             <input 

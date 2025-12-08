@@ -170,6 +170,7 @@ export default function createOrEditProject() {
     const [groupAmount, setGroupAmount] = useState(5);
     const [creatingGroups, setCreatingGroups] = useState(false);
     const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Gruppen wirklich löschen?");
+    const [nameError, setNameError] = useState("");
 
     const isEdit = !(projectId === "new");
     const navigate = useNavigate();
@@ -481,6 +482,11 @@ export default function createOrEditProject() {
             return
         }
 
+        if (projectCreateDetails.projectName.length > 100) {
+            setNameError("Name darf nicht länger als 100 sein")
+            return
+        }
+
         const payload = {
             projectName: projectCreateDetails.projectName,
             courseId: projectCreateDetails.courseId,
@@ -689,6 +695,8 @@ export default function createOrEditProject() {
                     value={isEdit ? project?.projectName : projectCreateDetails.projectName}
                     onChange={e => handleProjectNameChange(e.target.value)}
                     sx={{flex: "1 1 250px"}}
+                    helperText={nameError}
+                    error={Boolean(nameError)}
                 />
 
                 <TextField
