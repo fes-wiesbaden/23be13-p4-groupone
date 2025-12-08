@@ -117,7 +117,7 @@ export default function UsersPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8080/api/users", {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/users`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error(`GET /api/users ${res.status}`);
@@ -200,7 +200,7 @@ export default function UsersPage() {
         updateRequest.password = form.password;
       }
 
-      const res = await fetch(`http://localhost:8080/api/users/${editRow.id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/${editRow.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -229,7 +229,7 @@ export default function UsersPage() {
         password: form.password,
       };
 
-      const res = await fetch("http://localhost:8080/api/users", {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
