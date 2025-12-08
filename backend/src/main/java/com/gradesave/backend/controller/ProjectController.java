@@ -524,15 +524,20 @@ public class ProjectController {
         return ResponseEntity.ok(answers);
     }
 
-    @GetMapping("{projectId}/gradeAverages")
-    public ResponseEntity<?> getProjectGradeAverages(@PathVariable UUID projectId) {
+    @GetMapping("{projectId}/gradeAverages/{groupId}")
+    public ResponseEntity<?> getProjectGradeAverages(@PathVariable UUID projectId, @PathVariable UUID groupId) {
         Optional<Project> projectOpt = projectService.getById(projectId);
         if (projectOpt.isEmpty())
             return ResponseEntity.notFound().build();
 
         Project project = projectOpt.get();
 
-        ProjectGradeAveragesDTO averages = answerService.getGradeAveragesForProject(project);
+        Optional<Group> groupOpt = groupService.getById(groupId);
+        if (groupOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        ProjectGradeAveragesDTO averages = answerService.getGradeAveragesForProjectAndGroup(project, groupOpt.get());
+
         return ResponseEntity.ok(averages);
     }
 }

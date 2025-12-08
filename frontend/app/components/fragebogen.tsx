@@ -119,7 +119,9 @@ export default function Fragebogen({
 
     if (!user) return <>Fehler beim Authentifizieren, bitte lade die Seite neu</>;
 
-    const myId = user.userId
+    const myId: string = user.userId
+
+    if (!myId.trim()) return <>Fehler beim Authentifizieren, bitte lade die Seite neu</>;
 
 
     const initializeAnswers = (row: FragebogenRow): FragebogenRow => {

@@ -146,6 +146,47 @@ public class AnswerService {
         return new DetailedProjectQuestionAnswersDTO(questionAnswers);
     }
 
+    private List<Integer> extractValidGrades(List<Answer> answers) {
+        return answers.stream()
+                .map(Answer::getAnswerGrade)
+                .filter(g -> g != null && g != NO_GRADE_SELECTED)
+                .toList();
+    }
+
+    private Double averageOrNull(List<Integer> grades) {
+        return grades.isEmpty()
+                ? null
+                : grades.stream().mapToInt(Integer::intValue).average().orElse(0.0);
+    }
+
+    private StudentGradeAverageDTO buildStudentAverage(UUID studentId, List<Answer> answers) {
+
+        User student = answers.getFirst().getRecipient();
+
+        List<Integer> allGrades = extractValidGrades(answers);
+
+        List<Integer> selfGrades = extractValidGrades(
+                answers.stream()
+                        .filter(a -> a.getAuthor().getId().equals(a.getRecipient().getId()))
+                        .toList()
+        );
+
+        List<Integer> peerGrades = extractValidGrades(
+                answers.stream()
+                        .filter(a -> !a.getAuthor().getId().equals(a.getRecipient().getId()))
+                        .toList()
+        );
+
+        return new StudentGradeAverageDTO(
+                studentId,
+                student.getFirstName() + " " + student.getLastName(),
+                averageOrNull(allGrades),
+                allGrades.size(),
+                averageOrNull(selfGrades),
+                averageOrNull(peerGrades)
+        );
+    }
+
     public ProjectGradeAveragesDTO getGradeAveragesForProject(Project project) {
         List<Answer> projectAnswers = answerRepository.findByProjectId(project.getId());
 
@@ -168,7 +209,7 @@ public class AnswerService {
                             .filter(g -> g != null && g != NO_GRADE_SELECTED)
                             .toList();
 
-                    Double averageGrade = grades.isEmpty() ? null : 
+                    Double averageGrade = grades.isEmpty() ? null :
                             grades.stream().mapToInt(Integer::intValue).average().orElse(0.0);
 
                     List<Integer> selfGrades = studentAnswers.stream()
@@ -198,6 +239,29 @@ public class AnswerService {
                             peerAssessment
                     );
                 })
+                .toArray(StudentGradeAverageDTO[]::new);
+
+        return new ProjectGradeAveragesDTO(averages);
+    }
+
+    public ProjectGradeAveragesDTO getGradeAveragesForProjectAndGroup(Project project, Group group) {
+
+        List<UUID> groupMemberIds = group.getUsers()
+                .stream()
+                .filter(u -> u.getRole() == Role.STUDENT)
+                .map(User::getId)
+                .toList();
+
+        List<Answer> gradeAnswers = answerRepository.findByProjectId(project.getId()).stream()
+                .filter(a -> a.getProjectQuestion().getQuestion().getType() == QuestionType.GRADE)
+                .filter(a -> groupMemberIds.contains(a.getRecipient().getId()))
+                .toList();
+
+        Map<UUID, List<Answer>> answersByRecipient = gradeAnswers.stream()
+                .collect(Collectors.groupingBy(a -> a.getRecipient().getId()));
+
+        StudentGradeAverageDTO[] averages = answersByRecipient.entrySet().stream()
+                .map(entry -> buildStudentAverage(entry.getKey(), entry.getValue()))
                 .toArray(StudentGradeAverageDTO[]::new);
 
         return new ProjectGradeAveragesDTO(averages);

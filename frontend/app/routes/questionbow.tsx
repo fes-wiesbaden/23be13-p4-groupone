@@ -266,12 +266,12 @@ export default function Questionbow() {
     useEffect(() => {
         if (viewMode === ViewType.STUDENT_ANSWERS && projectId) {
             const fetchAverages = async () => {
-                if (loadingAverages) return
+                if (loadingAverages || !selectedGroup) return
 
                 setLoadingAverages(true);
                 try {
                     const res = await fetch(
-                        `${API_CONFIG.BASE_URL}/api/project/${projectId}/gradeAverages`,
+                        `${API_CONFIG.BASE_URL}/api/project/${projectId}/gradeAverages/${selectedGroup.groupId}`,
                         {credentials: "include"}
                     );
                     if (!res.ok) {
@@ -295,7 +295,7 @@ export default function Questionbow() {
 
             fetchAverages();
         }
-    }, [viewMode, projectId]);
+    }, [viewMode, projectId, selectedGroup]);
 
     if (isLoading) return <>Loading User...</>
     if (loadingProject) return <>Loading Project...</>
