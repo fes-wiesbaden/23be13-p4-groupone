@@ -6,7 +6,7 @@
     @Edited by Noah Bach
     @Date: 05/12/2025
     Better usability
-    (remove file from form on submit, reload on succes)
+    (remove file from form on submit, reload on success)
  */
 import * as React from "react";
 import Paper from "@mui/material/Paper";
@@ -81,11 +81,11 @@ const SingleFileUploader = (props: FileUploadProps) => {
         setSnackbarOpen(true);
         return;
       }
-      setSnackbarMessage("Datei erfolgreich hochgeladen!!");
+      setSnackbarMessage("Datei erfolgreich hochgeladen!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
 
-      if (props.doAfterUpload != undefined)
+      if (props.doAfterUpload !== undefined)
         props.doAfterUpload();
     } catch (error: any) {
       console.error("Fehler beim Hochladen der Datei:", error);

@@ -10,7 +10,7 @@
  * @Edited by Noah Bach
  * @Date: 05/12/2025
  * Better usability for CSV import
- * (Snackbar, remove file from form on submit, reload on succes)
+ * (Snackbar, remove file from form on submit, reload on success)
  */
 import {
   Dialog,
