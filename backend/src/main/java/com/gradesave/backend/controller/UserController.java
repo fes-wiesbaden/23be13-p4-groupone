@@ -70,6 +70,7 @@ public class UserController {
 
             return ResponseEntity.ok(Map.of(
                     "message", "Login successful",
+                    "id", user.getId(),
                     "role", user.getRole(),
                     "username", user.getUsername()
             ));
@@ -95,8 +96,8 @@ public class UserController {
         }
 
         return ResponseEntity.ok(Map.of(
+                "id", user.getId(),
                 "username", user.getUsername(),
-                "userId", user.getId(),
                 "role", user.getRole().toString()
         ));
     }

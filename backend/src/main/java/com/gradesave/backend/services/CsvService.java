@@ -5,9 +5,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.gradesave.backend.models.Course;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 

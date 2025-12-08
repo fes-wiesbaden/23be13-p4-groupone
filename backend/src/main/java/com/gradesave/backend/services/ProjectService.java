@@ -2,11 +2,11 @@ package com.gradesave.backend.services;
 
 import com.gradesave.backend.dto.project.QuestionnaireActivityStatus;
 import com.gradesave.backend.dto.question.QuestionDTO;
-import com.gradesave.backend.models.Answer;
 import com.gradesave.backend.models.Project;
 import com.gradesave.backend.models.ProjectQuestion;
 import com.gradesave.backend.models.Question;
 import com.gradesave.backend.repositories.*;
+import com.gradesave.backend.repositories.ProjectRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -16,26 +16,20 @@ import java.util.stream.Collectors;
 
 /**
  * @author: Paul Geisthardt
- * <p>
- * Business logic for projects
- * </p>
+ *          <p>
+ *          Business logic for projects
+ *          </p>
  */
 
 @Service
 @Transactional
 public class ProjectService implements CrudService<Project, UUID> {
-    private final CourseRepository courseRepository;
     private final ProjectRepository projectRepository;
-    private final GroupRepository groupRepository;
     private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
 
-    public ProjectService(CourseRepository courseRepository, ProjectRepository projectRepository, GroupRepository groupRepository, QuestionRepository questionRepository, AnswerRepository answerRepository) {
-        this.courseRepository = courseRepository;
+    public ProjectService(ProjectRepository projectRepository, QuestionRepository questionRepository) {
         this.projectRepository = projectRepository;
-        this.groupRepository = groupRepository;
         this.questionRepository = questionRepository;
-        this.answerRepository = answerRepository;
     }
 
     @Override

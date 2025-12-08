@@ -119,7 +119,7 @@ export default function Fragebogen({
 
     if (!user) return <>Fehler beim Authentifizieren, bitte lade die Seite neu</>;
 
-    const myId = user.userId
+    const myId = user.id
 
     if (!myId || !myId.trim()) return <>Fehler beim Authentifizieren, bitte lade die Seite neu</>;
 

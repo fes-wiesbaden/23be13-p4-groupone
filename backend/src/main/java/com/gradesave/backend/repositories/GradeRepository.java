@@ -21,13 +21,27 @@ import com.gradesave.backend.models.Grade;
 @Repository
 public interface GradeRepository extends JpaRepository<Grade, UUID> {
     @Query("""
-        SELECT g
-        FROM Grade g
-        JOIN g.performance p
-        JOIN p.projectSubject ps
-        WHERE ps.project.id = :projectId
+    SELECT g
+    FROM Grade g
+    LEFT JOIN g.performance p
+    LEFT JOIN p.projectSubject ps
+    LEFT JOIN g.projectSubject gps
+    WHERE 
+        (ps IS NOT NULL AND ps.project.id = :projectId)
+        OR
+        (gps IS NOT NULL AND gps.project.id = :projectId)
     """)
     List<Grade> findByProjectId(UUID projectId);
+
+    @Query("""
+    SELECT g
+    FROM Grade g
+    WHERE ((g.projectSubject.id = :projectSubjectId)
+        OR
+        (g.performance.id = :performanceId))
+        AND g.student.id = :studentId
+    """)
+    Grade findByStudentIdAndPerformanceIdOrProjectSubjectId(UUID studentId, UUID performanceId, UUID projectSubjectId);
 
     Grade findByPerformanceIdAndStudentId(UUID performanceId, UUID studentId);
 }

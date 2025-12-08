@@ -10,6 +10,6 @@ import java.util.UUID;
  *
  **/
 
-public record GradeDto(UUID gradeId, UUID performanceId, Double grade) {
+public record GradeDto(UUID performanceId, UUID projectSubjectId, Double grade) {
 
 }

@@ -35,7 +35,7 @@ public class ProjectSubject {
     private Subject subject;
 
     @NotNull(message = "Duration is required")
-    private int duration;
+    private Double duration;
 
     public UUID getId() {
         return id;
@@ -61,11 +61,11 @@ public class ProjectSubject {
         this.subject = subject;
     }
 
-    public int getDuration() {
+    public Double getDuration() {
         return duration;
     }
 
-    public void setDuration(int duration) {
+    public void setDuration(Double duration) {
         this.duration = duration;
     }
 }

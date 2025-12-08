@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * @author: Michael Holl
  * <p>
- * Business logic for subjects
+ * Business logic for questions
  * </p>
  *
  *

@@ -1,20 +1,16 @@
 package com.gradesave.backend.dto.project;
 
 import java.util.List;
-import java.util.UUID;
 
-public class CreateProjectResponseDTO
-{
+public class CreateProjectResponseDTO {
     private List<String> errors;
     private ProjectSummaryDTO projectSummary;
 
-    public CreateProjectResponseDTO(List<String> errors)
-    {
+    public CreateProjectResponseDTO(List<String> errors) {
         this.errors = errors;
     }
 
-    public CreateProjectResponseDTO(ProjectSummaryDTO projectSummary)
-    {
+    public CreateProjectResponseDTO(ProjectSummaryDTO projectSummary) {
         this.projectSummary = projectSummary;
     }
 

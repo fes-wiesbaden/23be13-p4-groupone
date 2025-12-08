@@ -7,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Avatar from '@mui/material/Avatar';
 import API_CONFIG from "~/apiConfig";
+import type {Role} from "~/types/models";
 
 /**
  * @author: Daniel Hess
@@ -40,8 +41,9 @@ export default function Login(): React.ReactElement {
                 const data: LoginResponse = await res.json();
 
                 login({
+                    id: data.id || "",
                     username: data.username || data.user?.username || "",
-                    role: data.role || data.user?.role || "",
+                    role: data.role as Role || data.user?.role as Role
                 });
 
                 navigate("/");

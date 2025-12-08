@@ -1,27 +1,21 @@
 
 package com.gradesave.backend.services;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.gradesave.backend.dto.grade.GradeDto;
-import com.gradesave.backend.dto.grade.GradeOverviewDto;
-import com.gradesave.backend.dto.grade.UpdateGradeRequest;
-import com.gradesave.backend.dto.grade.UserGradeDto;
+import com.gradesave.backend.dto.grade.*;
 import com.gradesave.backend.dto.performance.PerformanceDto;
 import com.gradesave.backend.dto.subject.SubjectDto;
 import com.gradesave.backend.models.*;
-import com.gradesave.backend.repositories.PerformanceRepository;
-import com.gradesave.backend.repositories.SubjectRepository;
-import com.gradesave.backend.repositories.UserRepository;
+import com.gradesave.backend.repositories.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-
-import com.gradesave.backend.repositories.GradeRepository;
 
 /**
  * @author: Michael Holl
@@ -40,15 +34,18 @@ public class GradeService implements CrudService<Grade, UUID>{
     private final PerformanceRepository performanceRepository;
     private final UserRepository userRepository;
     private final SubjectRepository subjectRepository;
+    private final ProjectSubjectRepository projectSubjectRepository;
 
     public GradeService(PerformanceRepository performanceRepository,
                         GradeRepository gradeRepository,
                         UserRepository userRepository,
-                        SubjectRepository subjectRepository) {
+                        SubjectRepository subjectRepository,
+                        ProjectSubjectRepository projectSubjectRepository) {
         this.performanceRepository = performanceRepository;
         this.gradeRepository = gradeRepository;
         this.userRepository = userRepository;
         this.subjectRepository = subjectRepository;
+        this.projectSubjectRepository = projectSubjectRepository;
     }
 
     @Override
@@ -102,14 +99,24 @@ public class GradeService implements CrudService<Grade, UUID>{
 
     public GradeOverviewDto loadGradeOverview(UUID projectId, UUID groupId) {
         // load subjects with performances
-        List<SubjectDto> subjects = subjectRepository.findByProjectSubjects_Project_Id(projectId).stream()
-                .map(subject -> {
+        List<SubjectDto> subjects = projectSubjectRepository.findByProjectId(projectId).stream()
+                .map(projectSubject -> {
                     List<PerformanceDto> performances = performanceRepository
-                            .findByProjectSubject_Subject_Id(subject.getId())
+                            .findByProjectSubjectId(projectSubject.getId())
                             .stream()
-                            .map(p -> new PerformanceDto(p.getId(), p.getName(), p.getShortName(), p.getWeight() * 100))
+                            .map(p -> {
+                                BigDecimal weight = BigDecimal.valueOf(p.getWeight())
+                                        .multiply(BigDecimal.valueOf(100))
+                                        .setScale(2, RoundingMode.HALF_UP);
+                                return new PerformanceDto(
+                                        p.getId(),
+                                        p.getName(),
+                                        p.getShortName(),
+                                        weight.doubleValue()
+                                );
+                            })
                             .toList();
-                    return new SubjectDto(subject.getId(), subject.getName(), subject.getShortName(), performances);
+                    return new SubjectDto(projectSubject.getId(), projectSubject.getSubject().getName(), projectSubject.getSubject().getShortName(), projectSubject.getDuration(), projectSubject.getSubject().isLearningField(), performances);
                 })
                 .toList();
 
@@ -118,25 +125,20 @@ public class GradeService implements CrudService<Grade, UUID>{
                 ? userRepository.findByGroups_IdAndRole(groupId, Role.STUDENT)
                 : userRepository.findByCourses_Projects_IdAndRole(projectId, Role.STUDENT);
 
-        // load all performances in current project
-        List<Performance> projectPerformances = performanceRepository.findByProjectSubject_Project_Id(projectId);
-
-        // load all grades in current project
+        // load all grades for project
         List<Grade> allGrades = gradeRepository.findByProjectId(projectId);
+        //collect every grade for a performance
         List<UserGradeDto> userGrades = users.stream()
                 .map(user -> {
-                    List<GradeDto> grades = projectPerformances.stream()
-                            .map(performance -> {
-                                Grade grade = allGrades.stream()
-                                        .filter(g -> g.getStudent().getId().equals(user.getId()) && g.getPerformance().getId().equals(performance.getId()))
-                                        .findFirst()
-                                        .orElse(null);
-                                return new GradeDto(
-                                        grade != null ? grade.getId() : null,
-                                        performance.getId(),
-                                        grade != null ? grade.getGrade() : null
-                                );
-                            })
+
+                    // collect all grades of project for every user
+                    List<GradeDto> subjectAndPerformanceGrades = allGrades.stream()
+                            .filter(grade -> grade.getStudent().getId().equals(user.getId()))
+                            .map(grade -> new GradeDto(
+                                    grade != null && grade.getPerformance() != null ? grade.getPerformance().getId() : null,
+                                    grade != null && grade.getProjectSubject() != null ? grade.getProjectSubject().getId() : null,
+                                    grade != null ? grade.getGrade() : null
+                            ))
                             .toList();
 
                     String groupName = user.getGroups().stream()
@@ -145,7 +147,7 @@ public class GradeService implements CrudService<Grade, UUID>{
                             .findFirst()
                             .orElse("");
 
-                    return new UserGradeDto(user.getId(), user.getFirstName(), user.getLastName(), groupName, grades);
+                    return new UserGradeDto(user.getId(), user.getFirstName(), user.getLastName(), groupName, subjectAndPerformanceGrades);
                 })
                 .sorted((u1, u2) -> u1.lastName().compareToIgnoreCase(u2.lastName()))
                 .toList();
@@ -162,20 +164,26 @@ public class GradeService implements CrudService<Grade, UUID>{
             }
 
             r.grades().forEach(g -> {
-                // Skip if grade value or performanceId is null
-                if (g.grade() == null || g.performanceId() == null) {
+                // Try to find an existing grade for this student and performance
+                Grade grade = gradeRepository.findByStudentIdAndPerformanceIdOrProjectSubjectId(r.studentId(), g.performanceId(), g.projectSubjectId());
+                if (grade != null && g.grade() == null) {
+                    gradeRepository.deleteById(grade.getId());
                     return;
                 }
-                // Try to find an existing grade for this student and performance
-                Grade grade = gradeRepository.findByPerformanceIdAndStudentId(g.performanceId(), r.studentId());
-
                 // If no existing grade is found, create a new one
                 if (grade == null) {
                     grade = new Grade();
-                    grade.setPerformance(
-                            performanceRepository.findById(g.performanceId())
-                                    .orElseThrow(() -> new RuntimeException("performance id not found"))
-                    );
+                    if (g.performanceId() != null) {
+                        grade.setPerformance(
+                                performanceRepository.findById(g.performanceId())
+                                        .orElseThrow(() -> new RuntimeException("performance id not found"))
+                        );
+                    }
+                    if (g.projectSubjectId() != null) {
+                        grade.setProjectSubject(projectSubjectRepository.findById(g.projectSubjectId())
+                                .orElseThrow(() -> new RuntimeException("project subject id not found"))
+                        );
+                    }
                     grade.setStudent(
                             userRepository.findById(r.studentId())
                                     .orElseThrow(() -> new RuntimeException("student id not found"))
@@ -186,5 +194,25 @@ public class GradeService implements CrudService<Grade, UUID>{
                 create(grade);
             });
         });
+    }
+
+    public BigDecimal calculateSubjectGrade(List<CalculateSubjectGradeDto> newGrades) {
+        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal totalWeight = BigDecimal.ZERO;
+
+        for (CalculateSubjectGradeDto gradeWithWeight : newGrades) {
+            BigDecimal grade = new BigDecimal(Double.toString(gradeWithWeight.grade()));
+            BigDecimal weight = BigDecimal.valueOf(gradeWithWeight.weight())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+            total = total.add(grade.multiply(weight));
+            totalWeight = totalWeight.add(weight);
+        }
+
+        if (totalWeight.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return total.divide(totalWeight, 2, RoundingMode.HALF_UP);
     }
 }

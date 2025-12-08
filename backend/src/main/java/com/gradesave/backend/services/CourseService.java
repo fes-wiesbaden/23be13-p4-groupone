@@ -10,6 +10,7 @@ import com.gradesave.backend.dto.course.UpdateCourseRequest;
 import com.gradesave.backend.dto.course.CourseSelectionDto;
 import com.gradesave.backend.dto.group.GroupSelectionDto;
 import com.gradesave.backend.dto.project.ProjectSelectionDto;
+import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.repositories.CourseRepository;
 import com.gradesave.backend.repositories.GroupRepository;
@@ -173,9 +174,10 @@ public class CourseService {
         courseRepository.save(course);
     }
 
-    public List<CourseSelectionDto> findGradeOverviewOptions() {
+    public List<CourseSelectionDto> findGradeOverviewOptions(UUID userId) {
+        User currentUser = userRepo.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
 
-        List<Course> courses = courseRepository.findAll();
+        List<Course> courses = courseRepository.findAllByUserId(currentUser.getId());
 
         return courses.stream().map(course -> {
 

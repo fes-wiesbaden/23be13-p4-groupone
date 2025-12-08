@@ -20,9 +20,9 @@ import API_CONFIG from "~/apiConfig";
  **/
 
 interface User {
-  username: string;
-  userId: string;
-  role: Role;
+    id: string;
+    username: string;
+    role: Role;
 }
 
 interface AuthContextType {

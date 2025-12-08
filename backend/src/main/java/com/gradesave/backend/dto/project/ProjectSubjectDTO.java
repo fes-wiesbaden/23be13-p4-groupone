@@ -4,7 +4,7 @@ import com.gradesave.backend.models.Project;
 
 import java.util.UUID;
 
-public record ProjectSubjectDTO(UUID projectSubjectId, UUID projectId, UUID subjectId, Integer duration) {
+public record ProjectSubjectDTO(UUID projectSubjectId, UUID projectId, UUID subjectId, Double duration) {
     public static ProjectSubjectDTO[] fromEntity(Project project) {
         return project.getProjectSubjects()
                 .stream()
