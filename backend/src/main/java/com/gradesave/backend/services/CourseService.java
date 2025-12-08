@@ -172,7 +172,6 @@ public class CourseService {
 
     public List<CourseSelectionDto> findGradeOverviewOptions(UUID userId) {
         User currentUser = userRepo.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
-        Role role = currentUser.getRole();
 
         List<Course> courses = courseRepository.findAllByUserId(currentUser.getId());
 

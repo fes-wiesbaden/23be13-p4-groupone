@@ -43,7 +43,6 @@ export default function Login(): React.ReactElement {
 
             if (res.ok) {
                 const data: LoginResponse = await res.json();
-                console.log("LOGIN", data)
                 login({
                     id: data.id || "",
                     username: data.username || data.user?.username || "",

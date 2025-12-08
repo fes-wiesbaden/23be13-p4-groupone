@@ -78,12 +78,12 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
     const [selectedPerformanceId, setSelectedPerformanceId] = useState<string | undefined>(undefined);
 
     const [subjects, setSubjects] = useState<Subject[]>([]);
-    const [shortName, setShortName] = useState<string | undefined>();
+    const [shortName, setShortName] = useState<string>();
     const [displayWeight, setDisplayWeight] = useState<string | undefined>();
     const [performanceOptions, setPerformanceOptions] = useState<Performance[] | undefined>();
     const [subjectOptions, setSubjectOptions] = useState<ProjectSubject[] | undefined>();
     const [columnAction, setColumnAction] = useState<string>("add");
-    const [learningField, setLearningField] = useState<String | undefined>("true");
+    const [learningField, setLearningField] = useState<string>("true");
     const [createMore, setCreateMore] = useState<boolean>(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -186,7 +186,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
 
     const handleClose = () => {
         setCreateMore(false);
-        setSelectedSubjectId("");
+        setSelectedSubjectId(undefined);
         onClose();
     };
 
@@ -209,12 +209,12 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                     endpoint = `${projectId}/add/subject`;
 
                     payload = selectedSubjectId
-                        ? { subjectId: selectedSubjectId, duration: Number(formJson.weight.replace(",",".")) }
+                        ? {subjectId: selectedSubjectId, duration: Number(formJson.weight.replace(",", "."))}
                         : {
                             subjectId: formJson.subject ?? undefined,
                             name: formJson.subjectName,
                             shortName: formJson.shortName,
-                            duration: Number(formJson.weight.replace(",",".")),
+                            duration: Number(formJson.weight.replace(",", ".")),
                             learningField: formJson.isLearningField === "true",
                         };
                 } else {
@@ -224,7 +224,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                         projectSubjectId: formJson.subject ?? "",
                         name: formJson.name,
                         shortName: formJson.shortName,
-                        weight: Number(formJson.weight.replace(",",".")) / 100,
+                        weight: Number(formJson.weight.replace(",", ".")) / 100,
                     };
                 }
                 break;
@@ -248,7 +248,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                     payload = {
                         id: selectedOption.id,
                         shortName: formJson.shortName,
-                        duration: Number(formJson.weight.replace(",",".")),
+                        duration: Number(formJson.weight.replace(",", ".")),
                         learningField: formJson.learningField === "true",
                     };
                 } else {
@@ -257,7 +257,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                         id: selectedOption.id,
                         name: selectedOption.name,
                         shortName: formJson.shortName,
-                        weight: Number(formJson.weight.replace(",",".")) / 100,
+                        weight: Number(formJson.weight.replace(",", ".")) / 100,
                     };
                 }
                 break;
@@ -271,20 +271,18 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
 
             const res = await fetch(url, {
                 method: method,
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 credentials: "include",
                 body: payload ? JSON.stringify(payload) : undefined,
             });
 
             if (!res.ok) {
-                console.error("Fehler beim Speichern:", res.statusText);
                 const errorText = await res.text();
                 setSnackbarMessage(errorText);
                 setSnackbarSeverity("error");
                 setSnackbarOpen(true);
                 return;
             }
-            console.log("Erfolgreich gespeichert!");
             setSnackbarMessage("Änderungen wurden gespeichert");
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
@@ -314,7 +312,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
 
                 <form onSubmit={handleSubmit} id="newPerformanceForm">
                     <DialogContent>
-                        <Box sx={{ display: "grid", gap: 2 }}>
+                        <Box sx={{display: "grid", gap: 2}}>
                             <FormControl fullWidth>
                                 <InputLabel>Aktion</InputLabel>
                                 <Select
@@ -400,7 +398,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                                         }
                                     }}
                                     renderInput={(params) => (
-                                        <TextField {...params} label="Name" required name="subjectName" variant="outlined"/>
+                                        <TextField {...params} label="Name" required name="subjectName"
+                                                   variant="outlined"/>
                                     )}
                                     fullWidth
                                 />
@@ -447,13 +446,13 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                                         <FormControlLabel
                                             value="true"
                                             disabled={selectedSubjectId !== undefined || columnAction === "delete"}
-                                            control={<Radio />}
+                                            control={<Radio/>}
                                             label="Lernfeld"
                                         />
                                         <FormControlLabel
                                             value="false"
                                             disabled={selectedSubjectId !== undefined || columnAction === "delete"}
-                                            control={<Radio />}
+                                            control={<Radio/>}
                                             label="Schulfach"
                                         />
                                     </RadioGroup>
@@ -462,7 +461,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                         </Box>
                     </DialogContent>
 
-                    <DialogActions sx={{ justifyContent: "space-between", padding: "16px" }}>
+                    <DialogActions sx={{justifyContent: "space-between", padding: "16px"}}>
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -473,7 +472,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                             label="mehrere Spalten anpassen"
                         />
                         <Box>
-                            <Button onClick={handleClose} sx={{ mr: 1 }}>Schließen</Button>
+                            <Button onClick={handleClose} sx={{mr: 1}}>Schließen</Button>
                             <Button type="submit" form="newPerformanceForm" variant="contained">
                                 {columnAction === "add" ? "Hinzufügen" :
                                     columnAction === "edit" ? "Bearbeiten" :

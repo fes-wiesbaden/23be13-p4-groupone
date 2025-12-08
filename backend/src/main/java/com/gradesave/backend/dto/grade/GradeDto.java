@@ -1,6 +1,5 @@
 package com.gradesave.backend.dto.grade;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -11,6 +10,6 @@ import java.util.UUID;
  *
  **/
 
-public record GradeDto(UUID performanceId, UUID projectSubjectId, BigDecimal grade) {
+public record GradeDto(UUID performanceId, UUID projectSubjectId, Double grade) {
 
 }

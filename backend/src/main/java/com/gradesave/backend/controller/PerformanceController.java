@@ -78,6 +78,10 @@ public class PerformanceController {
             Performance p = performanceOpt.get();
             p.setName(performance.name());
             p.setShortName(performance.shortName());
+            if (performance.weight() < 0 || performance.weight() > 1) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Weight of performance is not valid"));
+            }
             p.setWeight(performance.weight());
             performanceService.create(p);
             return ResponseEntity.ok(Map.of("message", "Performance edited successfully"));

@@ -1,6 +1,5 @@
 package com.gradesave.backend.controller;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,7 +40,7 @@ public class GradeController {
     }
 
     @PostMapping("/calculateSubjectGrade")
-    public BigDecimal calculateSubjectGrade(@RequestBody List<CalculateSubjectGradeDto> newGrades) {
-        return gradeService.calculateSubjectGrade(newGrades);
+    public Double calculateSubjectGrade(@RequestBody List<CalculateSubjectGradeDto> newGrades) {
+        return gradeService.calculateSubjectGrade(newGrades).doubleValue();
     }
 }

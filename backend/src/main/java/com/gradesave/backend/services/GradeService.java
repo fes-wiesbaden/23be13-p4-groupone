@@ -3,7 +3,6 @@ package com.gradesave.backend.services;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -202,7 +201,7 @@ public class GradeService implements CrudService<Grade, UUID>{
         BigDecimal totalWeight = BigDecimal.ZERO;
 
         for (CalculateSubjectGradeDto gradeWithWeight : newGrades) {
-            BigDecimal grade = gradeWithWeight.grade();
+            BigDecimal grade = new BigDecimal(Double.toString(gradeWithWeight.grade()));
             BigDecimal weight = BigDecimal.valueOf(gradeWithWeight.weight())
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 

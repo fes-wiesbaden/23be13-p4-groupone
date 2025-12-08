@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import API_CONFIG from "../apiConfig";
 import Tooltip from "@mui/material/Tooltip";
 import { Autocomplete, Box, Button, FormControlLabel, Paper, Stack, Switch, TextField } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
-import { DataGrid, type GridColDef, type GridColumnGroupingModel, type GridSingleSelectColDef } from "@mui/x-data-grid";
+import { DataGrid, type GridColDef, type GridColumnGroupingModel } from "@mui/x-data-grid";
 import { Role } from "~/types/models";
 import FormDialog from "~/components/addColumn";
 import CustomizedSnackbars from '../components/snackbar';
@@ -84,6 +84,9 @@ export default function Grades() {
             return await res.json();
         } catch (err) {
             console.error("Fehler beim Berechnen der Zeugnisnote:", err);
+            setSnackbarMessage("Fehler beim Berechnen der Zeugnisnote");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
         }
     };
 
@@ -115,7 +118,7 @@ export default function Grades() {
     useEffect(() => {
         if (isStudent) setShowPerformances(false);
         fetchOptions();
-    }, [user?.id]);
+    }, [user?.id, isStudent]);
 
     useEffect(() => {
         if (!gradeOverview) {
@@ -258,9 +261,9 @@ export default function Grades() {
                 setSnackbarMessage(`Fehler beim Speichern! Code: ${res.status}`);
                 setSnackbarSeverity("error");
                 setSnackbarOpen(true);
-                return;            }
+                return;
+            }
             setUpdatedGrades([]);
-            console.log("Noten erfolgreich gespeichert!");
             setSnackbarMessage("Noten erfolgreich gespeichert!");
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
@@ -295,10 +298,10 @@ export default function Grades() {
 
     const rows = gradeOverview?.users.map((u, i) => {
         const row: any = { id: u.id, nr: i + 1, nachname: u.lastName, vorname: u.firstName, gruppe: u.group };
+        if (!showGrades) {
+            return [];
+        }
         u.grades.forEach(g => {
-            if (!showGrades) {
-                return [];
-            }
             if (g.performanceId === "ZV") row[`${g.projectSubjectId}-ZV`] = g.grade;
             else if (!g.performanceId && g.projectSubjectId) row[`${g.projectSubjectId}-Z`] = g.grade;
             else if (g.performanceId) row[g.performanceId] = g.grade;
@@ -388,55 +391,56 @@ export default function Grades() {
                         processRowUpdate={async updatedRow => {
                             if (!gradeOverview) return updatedRow;
 
-                            const newUsers = await Promise.all(
-                                gradeOverview.users.map(async user => {
-                                    if (user.id !== updatedRow.id) return user;
-                                    const grades = [...(user.grades ?? [])];
+                            const userToUpdate = gradeOverview.users.find(u => u.id === updatedRow.id);
+                            if (!userToUpdate) return updatedRow;
 
-                                    for (const key of Object.keys(updatedRow)) {
-                                        if (["id", "nr", "nachname", "vorname", "gruppe"].includes(key)) continue;
-                                        if (typeof updatedRow[key] !== "string") continue;
+                            const grades = [...(userToUpdate.grades ?? [])];
 
-                                        const isSubjectGrade = key.endsWith("-Z");
-                                        const perfId = isSubjectGrade ? undefined : key;
-                                        const subjId = isSubjectGrade ? key.replace("-Z", "") : undefined;
-                                        const newValue = updatedRow[key] === "" ? undefined : Number(updatedRow[key]);
+                            Object.keys(updatedRow).forEach(key => {
+                                if (["id","nr","nachname","vorname","gruppe"].includes(key)) return;
+                                if (typeof updatedRow[key] !== "string") return;
 
-                                        const editedGrade = grades.find(g =>
-                                            (perfId && g.performanceId === perfId) ||
-                                            (subjId && g.projectSubjectId === subjId && g.performanceId !== "ZV")
-                                        );
-                                        if (editedGrade) editedGrade.grade = newValue ?? null;
-                                        else grades.push({ performanceId: perfId, projectSubjectId: subjId, grade: newValue ?? null });
+                                const isSubjectGrade = key.endsWith("-Z");
+                                const perfId = isSubjectGrade ? undefined : key;
+                                const subjId = isSubjectGrade ? key.replace("-Z","") : undefined;
+                                const newValue = updatedRow[key] === "" ? null : Number(updatedRow[key]);
 
-                                        if (!isSubjectGrade && perfId) {
-                                            const subject = gradeOverview.subjects.find(s => s.performances.some(p => p.id === perfId));
-                                            if (!subject) continue;
+                                const existing = grades.find(
+                                    g => (perfId && g.performanceId === perfId) || (subjId && g.projectSubjectId === subjId && g.performanceId !== "ZV")
+                                );
 
-                                            const allGrades = subject.performances.map(p => ({
-                                                grade: grades.find(gr => gr.performanceId === p.id)?.grade ?? undefined,
-                                                weight: p.weight
-                                            }));
+                                if (existing) existing.grade = newValue;
+                                else grades.push({ performanceId: perfId, projectSubjectId: subjId, grade: newValue });
+                            });
 
-                                            if (allGrades.every(g => g.grade !== undefined)) {
-                                                const subjectGrade = await calculateSubjectGrade(allGrades);
-                                                const zvEntry = grades.find(g => g.projectSubjectId === subject.id && g.performanceId === "ZV");
-                                                if (zvEntry) zvEntry.grade = subjectGrade;
-                                                else grades.push({ projectSubjectId: subject.id, performanceId: "ZV", grade: subjectGrade });
-                                                updatedRow[`${subject.id}-ZV`] = subjectGrade ?? undefined;
-                                            }
-                                        }
-                                    }
+                            const zvCalculations = gradeOverview.subjects.map(async (subject) => {
+                                const perfGrades = subject.performances.map(p => ({
+                                    grade: grades.find(g => g.performanceId === p.id)?.grade ?? undefined,
+                                    weight: p.weight
+                                }));
+                                if (perfGrades.some(g => g.grade === undefined)) return;
 
-                                    setUpdatedGrades(prev => [
-                                        ...prev.filter(g => g.studentId !== updatedRow.id),
-                                        { studentId: updatedRow.id, grades }
-                                    ]);
-                                    return { ...user, grades };
-                                })
-                            );
+                                const zvGrade = await calculateSubjectGrade(perfGrades);
 
-                            setGradeOverview({ ...gradeOverview, users: newUsers });
+                                const zvEntry = grades.find(g => g.projectSubjectId === subject.id && g.performanceId === "ZV");
+                                if (zvEntry) zvEntry.grade = zvGrade;
+                                else grades.push({ projectSubjectId: subject.id, performanceId: "ZV", grade: zvGrade });
+
+                                updatedRow[`${subject.id}-ZV`] = zvGrade ?? null;
+                            });
+
+                            await Promise.all(zvCalculations);
+
+                            setUpdatedGrades(prev => [
+                                ...prev.filter(g => g.studentId !== updatedRow.id),
+                                { studentId: updatedRow.id, grades }
+                            ]);
+
+                            setGradeOverview(prev => ({
+                                ...prev!,
+                                users: prev!.users.map(u => u.id === updatedRow.id ? { ...userToUpdate, grades } : u)
+                            }));
+
                             return updatedRow;
                         }}
                         sx={{

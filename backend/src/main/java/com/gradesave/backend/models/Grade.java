@@ -1,6 +1,5 @@
 package com.gradesave.backend.models;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import jakarta.persistence.Entity;
@@ -44,7 +43,7 @@ public class Grade {
     @DecimalMin(value = "1.0", inclusive = true, message = "grade must be greater or equal to 1")
     @DecimalMax(value = "6.0", inclusive = true, message = "grade must be less than or equal to 6")
     @NotNull(message = "grade is required")
-    private BigDecimal grade;
+    private Double grade;
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
@@ -67,11 +66,11 @@ public class Grade {
         return performance;
     }
 
-    public BigDecimal  getGrade() {
+    public Double getGrade() {
         return grade;
     }
 
-    public void setGrade(BigDecimal  grade) {
+    public void setGrade(Double  grade) {
         this.grade = grade;
     }
 
