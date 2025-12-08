@@ -108,7 +108,7 @@ public class ProjectController {
             project.setName(req.projectName());
         }
 
-        Project updatedProject = projectService.update(id, project);
+        projectService.update(id, project);
 
         return ResponseEntity.ok().build();
     }

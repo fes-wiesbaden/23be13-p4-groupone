@@ -10,6 +10,7 @@ import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddSubjectToProject, {type Project} from "~/components/addSubjectToProject";
+import useAlertDialog from "~/components/youSurePopup";
 
 /**
  * @author Paul Geisthardt
@@ -168,6 +169,7 @@ export default function createOrEditProject() {
     const [draftSubjects, setDraftSubjects] = useState<ProjectSubjectDTO[]>([]);
     const [groupAmount, setGroupAmount] = useState(5);
     const [creatingGroups, setCreatingGroups] = useState(false);
+    const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Gruppen wirklich löschen?");
 
     const isEdit = !(projectId === "new");
     const navigate = useNavigate();
@@ -321,7 +323,10 @@ export default function createOrEditProject() {
     }
 
 
-    const deleteDraftGroup = (groupId: string) => {
+    const deleteDraftGroup = async (groupId: string) => {
+        if (!await confirm())
+            return;
+
         const removed = draftGroups.find(g => g.groupId === groupId);
         setDraftGroups(prev => prev.filter(g => g.groupId !== groupId));
         if (removed) {
@@ -385,7 +390,10 @@ export default function createOrEditProject() {
     }
 
 
-    const handleDeleteGroup = (groupId: string) => {
+    const handleDeleteGroup = async (groupId: string) => {
+        if (!await confirm())
+            return;
+
         if (!groupId.trim() || !isEdit) return;
 
         const removedGroup = project?.groups.find(g => g.groupId === groupId);
@@ -884,6 +892,7 @@ export default function createOrEditProject() {
                     </Box>
                 </Box>
             </Box>
+            {ConfirmDialog}
         </Box>
     )
 }

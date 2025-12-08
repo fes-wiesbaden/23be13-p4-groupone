@@ -1,8 +1,6 @@
 package com.gradesave.backend.services;
 
 import com.gradesave.backend.models.Project;
-import com.gradesave.backend.repositories.CourseRepository;
-import com.gradesave.backend.repositories.GroupRepository;
 import com.gradesave.backend.repositories.ProjectRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -14,22 +12,18 @@ import java.util.UUID;
 
 /**
  * @author: Paul Geisthardt
- * <p>
- * Business logic for projects
- * </p>
+ *          <p>
+ *          Business logic for projects
+ *          </p>
  */
 
 @Service
 @Transactional
 public class ProjectService implements CrudService<Project, UUID> {
-    private final CourseRepository courseRepository;
     private final ProjectRepository projectRepository;
-    private final GroupRepository groupRepository;
 
-    public ProjectService(CourseRepository courseRepository, ProjectRepository projectRepository, GroupRepository groupRepository) {
-        this.courseRepository = courseRepository;
+    public ProjectService(ProjectRepository projectRepository) {
         this.projectRepository = projectRepository;
-        this.groupRepository = groupRepository;
     }
 
     @Override

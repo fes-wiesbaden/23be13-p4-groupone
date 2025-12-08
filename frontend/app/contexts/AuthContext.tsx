@@ -6,6 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import API_CONFIG from "~/apiConfig";
 import type {Role} from "~/types/models";
 
 /**
@@ -38,12 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const apiUrl =
-    (import.meta.env as any).VITE_API_URL ?? "http://localhost:8080";
-
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch(`${apiUrl}/api/users/me`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/me`, {
         credentials: "include",
       });
 
@@ -59,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [apiUrl]);
+  }, []);
 
   useEffect(() => {
     checkAuth();
@@ -71,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch(`${apiUrl}/api/users/logout`, {
+      await fetch(`${API_CONFIG.BASE_URL}/api/users/logout`, {
         method: "POST",
         credentials: "include",
       });

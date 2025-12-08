@@ -32,6 +32,7 @@ import QuizIcon from '@mui/icons-material/Quiz';
 import HomeIcon from '@mui/icons-material/Home';
 import ProjectIcon from '@mui/icons-material/Work';
 import LearningIcon from '@mui/icons-material/MenuBook';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import Menu from '@mui/material/Menu';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
@@ -216,6 +217,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
     const menuItems: MenuItem[] = [
         {text: 'Startseite', icon: <HomeIcon/>, path: '/'},
         {text: 'Klassen', icon: <SchoolIcon/>, path: '/klassen', roles: ['ADMIN', 'TEACHER']},
+        {text: 'PDFs', icon: <PictureAsPdfIcon/>, path: '/pdfs', roles: ['ADMIN']},
         {text: 'Benutzer', icon: <PeopleIcon/>, path: '/user', roles: ['ADMIN']},
         {text: 'Fragen', icon: <QuizIcon/>, path: '/fragen', roles: ['ADMIN', 'TEACHER']},
         {text: 'Noten', icon: <GradeIcon/>, path: '/noten', roles: ['ADMIN', 'TEACHER', 'STUDENT']},

@@ -2,12 +2,20 @@
  * @Author: Daniel Hess
  * @Date: 09/09/2024
  * Creates overview of all users with actions to edit, delete and add new users
- * 
+ *
  * @Edited by Kebba Ceesay
  * @Date: 03/12/2025
  * Snackbar integration completed
+ *
+ * @Edited by Kebba Ceesay
+ * @Date: 08/12/2025
+ * Add dialog integration
+ * 
+ * @Edited by Noah Bach
+ * @Date: 05/12/2025
+ * Better usability for CSV import
+ * (Snackbar, remove file from form on submit, reload on success)
  */
-import * as React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -26,6 +34,7 @@ import { useCallback, useEffect, useState } from "react";
 import API_CONFIG from "~/apiConfig";
 import FileUpload from "~/components/fileUpload";
 import CsvType from "~/types/csvType";
+import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
@@ -79,6 +88,7 @@ export default function UsersPage() {
     password: "",
   });
   const [error, setError] = useState<Record<string, string>>({});
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie den Benutzer wirklich löschen?");
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!form.username.trim()) {
@@ -113,7 +123,7 @@ export default function UsersPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8080/api/users", {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/users`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error(`GET /api/users ${res.status}`);
@@ -159,7 +169,9 @@ export default function UsersPage() {
   };
 
   const onDeleteClick = async (id: string) => {
-    if (!confirm("Diesen Benutzer wirklich löschen?")) return;
+    if (!await confirm())
+      return;
+
     const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/${id}`, {
       method: "DELETE",
       credentials: "include",
@@ -196,7 +208,7 @@ export default function UsersPage() {
         updateRequest.password = form.password;
       }
 
-      const res = await fetch(`http://localhost:8080/api/users/${editRow.id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/${editRow.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -204,7 +216,6 @@ export default function UsersPage() {
       });
 
       if (!res.ok) {
-        // alert("Aktualisieren fehlgeschlagen.");
         console.error("Fehler beim Aktualisieren des Benutzers:", res.statusText);
 
         setSnackbarMessage(`Fehler beim Bearbeiten! Code: ${res.status}`);
@@ -226,16 +237,14 @@ export default function UsersPage() {
         password: form.password,
       };
 
-      const res = await fetch("http://localhost:8080/api/users", {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(createRequest),
       });
-      if (res.ok) {
-        // alert("Erstellen fehlgeschlagen.");
+      if (!res.ok) {
         console.error("Fehler beim Erstellen des Benutzers:", res.statusText);
-
         setSnackbarMessage(`Fehler beim Erstellen! Code: ${res.status}`);
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
@@ -256,7 +265,8 @@ export default function UsersPage() {
         type={CsvType.USERS}
         url={`${API_CONFIG.BASE_URL}/api/csv/upload`}
         upload_name={"Hochladen der CSV"}
-        select_name={"Wählen sie eine Nutzer CSV aus"}
+        select_name={"Wählen Sie eine Nutzer-CSV aus"}
+        doAfterUpload={load}
       />
       <DataGridWithAdd<UserRow>
         columns={columns}
@@ -351,6 +361,7 @@ export default function UsersPage() {
           severity={snackbarSeverity}
           onClose={handleSnackbarClose}
       />
+      {ConfirmDialog}
     </>
   );
 }
