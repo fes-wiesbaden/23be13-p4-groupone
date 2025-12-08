@@ -121,4 +121,8 @@ public class UserService implements CrudService<User, UUID> {
     public List<User> getUsersByIds(List<UUID> uuids) {
         return repo.findAllById(uuids);
     }
+
+    public PasswordEncoder getPasswordEncoder() {
+        return encoder;
+    }
 }

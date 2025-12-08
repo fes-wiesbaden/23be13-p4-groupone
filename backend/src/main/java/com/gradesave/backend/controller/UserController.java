@@ -98,10 +98,77 @@ public class UserController {
         }
 
         return ResponseEntity.ok(Map.of(
+                "id", user.getId(),
                 "username", user.getUsername(),
-                "role", user.getRole().toString()
+                "role", user.getRole().toString(),
+                "firstName", user.getFirstName(),
+                "lastName", user.getLastName(),
+                "courses", user.getCourses()
         ));
     }
+
+    @PostMapping("/verify-password")
+    public ResponseEntity<?> verifyPassword(@RequestBody Map<String, String> body) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(401).body(Map.of("valid", false, "error", "Not authenticated"));
+        }
+
+        String username = authentication.getName();
+        String password = body.get("password");
+
+        if (password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("valid", false, "error", "Passwort fehlt!"));
+        }
+
+        User user = userService.findByUsername(username);
+
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("valid", false, "error", "User not found"));
+        }
+
+        boolean matches = userService.getPasswordEncoder().matches(password, user.getPassword());
+
+        return ResponseEntity.ok(Map.of("valid", matches));
+    }
+
+    @PutMapping("/me/update-password")
+    public ResponseEntity<?> updateOwnPassword(@RequestBody Map<String, String> body) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+            "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String username = authentication.getName();
+        User user = userService.findByUsername(username);
+
+        if (user == null) {
+            return ResponseEntity.status(404).build();
+        }
+
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+
+        if (currentPassword == null || currentPassword.isBlank() ||
+            newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Passwords missing"));
+        }
+
+        if (!userService.getPasswordEncoder().matches(currentPassword, user.getPassword())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Aktuelles Passwort ist falsch!"));
+        }
+
+        user.setPassword(newPassword);
+        userService.update(user.getId(), user);
+
+        return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+    }
+
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
