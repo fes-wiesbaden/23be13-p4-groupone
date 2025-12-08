@@ -31,7 +31,8 @@ public class SecurityConfig {
 
                                                 .requestMatchers(
                                                                 "/api/users/**",
-                                                                "/api/csv/**")
+                                                                "/api/csv/**",
+                                                                "/api/pdfs/**")
                                                 .hasAuthority("ROLE_ADMIN")
                                                 .requestMatchers(
                                                                 "/api/courses/**",
