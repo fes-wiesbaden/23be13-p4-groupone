@@ -49,7 +49,7 @@ public class ProjectSubjectController {
 
     @Transactional
     @PutMapping("/edit")
-    public ResponseEntity<Map<String, String>> updateSubject(@RequestBody EditProjectSubjectDto editProjectSubjectDto) {
+    public ResponseEntity<Map<String, String>> updateSubject(@RequestBody @Valid EditProjectSubjectDto editProjectSubjectDto) {
         Optional<ProjectSubject> projectSubjectOpt = projectSubjectService.findById(editProjectSubjectDto.id());
         if (projectSubjectOpt.isPresent()) {
             ProjectSubject projectSubject = projectSubjectOpt.get();

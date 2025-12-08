@@ -83,7 +83,6 @@ export default function Grades() {
             if (!res.ok) throw new Error(res.statusText);
             return await res.json();
         } catch (err) {
-            console.error("Fehler beim Berechnen der Zeugnisnote:", err);
             setSnackbarMessage("Fehler beim Berechnen der Zeugnisnote");
             setSnackbarSeverity("error");
             setSnackbarOpen(true);
@@ -235,7 +234,6 @@ export default function Grades() {
                 setSnackbarOpen(true);
             }
         } catch (err) {
-            console.error(err);
             setSnackbarMessage("Laden der Notenübersicht gescheitert");
             setSnackbarSeverity("error");
             setSnackbarOpen(true);

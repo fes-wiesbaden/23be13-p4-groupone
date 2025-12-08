@@ -7,6 +7,7 @@ import com.gradesave.backend.models.ProjectSubject;
 import com.gradesave.backend.services.PerformanceService;
 import com.gradesave.backend.services.ProjectSubjectService;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class PerformanceController {
 
     @Transactional
     @PostMapping("/save")
-    public ResponseEntity<Map<String, String>> savePerformance(@RequestBody NewPerformanceRequest request) {
+    public ResponseEntity<Map<String, String>> savePerformance(@RequestBody @Valid NewPerformanceRequest request) {
         Optional<ProjectSubject> projectSubject = projectSubjectService.findById(request.projectSubjectId());
 
         if (projectSubject.isPresent()) {
@@ -57,7 +58,7 @@ public class PerformanceController {
 
     @Transactional
     @DeleteMapping("/remove/{performanceId}")
-    public ResponseEntity<Map<String, String>> removePerformanceById(@PathVariable UUID performanceId) {
+    public ResponseEntity<Map<String, String>> removePerformanceById(@PathVariable @Valid UUID performanceId) {
         Optional<Performance> performance = performanceService.findById(performanceId);
 
         if (performance.isPresent()) {
@@ -71,7 +72,7 @@ public class PerformanceController {
 
     @Transactional
     @PutMapping("/edit")
-    public ResponseEntity<Map<String, String>> editPerformanceById(@RequestBody PerformanceDto performance) {
+    public ResponseEntity<Map<String, String>> editPerformanceById(@RequestBody @Valid PerformanceDto performance) {
         Optional<Performance> performanceOpt = performanceService.findById(performance.id());
 
         if (performanceOpt.isPresent()) {
