@@ -5,6 +5,7 @@ import com.gradesave.backend.services.QuestionService;
 
 import jakarta.validation.Valid;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,7 +46,8 @@ public class QuestionController {
         return questionService.update(id, question);
     }
     @DeleteMapping("/{id}")
-    public void deleteQuestion(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteQuestion(@PathVariable UUID id) {
         questionService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

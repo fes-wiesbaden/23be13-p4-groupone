@@ -335,6 +335,20 @@ public class ProjectController {
         projectSubject.setProject(project);
         projectSubject.setDuration(req.duration());
 
+
+        for (Question subjectQuestion : subject.getQuestions()) {
+            boolean alreadyInProject = project.getProjectQuestions().stream()
+                    .anyMatch(pq -> pq.getQuestion().getId() == subjectQuestion.getId());
+
+            if (alreadyInProject) continue;
+
+            ProjectQuestion projectQuestion = new ProjectQuestion();
+            projectQuestion.setQuestion(subjectQuestion);
+            projectQuestion.setProject(project);
+
+            project.getProjectQuestions().add(projectQuestion);
+        }
+
         project.getProjectSubjects().add(projectSubject);
 
         projectService.update(projectId, project);
@@ -361,6 +375,20 @@ public class ProjectController {
         ProjectSubject projectSubject = projectSubjectOpt.get();
 
         project.getProjectSubjects().remove(projectSubject);
+
+
+        for (Question subjectQuestion : projectSubject.getSubject().getQuestions()) {
+
+            boolean questionUsedInAnotherSubject = project.getProjectSubjects().stream()
+                    .filter(ps -> !ps.getSubject().getId().equals(subjectId))
+                    .anyMatch(ps -> ps.getSubject().getQuestions().stream()
+                            .anyMatch(q -> q.getId().equals(subjectQuestion.getId())));
+
+            if (!questionUsedInAnotherSubject) {
+                project.getProjectQuestions()
+                        .removeIf(pq -> pq.getQuestion().getId().equals(subjectQuestion.getId()));
+            }
+        }
 
         projectService.update(projectId, project);
 

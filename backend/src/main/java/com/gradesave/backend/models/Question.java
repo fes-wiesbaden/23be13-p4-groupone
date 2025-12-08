@@ -89,4 +89,11 @@ public class Question {
         this.subjects = subjects;
     }
 
+    public Set<ProjectQuestion> getProjectQuestions() {
+        return projectQuestions;
+    }
+
+    public void setProjectQuestions(Set<ProjectQuestion> projectQuestions) {
+        this.projectQuestions = projectQuestions;
+    }
 }

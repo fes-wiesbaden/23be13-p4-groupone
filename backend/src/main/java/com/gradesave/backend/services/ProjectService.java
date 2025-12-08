@@ -66,6 +66,7 @@ public class ProjectService implements CrudService<Project, UUID> {
         existing.setProjectStart(entity.getProjectStart());
         existing.setGroups(entity.getGroups());
         existing.setProjectSubjects(entity.getProjectSubjects());
+        existing.setProjectQuestions(entity.getProjectQuestions());
 
         return projectRepository.save(existing);
     }
