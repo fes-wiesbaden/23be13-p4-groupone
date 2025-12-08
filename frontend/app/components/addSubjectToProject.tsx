@@ -7,7 +7,7 @@ import Box from "@mui/material/Box";
 import {Button, Card, CardContent, Chip, MenuItem, Select, TextField} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import alertDialog from "./youSurePopup";
+import useAlertDialog from "./youSurePopup";
 
 export type Project = {
     projectId?: string;
@@ -28,7 +28,7 @@ export default function AddSubjectToProject({
     const [loadingError, setLoadingError] = useState<string | null>(null);
     const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
     const [duration, setDuration] = useState<number>(80);
-    const [confirm, ConfirmDialog] = alertDialog("Wirklich entfernen?", "Wollen Sie das Fach wirklich vom Projekt entfernen?")
+    const [confirm, ConfirmDialog] = useAlertDialog("Wirklich entfernen?", "Wollen Sie das Fach wirklich vom Projekt entfernen?")
 
     const fetchSubjects = async () => {
         try {

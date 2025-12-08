@@ -16,7 +16,7 @@ import {
   RadioGroup,
   TextField,
 } from "@mui/material";
-import alertDialog from "~/components/youSurePopup";
+import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
 
 /**
@@ -50,7 +50,7 @@ export default function Subject() {
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [originalSubject, setOriginalSubject] = useState<Subject | null>(null);
-  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie das Fach wirklich löschen?");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');

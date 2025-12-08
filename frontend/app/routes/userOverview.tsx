@@ -30,7 +30,7 @@ import { useCallback, useEffect, useState } from "react";
 import API_CONFIG from "~/apiConfig";
 import FileUpload from "~/components/fileUpload";
 import CsvType from "~/types/csvType";
-import alertDialog from "~/components/youSurePopup";
+import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
@@ -84,7 +84,7 @@ export default function UsersPage() {
     password: "",
   });
   const [error, setError] = useState<Record<string, string>>({});
-  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie den Benutzer wirklich löschen?");
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!form.username.trim()) {

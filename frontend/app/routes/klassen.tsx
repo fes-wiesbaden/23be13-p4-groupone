@@ -43,13 +43,13 @@ const columns = [
 ];
 
 import type { User, Role, CourseDto } from "../types/models";
-import alertDialog from "~/components/youSurePopup";
+import useAlertDialog from "~/components/youSurePopup";
 
 export default function Klassen() {
   const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
   const navigate = useNavigate();
 
-  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie die Klasse wirklich löschen?")
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Klasse wirklich löschen?")
 
   async function handleEditClick(row: CourseRow) {
     navigate(`/klassen/${row.id}`);

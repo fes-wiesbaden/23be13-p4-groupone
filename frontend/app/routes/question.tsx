@@ -16,7 +16,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
-import alertDialog from "~/components/youSurePopup";
+import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
 
 /**
@@ -77,7 +77,7 @@ export default function Question() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const handleSnackbarClose = () => { setSnackbarOpen(false);};
-  const [confirm, ConfirmDialog] = alertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Frage wirklich löschen?");
 
   useEffect(() => {
     const fetchData = async () => {

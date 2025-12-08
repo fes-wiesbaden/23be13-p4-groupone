@@ -9,7 +9,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useState, useCallback } from 'react';
 
-export default function alertDialog(
+export default function useAlertDialog(
     title?: string,
     text?: string
 ) {
@@ -29,10 +29,12 @@ export default function alertDialog(
     const handleClose = () => {
         setOpen(false);
         if (resolveFn) resolveFn(false);
+        setResolve(null);
     }
     const handleConfirm = () => {
         setOpen(false);
         if (resolveFn) resolveFn(true);
+        setResolve(null);
     }
 
     const dialogElement = (
