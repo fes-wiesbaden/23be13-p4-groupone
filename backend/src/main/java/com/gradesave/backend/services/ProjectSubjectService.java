@@ -7,6 +7,15 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ * Business logic for projectSubjects
+ * </p>
+ *
+ *
+ */
+
 @Service
 public class ProjectSubjectService {
     private final ProjectSubjectRepository projectSubjectRepository;

@@ -14,6 +14,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ * Handles incoming HTTP requests for projectSubjects
+ * </p>
+ **/
+
 @RestController
 @RequestMapping("/api/projectSubject")
 public class ProjectSubjectController {

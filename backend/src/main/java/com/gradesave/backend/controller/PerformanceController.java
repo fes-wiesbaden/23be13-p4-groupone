@@ -15,6 +15,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * @author: Michael Holl
+ * <p>
+ * Handles incoming HTTP requests for performances
+ * </p>
+ **/
+
 @RestController
 @RequestMapping("/api/performance")
 public class PerformanceController {
