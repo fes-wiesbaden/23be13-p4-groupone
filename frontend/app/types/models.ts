@@ -10,7 +10,8 @@ export interface User {
   firstName: string;
   lastName: string;
   role: Role;
-  courses: CourseDto[]
+  courses: CourseDto[];
+  needsPasswordChange: boolean
 }
 
 export interface CourseDto {

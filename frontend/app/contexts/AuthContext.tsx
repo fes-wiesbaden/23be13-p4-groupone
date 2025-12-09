@@ -7,8 +7,9 @@ import {
   type ReactNode,
 } from "react";
 
-import type {Role} from "~/types/models";
+import type {Role, User} from "~/types/models";
 import API_CONFIG from "~/apiConfig";
+import {useNavigate} from "react-router";
 
 /**
  * @author: Daniel Hess
@@ -18,12 +19,6 @@ import API_CONFIG from "~/apiConfig";
  * </p>
  *
  **/
-
-interface User {
-    id: string;
-    username: string;
-    role: Role;
-}
 
 interface AuthContextType {
   user: User | null;
@@ -40,6 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const navigate = useNavigate()
+
   const checkAuth = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -51,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await res.json();
         setUser(userData);
       } else {
-        console.error("Auth check failed:");
+        console.error(`Auth check failed: ${res.status}`);
         setUser(null);
       }
     } catch (error) {
@@ -69,6 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (userData: User) => {
     setUser(userData);
+    if (userData.needsPasswordChange) {
+        navigate("/change-password")
+    } else {
+        navigate("/")
+    }
   };
 
   const logout = async () => {

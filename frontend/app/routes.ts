@@ -15,5 +15,6 @@ export default [
   route("Login", "routes/login.tsx"),
   route("Noten", "routes/grades.tsx"),
   route("profil", "routes/profil.tsx"),
+  route("change-password", "routes/change-password.tsx"),
   // route("test", "routes/test.tsx"), add routes like this
 ] satisfies RouteConfig;

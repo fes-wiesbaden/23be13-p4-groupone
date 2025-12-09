@@ -7,7 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Avatar from '@mui/material/Avatar';
 import API_CONFIG from "~/apiConfig";
-import type {Role} from "~/types/models";
+import type {Role, User} from "~/types/models";
 
 /**
  * @author: Daniel Hess
@@ -38,15 +38,9 @@ export default function Login(): React.ReactElement {
             });
 
             if (res.ok) {
-                const data: LoginResponse = await res.json();
+                const data: User = await res.json();
 
-                login({
-                    id: data.id || "",
-                    username: data.username || data.user?.username || "",
-                    role: data.role as Role || data.user?.role as Role
-                });
-
-                navigate("/");
+                login(data);
             } else {
                 let msg = "Login failed";
                 try {

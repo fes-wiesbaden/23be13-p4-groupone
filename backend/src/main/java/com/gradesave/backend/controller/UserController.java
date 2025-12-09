@@ -68,12 +68,7 @@ public class UserController {
                 return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
             }
 
-            return ResponseEntity.ok(Map.of(
-                    "message", "Login successful",
-                    "id", user.getId(),
-                    "role", user.getRole(),
-                    "username", user.getUsername()
-            ));
+            return ResponseEntity.ok(MeDTO.fromEntity(user));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
@@ -154,6 +149,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", "Aktuelles Passwort ist falsch!"));
         }
 
+        user.setChangedDefaultPassword(true);
         user.setPassword(newPassword);
         userService.update(user.getId(), user);
 

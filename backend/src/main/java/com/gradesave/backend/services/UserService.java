@@ -88,6 +88,7 @@ public class UserService implements CrudService<User, UUID> {
         existing.setFirstName(patch.getFirstName());
         existing.setLastName(patch.getLastName());
         existing.setRole(patch.getRole());
+        existing.setChangedDefaultPassword(patch.getChangedDefaultPassword());
 
         if (patch.getPassword() != null && !patch.getPassword().isBlank()) {
             existing.setPassword(encoder.encode(patch.getPassword()));
