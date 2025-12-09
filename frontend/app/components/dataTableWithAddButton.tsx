@@ -5,7 +5,7 @@ import {
     type GridRenderCellParams,
 } from "@mui/x-data-grid";
 import {deDE} from "@mui/x-data-grid/locales";
-import {Stack, IconButton, Tooltip, Button, Paper} from "@mui/material";
+import {Stack, IconButton, Tooltip, Button, Paper, Typography} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -105,16 +105,41 @@ export default function DataGridWithAdd<TRow extends DataRow>({
     ];
 
     return (
-        <Paper elevation={3} sx={{ p: 2, width: "100%" }}>
-            <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1} mb={2}>
+        <Paper
+            elevation={2}
+            sx={{
+                p: 3,
+                width: "100%",
+                borderRadius: 3,
+                background: 'background.paper',
+            }}
+        >
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                spacing={2}
+                mb={3}
+            >
+                <Typography variant="h5" fontWeight={600}>
+                    Datenverwaltung
+                </Typography>
                 <Button
                     onClick={onAddClick}
                     variant="contained"
                     color="primary"
                     startIcon={<AddIcon />}
-                    size="small"
                     disabled={isDisabled}
-
+                    sx={{
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1,
+                        fontWeight: 600,
+                        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                        '&:hover': {
+                            boxShadow: '0 6px 16px rgba(25, 118, 210, 0.35)',
+                        },
+                    }}
                 >
                     Hinzufügen
                 </Button>
@@ -128,6 +153,39 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                 autoHeight
                 localeText={deDE.components.MuiDataGrid.defaultProps?.localeText}
                 onRowClick={(params) => onRowClick?.(params.row)}
+                sx={{
+                    border: 'none',
+                    '& .MuiDataGrid-main': {
+                        borderRadius: 2,
+                    },
+                    '& .MuiDataGrid-columnHeaders': {
+                        backgroundColor: 'action.hover',
+                        borderRadius: '8px 8px 0 0',
+                        borderBottom: 'none',
+                    },
+                    '& .MuiDataGrid-columnHeaderTitle': {
+                        fontWeight: 600,
+                    },
+                    '& .MuiDataGrid-cell': {
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                    },
+                    '& .MuiDataGrid-row': {
+                        '&:hover': {
+                            backgroundColor: 'action.hover',
+                            cursor: onRowClick ? 'pointer' : 'default',
+                        },
+                        '&:last-child .MuiDataGrid-cell': {
+                            borderBottom: 'none',
+                        },
+                    },
+                    '& .MuiDataGrid-footerContainer': {
+                        borderTop: '2px solid',
+                        borderColor: 'divider',
+                        backgroundColor: 'action.hover',
+                        borderRadius: '0 0 8px 8px',
+                    },
+                }}
             />
         </Paper>
     );

@@ -93,6 +93,8 @@ const AppBar = styled(MuiAppBar, {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    backdropFilter: 'blur(8px)',
     variants: [
         {
             props: ({open}) => open,
@@ -168,6 +170,14 @@ function DrawerMenu({items, open, navigate, onLogout}: {
                                 {
                                     minHeight: 48,
                                     px: 2.5,
+                                    borderRadius: open ? 2 : 0,
+                                    mx: open ? 1 : 0,
+                                    mb: 0.5,
+                                    transition: 'all 0.2s',
+                                    '&:hover': {
+                                        backgroundColor: 'action.selected',
+                                        transform: 'translateX(4px)',
+                                    },
                                 },
                                 open
                                     ? {justifyContent: "initial"}
