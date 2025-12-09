@@ -2,12 +2,10 @@ import {useAuth} from "~/contexts/AuthContext";
 import {useNavigate} from "react-router";
 import React, {useState} from "react";
 import CustomizedSnackbars from "~/components/snackbar"
-import {Button, CircularProgress, TextField, Typography, Paper, Container, Avatar, InputAdornment, IconButton} from "@mui/material";
+import {Button, CircularProgress, TextField, Typography, Paper, Container, Avatar} from "@mui/material";
 import Box from "@mui/material/Box";
 import API_CONFIG from "~/apiConfig";
 import LockResetIcon from '@mui/icons-material/LockReset';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export default function ChangePassword() {
     const {user, checkAuth, isLoading} = useAuth()
@@ -16,9 +14,6 @@ export default function ChangePassword() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [saving, setSaving] = useState(false)
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
