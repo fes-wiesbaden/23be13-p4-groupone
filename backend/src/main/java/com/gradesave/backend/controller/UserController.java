@@ -140,13 +140,15 @@ public class UserController {
         String currentPassword = body.get("currentPassword");
         String newPassword = body.get("newPassword");
 
-        if (currentPassword == null || currentPassword.isBlank() ||
-            newPassword == null || newPassword.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Passwords missing"));
-        }
 
         if (!userService.getPasswordEncoder().matches(currentPassword, user.getPassword())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Aktuelles Passwort ist falsch!"));
+        }
+
+        try {
+            userService.validatePassword(newPassword);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("valid", false, "error", e.getMessage()));
         }
 
         user.setChangedDefaultPassword(true);
@@ -183,6 +185,7 @@ public class UserController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest req) {
         User entity = new User();
+
         entity.setUsername(req.username());
         entity.setFirstName(req.firstName());
         entity.setLastName(req.lastName());

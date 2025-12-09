@@ -42,6 +42,15 @@ export default function ChangePassword() {
             setSnackbarOpen(true);
             return;
         }
+        const trimmedPassword: string = newPassword.trim();
+            if (trimmedPassword.length < 8 || trimmedPassword.length > 50) {
+                setError("Passwort muss zwischen 8 und 50 Zeichen lang sein");
+                setSnackbarMessage("Passwort muss zwischen 8 und 50 Zeichen lang sein");
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
+                return;
+
+        }
 
         setSaving(true)
 

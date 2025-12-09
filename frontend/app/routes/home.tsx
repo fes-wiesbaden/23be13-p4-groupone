@@ -88,7 +88,7 @@ export default function Home() {
       icon: <LearningIcon sx={{ fontSize: 40 }} />,
       path: "/lernbereich",
       color: "#0288d1",
-      roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT],
+      roles: [Role.ADMIN, Role.TEACHER],
     },
     {
       title: "PDF Benutzer Daten",

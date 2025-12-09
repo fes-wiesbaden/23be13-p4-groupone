@@ -105,6 +105,15 @@ export default function Profile(): React.ReactElement {
             setError("Bitte aktuelles Passwort eingeben");
             return;
         }
+        if (currentPassword.trim().length > 0) {
+            const password = newPassword;
+
+            if (password.length < 8 || password.length > 50) {
+                setError("Passwort muss zwischen 8 und 50 Zeichen lang sein");
+                return;
+            }
+        }
+
 
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/me/update-password`, {
