@@ -36,7 +36,9 @@ interface DataGridWithAddProps<TRow extends DataRow = DataRow> {
     onEditClick: (row: TRow) => void | Promise<void>;
     onDeleteClick: (id: TRow["id"]) => void | Promise<void>;
     onRowClick?: (id: TRow) => void | Promise<void>;
-    isDisabled?: boolean
+    isDisabled?: boolean;
+    title?: string;
+    addButtonLabel?: string;
 }
 
 export default function DataGridWithAdd<TRow extends DataRow>({
@@ -46,7 +48,9 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                                             onEditClick,
                                             onDeleteClick,
                                             onRowClick,
-                                            isDisabled
+                                            isDisabled,
+                                            title,
+                                            addButtonLabel = "Hinzufügen"
                                         }: DataGridWithAddProps<TRow>) {
     const actionCol: GridColDef<TRow> = {
         field: "actions",
@@ -121,9 +125,11 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                 spacing={2}
                 mb={3}
             >
-                <Typography variant="h5" fontWeight={600}>
-                    Datenverwaltung
-                </Typography>
+                {title && (
+                    <Typography variant="h5" fontWeight={600}>
+                        {title}
+                    </Typography>
+                )}
                 <Button
                     onClick={onAddClick}
                     variant="contained"
@@ -139,9 +145,10 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                         '&:hover': {
                             boxShadow: '0 6px 16px rgba(25, 118, 210, 0.35)',
                         },
+                        marginLeft: title ? 0 : 'auto',
                     }}
                 >
-                    Hinzufügen
+                    {addButtonLabel}
                 </Button>
             </Stack>
 

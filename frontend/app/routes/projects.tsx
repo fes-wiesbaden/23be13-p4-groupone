@@ -159,6 +159,8 @@ export default function Projects () {
     return (
         <>
             <DataTableWithAdd<ProjectRow>
+                title="Projekte"
+                addButtonLabel="Neues Projekt"
                 columns={columns}
                 rows={rows}
                 onAddClick={handleAddClick}
