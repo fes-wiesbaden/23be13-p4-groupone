@@ -15,6 +15,10 @@ import "./app.css";
 import SideAppBar from "~/components/sideAppBar";
 import React, { useEffect } from "react";
 import { AuthProvider, useAuth } from "~/contexts/AuthContext";
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from "~/theme";
+
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -39,9 +43,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <AuthProvider>
-          <SideAppBar>{children}</SideAppBar>
-        </AuthProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AuthProvider>
+            <SideAppBar>{children}</SideAppBar>
+          </AuthProvider>
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

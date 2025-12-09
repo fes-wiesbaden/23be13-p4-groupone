@@ -5,7 +5,6 @@ import {
     type GridRenderCellParams,
 } from "@mui/x-data-grid";
 import {deDE} from "@mui/x-data-grid/locales";
-import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {Stack, IconButton, Tooltip, Button, Paper} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -105,39 +104,31 @@ export default function DataGridWithAdd<TRow extends DataRow>({
         actionCol,
     ];
 
-    const theme = createTheme(
-        {
-            palette: {primary: {main: "#1976d2"}},
-        },
-        deDE
-    );
-
     return (
-        <ThemeProvider theme={theme}>
-            <Paper elevation={3} sx={{ p: 2, width: "100%" }}>
-                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1} mb={2}>
-                    <Button
-                        onClick={onAddClick}
-                        variant="contained"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        size="small"
-                        disabled={isDisabled}
-                    >
-                        Hinzufügen
-                    </Button>
-                </Stack>
+        <Paper elevation={3} sx={{ p: 2, width: "100%" }}>
+            <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1} mb={2}>
+                <Button
+                    onClick={onAddClick}
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    size="small"
+                    disabled={isDisabled}
 
-                <DataGrid
-                    rows={rows}
-                    columns={gridColumns}
-                    pagination
-                    disableRowSelectionOnClick
-                    autoHeight
-                    localeText={deDE.components.MuiDataGrid.defaultProps?.localeText}
-                    onRowClick={(params) => onRowClick?.(params.row)}
-                />
-            </Paper>
-        </ThemeProvider>
+                >
+                    Hinzufügen
+                </Button>
+            </Stack>
+
+            <DataGrid
+                rows={rows}
+                columns={gridColumns}
+                pagination
+                disableRowSelectionOnClick
+                autoHeight
+                localeText={deDE.components.MuiDataGrid.defaultProps?.localeText}
+                onRowClick={(params) => onRowClick?.(params.row)}
+            />
+        </Paper>
     );
 }

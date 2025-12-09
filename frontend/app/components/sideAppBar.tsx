@@ -41,6 +41,7 @@ import MenuItem from '@mui/material/MenuItem';
 import ProfileIcon from '../assets/test_profile_icon.jpg'
 import {useAuth} from "~/contexts/AuthContext";
 import {Role} from '~/types/models';
+import ColorModeToggle from './colorModeToggle';
 
 const drawerWidth = 240;
 
@@ -361,7 +362,8 @@ export default function SideAppBar({children}: SideAppBarProps) {
                             </Typography>
                             <Box sx={{flexGrow: 1, display: {xs: 'none', md: 'flex'}}}>
                             </Box>
-                            <Box sx={{flexGrow: 0}}>
+                            <Box sx={{flexGrow: 0, display: 'flex', alignItems: 'center', gap: 1}}>
+                                <ColorModeToggle />
                                 <Tooltip title="Open settings">
                                     <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
                                         <Avatar alt="Remy Sharp"
