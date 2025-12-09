@@ -14,5 +14,6 @@ export default [
   route("Projekte/:projectId", "routes/createOrEditProject.tsx"),
   route("Login", "routes/login.tsx"),
   route("Noten", "routes/grades.tsx"),
+  route("profil", "routes/profil.tsx"),
   // route("test", "routes/test.tsx"), add routes like this
 ] satisfies RouteConfig;

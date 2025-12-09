@@ -161,4 +161,8 @@ public class UserService implements CrudService<User, UUID> {
 
         return Optional.of(user);
     }
+
+    public PasswordEncoder getPasswordEncoder() {
+        return encoder;
+    }
 }
