@@ -3,6 +3,7 @@ import { Box, TextField, Typography, Button, Container, CircularProgress } from 
 import { useAuth } from "../contexts/AuthContext";
 import { Card, CardContent, CardHeader } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import type {CourseDto, User} from "~/types/models";
 
 
 /**
@@ -52,12 +53,12 @@ export default function Profile(): React.ReactElement {
           credentials: "include",
         });
         if (res.ok) {
-          const data = await res.json();
+          const data: User = await res.json();
           setProfile(data);
           setFirstName(data.firstName ?? "");
           setLastName(data.lastName ?? "");
           setRole(data.role ?? "");
-          setCourses(data.courses ? data.courses.map((c: Course) => c.courseName).join(", ") : "");
+          setCourses(data.courses ? data.courses.map((c: CourseDto) => c.courseName).join(", ") : "");
           setUsername(data.username ?? "");
         } else {
           setError("Fehler beim Laden der Profildaten");
@@ -163,7 +164,7 @@ export default function Profile(): React.ReactElement {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               fullWidth
-              disabled={authUser?.role !== "ADMIN"}
+              disabled={true}
             />
 
             <TextField
@@ -171,7 +172,7 @@ export default function Profile(): React.ReactElement {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               fullWidth
-              disabled={authUser?.role !== "ADMIN"}
+              disabled={true}
             />
 
             <TextField
@@ -179,7 +180,7 @@ export default function Profile(): React.ReactElement {
               value={role}
               onChange={(e) => setRole(e.target.value)}
               fullWidth
-              disabled={authUser?.role !== "ADMIN"}
+              disabled={true}
             />
 
             <TextField
@@ -187,7 +188,7 @@ export default function Profile(): React.ReactElement {
               value={courses}
               onChange={(e) => setCourses(e.target.value)}
               fullWidth
-              disabled={authUser?.role !== "ADMIN"}
+              disabled={true}
             />
 
             <TextField
@@ -195,7 +196,7 @@ export default function Profile(): React.ReactElement {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               fullWidth
-              disabled={authUser?.role !== "ADMIN"}
+              disabled={true}
             />
 
             <Typography variant="h5" gutterBottom fontWeight={600}>

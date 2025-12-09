@@ -1,10 +1,7 @@
 package com.gradesave.backend.controller;
 
-import com.gradesave.backend.dto.user.CreateUserRequest;
-import com.gradesave.backend.dto.user.UpdateUserRequest;
-import com.gradesave.backend.dto.user.UserDto;
-import com.gradesave.backend.dto.user.StudentDTO;
-import com.gradesave.backend.dto.user.TeacherDTO;
+import com.gradesave.backend.dto.course.CourseBareDTO;
+import com.gradesave.backend.dto.user.*;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.services.UserService;
@@ -97,14 +94,7 @@ public class UserController {
             return ResponseEntity.status(404).body(Map.of("error", "User not found"));
         }
 
-        return ResponseEntity.ok(Map.of(
-                "id", user.getId(),
-                "username", user.getUsername(),
-                "role", user.getRole().toString(),
-                "firstName", user.getFirstName(),
-                "lastName", user.getLastName(),
-                "courses", user.getCourses()
-        ));
+        return ResponseEntity.ok(MeDTO.fromEntity(user));
     }
 
     @PostMapping("/verify-password")
