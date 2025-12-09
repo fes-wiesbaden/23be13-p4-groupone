@@ -330,7 +330,7 @@ export default function Fragebogen({
                 <Button variant="contained" onClick={() => {
                     navigate("/fragebogen")
                 }}>
-                    Return
+                    Zurück zu Fragebogenauswahl
                 </Button>
             </>
         )
@@ -345,7 +345,7 @@ export default function Fragebogen({
                 <Button variant="contained" onClick={() => {
                     navigate("/fragebogen")
                 }}>
-                    Zurück
+                    Zurück zu Fragebogenauswahl
                 </Button>
             </>
         )
@@ -360,7 +360,7 @@ export default function Fragebogen({
                 <Button variant="contained" onClick={() => {
                     navigate("/fragebogen")
                 }}>
-                    Return
+                    Zurück zu Fragebogenauswahl
                 </Button>
             </>
         )
@@ -395,13 +395,22 @@ export default function Fragebogen({
                                       value={QuestionnaireActivityStatus.ARCHIVED}>Archiviert</MenuItem>
                         </TextField>
 
-                        <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
-                            <Button variant="contained" onClick={handleReset}>
-                                Zurücksetzen
-                            </Button>
-                            <Button variant="contained" onClick={handleSubmit}>
-                                Speichern
-                            </Button>
+                        <Box display="flex" width="100%" justifyContent="space-between" mt={2}>
+                            <Box>
+                                <Button variant="contained" onClick={() => {
+                                    navigate("/fragebogen")
+                                }}>
+                                    Zurück zu Fragebogenauswahl
+                                </Button>
+                            </Box>
+                            <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                                <Button variant="contained" onClick={handleReset}>
+                                    Zurücksetzen
+                                </Button>
+                                <Button variant="contained" onClick={handleSubmit}>
+                                    Speichern
+                                </Button>
+                            </Box>
                         </Box>
                     </Box>
 
@@ -548,6 +557,7 @@ export default function Fragebogen({
                                 </Box>
                             )}
                         </Box>
+
                     )}
 
                     {!selectedStudentFilter && sorted.gradeQuestions.length > 0 && (
@@ -791,6 +801,12 @@ export default function Fragebogen({
                             </AccordionDetails>
                         </Accordion>
                     )}
+
+                    <Button variant="contained" onClick={() => {
+                        navigate("/fragebogen")
+                    }}>
+                        Zurück zu Fragebogenauswahl
+                    </Button>
                 </>
             )}
 
@@ -929,16 +945,24 @@ export default function Fragebogen({
                         </Box>
                     ))}
                     {/*Slay ist cool*/}
-                    <Button
-                        variant="contained"
-                        sx={{mt: 2}}
-                        onClick={handleSubmit}
-                        disabled={!allAnsweredFilled || status !== QuestionnaireActivityStatus.READY_FOR_ANSWERING}
-                    >
-                        Abgeben
-                    </Button>
+
+                    <Box display="flex" justifyContent="space-between" mt={2} gap={2}>
+                        <Button variant="contained" onClick={() => {
+                            navigate("/fragebogen")
+                        }}>
+                            Zurück zu Fragebogenauswahl
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handleSubmit}
+                            disabled={!allAnsweredFilled || status !== QuestionnaireActivityStatus.READY_FOR_ANSWERING}
+                        >
+                            Abgeben
+                        </Button>
+                    </Box>
                 </>
             )}
+
         </>
     )
 }

@@ -506,6 +506,16 @@ export default function Questionbow() {
                                 />
                             )
                         )}
+
+                        {!selectedGroup && (viewMode === ViewType.PREVIEW || viewMode === ViewType.STUDENT_ANSWERS) && (
+                            <Box display="flex" justifyContent="flex-start" mt={2}>
+                                <Button variant="contained" onClick={() => {
+                                    navigate("/fragebogen")
+                                }}>
+                                    Zurück zu Fragebogenauswahl
+                                </Button>
+                            </Box>
+                        )}
                     </Box>
                 )
                 :
