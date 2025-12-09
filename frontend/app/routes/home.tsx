@@ -48,7 +48,7 @@ export default function Home() {
       icon: <SchoolIcon sx={{ fontSize: 40 }} />,
       path: "/klassen",
       color: "#1976d2",
-      roles: [Role.ADMIN, Role.TEACHER],
+      roles: [Role.ADMIN],
     },
     {
       title: "Benutzer",
@@ -80,7 +80,7 @@ export default function Home() {
       icon: <ProjectIcon sx={{ fontSize: 40 }} />,
       path: "/projekte",
       color: "#7b1fa2",
-      roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT],
+      roles: [Role.ADMIN],
     },
     {
       title: "Lernbereich",
