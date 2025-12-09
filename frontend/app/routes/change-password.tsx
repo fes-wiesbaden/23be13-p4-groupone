@@ -1,10 +1,13 @@
 import {useAuth} from "~/contexts/AuthContext";
 import {useNavigate} from "react-router";
-import React, {use, useState} from "react";
+import React, {useState} from "react";
 import CustomizedSnackbars from "~/components/snackbar"
-import {Button, CardContent, CircularProgress, TextField, Typography} from "@mui/material";
+import {Button, CircularProgress, TextField, Typography, Paper, Container, Avatar, InputAdornment, IconButton} from "@mui/material";
 import Box from "@mui/material/Box";
 import API_CONFIG from "~/apiConfig";
+import LockResetIcon from '@mui/icons-material/LockReset';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export default function ChangePassword() {
     const {user, checkAuth, isLoading} = useAuth()
@@ -13,6 +16,9 @@ export default function ChangePassword() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [saving, setSaving] = useState(false)
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -23,15 +29,22 @@ export default function ChangePassword() {
     };
     const [error, setError] = useState<string>("");
 
-    const handlePasswordChange = async () => {
+    const handlePasswordChange = async (e?: React.FormEvent) => {
+        e?.preventDefault();
         setError("");
 
         if (newPassword !== confirmPassword) {
-            setError("Neues Passwort stimmt nicht mit Bestätigung überein");
+            setError("Die Passwörter stimmen nicht überein");
+            setSnackbarMessage(`Die Passwörter stimmen nicht überein`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
             return;
         }
         if (!currentPassword) {
-            setError("Bitte aktuelles Passwort eingeben");
+            setError("Bitte geben Sie Ihr aktuelles Passwort ein");
+            setSnackbarMessage(`Bitte geben Sie Ihr aktuelles Passwort ein`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
             return;
         }
 
@@ -70,53 +83,160 @@ export default function ChangePassword() {
         }
     };
 
-    if (!user || isLoading) return <CircularProgress/>
+    if (!user || isLoading) return (
+        <Box sx={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        }}>
+            <CircularProgress/>
+        </Box>
+    )
 
     return (
-        <>
-            <CardContent>
-                <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-                    <Typography variant="h5" gutterBottom fontWeight={600}>
-                        Passwort ändern
-                    </Typography>
+        <Box
+            sx={{
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
+        >
+            <Container component="main" maxWidth="xs">
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Paper
+                        elevation={6}
+                        sx={{
+                            padding: 4,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            borderRadius: 2,
+                        }}
+                    >
+                        <Avatar sx={{ m: 1, bgcolor: 'warning.main', width: 56, height: 56 }}>
+                            <LockResetIcon sx={{ fontSize: 32 }} />
+                        </Avatar>
+                        
+                        <Typography component="h1" variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
+                            Passwort ändern
+                        </Typography>
 
-                    <TextField
-                        label="Aktuelles Passwort"
-                        type="password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        fullWidth
-                    />
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
+                            Bitte ändern Sie Ihr Passwort, um fortzufahren
+                        </Typography>
 
-                    <TextField
-                        label="Neues Passwort"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        fullWidth
-                    />
+                        <Box
+                            component="form"
+                            onSubmit={handlePasswordChange}
+                            sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}
+                        >
+                            <TextField
+                                label="Aktuelles Passwort"
+                                type={showCurrentPassword ? "text" : "password"}
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                required
+                                fullWidth
+                                autoComplete="current-password"
+                                autoFocus
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                edge="end"
+                                            >
+                                                {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
+                            />
 
-                    <TextField
-                        label="Passwort bestätigen"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        fullWidth
-                    />
+                            <TextField
+                                label="Neues Passwort"
+                                type={showNewPassword ? "text" : "password"}
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
+                                fullWidth
+                                autoComplete="new-password"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                edge="end"
+                                            >
+                                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
+                            />
 
-                    {error && <Typography color="error">{error}</Typography>}
+                            <TextField
+                                label="Passwort bestätigen"
+                                type={showConfirmPassword ? "text" : "password"}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                fullWidth
+                                autoComplete="new-password"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                edge="end"
+                                            >
+                                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
+                            />
 
-                    <Button variant="contained" onClick={handlePasswordChange} disabled={saving}>
-                        {saving ? "Andern..." : "Passwort ändern"}
-                    </Button>
+                            <Button 
+                                type="submit" 
+                                variant="contained" 
+                                fullWidth
+                                size="large"
+                                disabled={saving}
+                                sx={{ mt: 2, py: 1.5 }}
+                            >
+                                {saving ? "Ändern..." : "Passwort ändern"}
+                            </Button>
+
+                            {error && (
+                                <Typography color="error" role="alert" sx={{ mt: 1, textAlign: 'center' }}>
+                                    {error}
+                                </Typography>
+                            )}
+                        </Box>
+                    </Paper>
                 </Box>
-            </CardContent>
+            </Container>
+
             <CustomizedSnackbars
                 open={snackbarOpen}
                 message={snackbarMessage}
                 severity={snackbarSeverity}
                 onClose={handleSnackbarClose}
             />
-        </>
+        </Box>
     )
 }

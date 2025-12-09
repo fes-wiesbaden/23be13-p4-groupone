@@ -13,7 +13,7 @@ import type {Route} from "./+types/root";
 import "./app.css";
 import SideAppBar from "~/components/sideAppBar";
 import React, {useEffect} from "react";
-import {AuthProvider, useAuth} from "~/contexts/AuthContext";
+import {AuthProvider, useAuth, isPublicRoute} from "~/contexts/AuthContext";
 
 export const links: Route.LinksFunction = () => [
     {rel: "preconnect", href: "https://fonts.googleapis.com"},
@@ -53,23 +53,22 @@ function ProtectedApp() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const publicRoutes = ["/login", "/register", "/change-password"];
-    const isPublicRoute = publicRoutes.includes(location.pathname);
+    const isPublic = isPublicRoute(location.pathname);
 
     useEffect(() => {
         if (!isLoading) {
-            if (!isAuthenticated && !isPublicRoute) {
+            if (!isAuthenticated && !isPublic) {
                 navigate("/login", {replace: true});
             } else if (
                 isAuthenticated
                 && user
                 && user.needsPasswordChange
-                && !isPublicRoute
+                && !isPublic
             ) {
                 navigate("/change-password", {replace: true});
             }
         }
-    }, [isAuthenticated, isLoading, isPublicRoute, user, navigate]);
+    }, [isAuthenticated, isLoading, isPublic, user, navigate]);
 
 
     if (isLoading) {
@@ -87,8 +86,12 @@ function ProtectedApp() {
         );
     }
 
-    if (isPublicRoute) {
+    if (isPublic) {
         return <Outlet/>;
+    }
+
+    if (isAuthenticated && user?.needsPasswordChange && location.pathname !== "/change-password") {
+        return null;
     }
 
     return isAuthenticated ? <Outlet/> : null;

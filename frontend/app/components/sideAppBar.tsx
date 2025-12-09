@@ -7,7 +7,7 @@ import * as React from 'react';
 import {type CSSObject, styled, type Theme, useTheme} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import PollIcon from '@mui/icons-material/Poll';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, useLocation} from 'react-router-dom';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar, {type AppBarProps as MuiAppBarProps} from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -39,7 +39,7 @@ import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import ProfileIcon from '../assets/test_profile_icon.jpg'
-import {useAuth} from "~/contexts/AuthContext";
+import {useAuth, isPublicRoute} from "~/contexts/AuthContext";
 import {Role} from '~/types/models';
 
 const drawerWidth = 240;
@@ -210,7 +210,10 @@ export default function SideAppBar({children}: SideAppBarProps) {
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const {user, isAuthenticated, logout} = useAuth();
+
+    const isPublic = isPublicRoute(location.pathname);
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -271,7 +274,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
     return (
         <Box sx={{display: 'flex'}}>
             <CssBaseline/>
-            {isAuthenticated && (
+            {isAuthenticated && !isPublic && (
                 <>
                     <AppBar position="fixed" open={open}>
                         <Toolbar>
@@ -425,7 +428,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
                     flexGrow: 1,
                     minWidth: 0,
                 }}>
-                {isAuthenticated && <Toolbar/>}
+                {isAuthenticated && !isPublic && <Toolbar/>}
                 {children}
             </Box>
         </Box>

@@ -20,6 +20,12 @@ import {useNavigate} from "react-router";
  *
  **/
 
+export const PUBLIC_ROUTES = ["/login", "/register", "/change-password"];
+
+export const isPublicRoute = (pathname: string): boolean => {
+  return PUBLIC_ROUTES.includes(pathname);
+};
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
