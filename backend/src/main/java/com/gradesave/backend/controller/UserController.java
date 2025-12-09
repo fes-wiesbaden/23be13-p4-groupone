@@ -95,11 +95,6 @@ public class UserController {
             return ResponseEntity.status(404).body(Map.of("error", "User not found"));
         }
 
-        return ResponseEntity.ok(Map.of(
-                "id", user.getId(),
-                "username", user.getUsername(),
-                "role", user.getRole().toString()
-        ));
         return ResponseEntity.ok(MeDTO.fromEntity(user));
     }
 
@@ -156,7 +151,7 @@ public class UserController {
         }
 
         if (!userService.getPasswordEncoder().matches(currentPassword, user.getPassword())) {
-            return ResponseEntity.status(403).body(Map.of("error", "Aktuelles Passwort ist falsch!"));
+            return ResponseEntity.badRequest().body(Map.of("error", "Aktuelles Passwort ist falsch!"));
         }
 
         user.setPassword(newPassword);

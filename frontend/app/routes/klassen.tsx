@@ -4,7 +4,7 @@ import {deleteCourse} from "~/adminfunctions";
 import DataTableWithAdd, {type DataRow,} from "../components/dataTableWithAddButton";
 import API_CONFIG from "../apiConfig";
 import {useNavigate} from "react-router";
-import type {CourseDto} from "../types/models";
+import type {CourseDto} from "~/types/models";
 import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "~/components/snackbar"
 
