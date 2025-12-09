@@ -18,6 +18,8 @@ import QuizIcon from "@mui/icons-material/Quiz";
 import ProjectIcon from "@mui/icons-material/Work";
 import LearningIcon from "@mui/icons-material/MenuBook";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import PollIcon from "@mui/icons-material/Poll";
+import { Role } from "~/types/models";
 
 interface DashboardCard {
   title: string;
@@ -25,7 +27,7 @@ interface DashboardCard {
   icon: React.ReactNode;
   path: string;
   color: string;
-  roles?: string[];
+  roles?: Role[];
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -46,7 +48,7 @@ export default function Home() {
       icon: <SchoolIcon sx={{ fontSize: 40 }} />,
       path: "/klassen",
       color: "#1976d2",
-      roles: ["ADMIN", "TEACHER"],
+      roles: [Role.ADMIN],
     },
     {
       title: "Benutzer",
@@ -54,7 +56,7 @@ export default function Home() {
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
       path: "/user",
       color: "#388e3c",
-      roles: ["ADMIN"],
+      roles: [Role.ADMIN],
     },
     {
       title: "Fragen",
@@ -62,7 +64,7 @@ export default function Home() {
       icon: <QuizIcon sx={{ fontSize: 40 }} />,
       path: "/fragen",
       color: "#f57c00",
-      roles: ["ADMIN", "TEACHER"],
+      roles: [Role.ADMIN, Role.TEACHER],
     },
     {
       title: "Noten",
@@ -70,7 +72,7 @@ export default function Home() {
       icon: <GradeIcon sx={{ fontSize: 40 }} />,
       path: "/noten",
       color: "#d32f2f",
-      roles: ["ADMIN", "TEACHER", "STUDENT"],
+      roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT],
     },
     {
       title: "Projekte",
@@ -78,7 +80,7 @@ export default function Home() {
       icon: <ProjectIcon sx={{ fontSize: 40 }} />,
       path: "/projekte",
       color: "#7b1fa2",
-      roles: ["ADMIN", "TEACHER", "STUDENT"],
+      roles: [Role.ADMIN],
     },
     {
       title: "Lernbereich",
@@ -86,7 +88,7 @@ export default function Home() {
       icon: <LearningIcon sx={{ fontSize: 40 }} />,
       path: "/lernbereich",
       color: "#0288d1",
-      roles: ["ADMIN", "TEACHER", "STUDENT"],
+      roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT],
     },
     {
       title: "PDF Benutzer Daten",
@@ -94,7 +96,15 @@ export default function Home() {
       icon: <PictureAsPdfIcon sx={{ fontSize: 40 }} />,
       path: "/pdfs",
       color: "#0288d1",
-      roles: ["ADMIN"],
+      roles: [Role.ADMIN],
+    },
+    {
+        title: "Fragebögen",
+        description: "Verwalten und Bearbeiten von Fragebögen für die Projekte",
+        icon: <PollIcon sx={{ fontSize: 40 }} />,
+        path: "/fragebogen",
+        color: "#0288d1",
+        roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT],
     },
   ];
 

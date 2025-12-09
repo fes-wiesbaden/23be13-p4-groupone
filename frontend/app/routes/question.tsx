@@ -16,8 +16,9 @@ import {
   MenuItem,
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
+import {QuestionType} from "~/components/fragebogen";
 import useAlertDialog from "~/components/youSurePopup";
-import CustomizedSnackbars from "../components/snackbar";
+import CustomizedSnackbars from "~/components/snackbar";
 
 /**
  * @author: Michael Holl
@@ -35,15 +36,16 @@ import CustomizedSnackbars from "../components/snackbar";
  *    Added dialaog integration
  * </p>
  **/
+
 interface Subject {
   id: string;
   name: string;
 }
 
-interface Question {
+export interface Question {
   id: string;
   text: string;
-  type: "TEXT" | "GRADE";
+  type: QuestionType;
   subjects: Subject[];
 }
 
@@ -108,20 +110,20 @@ export default function Question() {
   }, []);
 
   const handleAddClick = () => setOpenDialog(true);
-  
+
   const handleCloseDialog = () => {
     setSelectedSubjects([]);
     setOpenDialog(false);
   };
-  
+
     const handleCloseEditDialog = () => {
     setSelectedSubjects([]);
     setOpenEditDialog(false);
   };
-  
+
   const handleEditClick = (row: QuestionRow) => {
     const question = row.original;
-  
+
     setEditQuestion(question);
     setSelectedSubjects(question.subjects);
     setOpenEditDialog(true);
@@ -330,7 +332,7 @@ export default function Question() {
               defaultValue={editQuestion?.text || ""}
             />
             {/* blendet die Question ID aus */}
-            <input 
+            <input
               id="id"
               name="id"
               defaultValue={editQuestion?.id || ""}
@@ -355,8 +357,8 @@ export default function Question() {
                 name="type"
                 defaultValue={editQuestion?.type || "TEXT"}
               >
-                <MenuItem value="TEXT">Text</MenuItem>
-                <MenuItem value="GRADE">Note</MenuItem>
+                <MenuItem value={QuestionType.TEXT}>Text</MenuItem>
+                <MenuItem value={QuestionType.GRADE}>Note</MenuItem>
               </Select>
             </FormControl>
           </form>

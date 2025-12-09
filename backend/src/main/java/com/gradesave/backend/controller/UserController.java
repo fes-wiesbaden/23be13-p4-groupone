@@ -1,10 +1,6 @@
 package com.gradesave.backend.controller;
 
-import com.gradesave.backend.dto.user.CreateUserRequest;
-import com.gradesave.backend.dto.user.UpdateUserRequest;
-import com.gradesave.backend.dto.user.UserDto;
-import com.gradesave.backend.dto.user.StudentDTO;
-import com.gradesave.backend.dto.user.TeacherDTO;
+import com.gradesave.backend.dto.user.*;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.services.UserService;
@@ -25,17 +21,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * @author Daniel Hess
- *
- *         Controller for handling User REST endpoints.
- *         Provides endpoints to create, retrieve, update, and delete users.
- *
- *         Implemented by Daniel Hess
+ * <p>
+ * Controller for handling User REST endpoints.
+ * Provides endpoints to create, retrieve, update, and delete users.
+ * <p>
+ * Implemented by Daniel Hess
  */
 
 @RestController
@@ -52,7 +49,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(
-            @RequestParam String username, 
+            @RequestParam String username,
             @RequestParam String password,
             HttpServletRequest request) {
         try {
@@ -85,15 +82,15 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        if (authentication == null || !authentication.isAuthenticated() || 
-            authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser")) {
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser")) {
             return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
         }
 
         String username = authentication.getName();
         User user = userService.findByUsername(username);
-        
+
         if (user == null) {
             return ResponseEntity.status(404).body(Map.of("error", "User not found"));
         }
@@ -109,18 +106,18 @@ public class UserController {
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
             SecurityContextHolder.clearContext();
-            
+
             HttpSession session = request.getSession(false);
             if (session != null) {
                 session.invalidate();
             }
-            
+
             Cookie cookie = new Cookie("JSESSIONID", null);
             cookie.setPath("/");
             cookie.setHttpOnly(true);
             cookie.setMaxAge(0);
             response.addCookie(cookie);
-            
+
             return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -191,7 +188,13 @@ public class UserController {
 
     @GetMapping("teachers")
     public ResponseEntity<TeacherDTO[]> getAllTeachers() {
-        return ResponseEntity.ok(userService.GetUsersByRole(Role.TEACHER).stream().map(TeacherDTO::fromEntity).toArray(TeacherDTO[]::new));
+        List<User> teachers = userService.GetUsersByRole(Role.TEACHER);
+        List<User> admins = userService.GetUsersByRole(Role.ADMIN);
+
+        return ResponseEntity.ok(
+                Stream.concat(teachers.stream(), admins.stream())
+                        .map(TeacherDTO::fromEntity)
+                        .toArray(TeacherDTO[]::new));
     }
 
     @GetMapping("free/students")

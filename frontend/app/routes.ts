@@ -5,6 +5,8 @@ export default [
   route("user", "routes/userOverview.tsx"),
   route("pdfs", "routes/pdfs.tsx"),
   route("fragen", "routes/question.tsx"),
+  route("fragebogen", "routes/questionbow-selection.tsx"),
+  route("fragebogen/:projectId", "routes/questionbow.tsx"),
   route("klassen", "routes/klassen.tsx"),
   route("klassen/:courseId", "routes/createOrEditCourse.tsx"),
   route("Lernbereich", "routes/subject.tsx"),

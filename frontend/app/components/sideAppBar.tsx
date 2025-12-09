@@ -6,6 +6,7 @@
 import * as React from 'react';
 import {type CSSObject, styled, type Theme, useTheme} from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import PollIcon from '@mui/icons-material/Poll';
 import {useNavigate} from 'react-router-dom';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar, {type AppBarProps as MuiAppBarProps} from '@mui/material/AppBar';
@@ -37,9 +38,9 @@ import Menu from '@mui/material/Menu';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
 import ProfileIcon from '../assets/test_profile_icon.jpg'
 import {useAuth} from "~/contexts/AuthContext";
+import {Role} from '~/types/models';
 
 const drawerWidth = 240;
 
@@ -136,16 +137,21 @@ interface MenuItem {
     text: string;
     icon: React.ReactNode;
     path: string;
-    roles?: string[];
+    roles?: Role[];
 }
 
-function DrawerMenu({items, open, navigate, onLogout}: { items: MenuItem[]; open: boolean; navigate: (path: string) => void; onLogout?: () => void }) {
+function DrawerMenu({items, open, navigate, onLogout}: {
+    items: MenuItem[];
+    open: boolean;
+    navigate: (path: string) => void;
+    onLogout?: () => void
+}) {
     return (
         <List>
             {items.map((item) => (
                 <ListItem key={item.text} disablePadding sx={{display: "block"}}>
                     <Tooltip
-                        title={ !open ? (<span style={{ fontSize: '1rem'}}>
+                        title={!open ? (<span style={{fontSize: '1rem'}}>
                         {item.text}</span>) : ('')}
                         placement="right"
                     >
@@ -163,8 +169,8 @@ function DrawerMenu({items, open, navigate, onLogout}: { items: MenuItem[]; open
                                     px: 2.5,
                                 },
                                 open
-                                    ? { justifyContent: "initial" }
-                                    : { justifyContent: "center" }
+                                    ? {justifyContent: "initial"}
+                                    : {justifyContent: "center"}
                             ]}
                         >
                             <ListItemIcon
@@ -174,8 +180,8 @@ function DrawerMenu({items, open, navigate, onLogout}: { items: MenuItem[]; open
                                         justifyContent: "center",
                                     },
                                     open
-                                        ? { mr: 3 }
-                                        : { mr: "auto" }
+                                        ? {mr: 3}
+                                        : {mr: "auto"}
                                 ]}
                             >
                                 {item.icon}
@@ -184,8 +190,8 @@ function DrawerMenu({items, open, navigate, onLogout}: { items: MenuItem[]; open
                                 primary={item.text}
                                 sx={[
                                     open
-                                        ? { opacity: 1 }
-                                        : { opacity: 0 }
+                                        ? {opacity: 1}
+                                        : {opacity: 0}
                                 ]}
                             />
                         </ListItemButton>
@@ -204,9 +210,9 @@ export default function SideAppBar({children}: SideAppBarProps) {
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
     const navigate = useNavigate();
-    const {logout, user, isAuthenticated} = useAuth();
-  
-  const handleDrawerOpen = () => {
+    const {user, isAuthenticated, logout} = useAuth();
+
+    const handleDrawerOpen = () => {
         setOpen(true);
     };
 
@@ -216,13 +222,14 @@ export default function SideAppBar({children}: SideAppBarProps) {
 
     const menuItems: MenuItem[] = [
         {text: 'Startseite', icon: <HomeIcon/>, path: '/'},
-        {text: 'Klassen', icon: <SchoolIcon/>, path: '/klassen', roles: ['ADMIN', 'TEACHER']},
-        {text: 'PDFs', icon: <PictureAsPdfIcon/>, path: '/pdfs', roles: ['ADMIN']},
-        {text: 'Benutzer', icon: <PeopleIcon/>, path: '/user', roles: ['ADMIN']},
-        {text: 'Fragen', icon: <QuizIcon/>, path: '/fragen', roles: ['ADMIN', 'TEACHER']},
-        {text: 'Noten', icon: <GradeIcon/>, path: '/noten', roles: ['ADMIN', 'TEACHER', 'STUDENT']},
-        {text: 'Projekte', icon: <ProjectIcon/>, path: '/projekte', roles: ['ADMIN', 'TEACHER', 'STUDENT']},
-        {text: 'Lernbereich', icon: <LearningIcon/>, path: '/lernbereich', roles: ['ADMIN', 'TEACHER', 'STUDENT']},
+        {text: 'Klassen', icon: <SchoolIcon/>, path: '/klassen', roles: [Role.ADMIN]},
+        {text: 'PDFs', icon: <PictureAsPdfIcon/>, path: '/pdfs', roles: [Role.ADMIN]},
+        {text: 'Benutzer', icon: <PeopleIcon/>, path: '/user', roles: [Role.ADMIN]},
+        {text: 'Fragen', icon: <QuizIcon/>, path: '/fragen', roles: [Role.ADMIN, Role.TEACHER]},
+        {text: 'Noten', icon: <GradeIcon/>, path: '/noten', roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]},
+        {text: 'Projekte', icon: <ProjectIcon/>, path: '/projekte', roles: [Role.ADMIN]},
+        {text: 'Lernbereich', icon: <LearningIcon/>, path: '/lernbereich', roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT]},
+        {text: 'Fragebogen', icon: <PollIcon/>, path: '/fragebogen', roles: [Role.STUDENT, Role.TEACHER, Role.ADMIN]},
     ];
 
     const bottomItems: MenuItem[] = [
@@ -357,7 +364,8 @@ export default function SideAppBar({children}: SideAppBarProps) {
                             <Box sx={{flexGrow: 0}}>
                                 <Tooltip title="Open settings">
                                     <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
-                                        <Avatar alt="Remy Sharp" src={ProfileIcon}/> {/* TODO: logic to get user icons */}
+                                        <Avatar alt="Remy Sharp"
+                                                src={ProfileIcon}/> {/* TODO: logic to get user icons */}
                                     </IconButton>
                                 </Tooltip>
                                 <Menu
@@ -376,20 +384,20 @@ export default function SideAppBar({children}: SideAppBarProps) {
                                     open={Boolean(anchorElUser)}
                                     onClose={handleCloseUserMenu}
                                 >
-                                  {settings.map((setting) => (
-                                            <MenuItem 
-                                                key={setting} 
-                                                onClick={() => {
-                                                    handleCloseUserMenu();
-                                                    if (setting === 'Logout') {
-                                                        handleLogout();
-                                                    }
-                                                }}
-                                            >
-                                                <Typography sx={{textAlign: 'center'}}>{setting}</Typography>
-                                            </MenuItem>
-                                        ))}
-                                    </Menu>
+                                    {settings.map((setting) => (
+                                        <MenuItem
+                                            key={setting}
+                                            onClick={() => {
+                                                handleCloseUserMenu();
+                                                if (setting === 'Logout') {
+                                                    handleLogout();
+                                                }
+                                            }}
+                                        >
+                                            <Typography sx={{textAlign: 'center'}}>{setting}</Typography>
+                                        </MenuItem>
+                                    ))}
+                                </Menu>
                             </Box>
                         </Toolbar>
                     </AppBar>
@@ -417,7 +425,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
                     flexGrow: 1,
                     minWidth: 0,
                 }}>
-                {isAuthenticated && <Toolbar />}
+                {isAuthenticated && <Toolbar/>}
                 {children}
             </Box>
         </Box>

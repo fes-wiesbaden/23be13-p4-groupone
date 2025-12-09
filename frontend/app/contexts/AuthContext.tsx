@@ -6,8 +6,9 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import API_CONFIG from "~/apiConfig";
+
 import type {Role} from "~/types/models";
+import API_CONFIG from "~/apiConfig";
 
 /**
  * @author: Daniel Hess
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAuth = useCallback(async () => {
+    setIsLoading(true)
     try {
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/me`, {
         credentials: "include",
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await res.json();
         setUser(userData);
       } else {
+        console.error("Auth check failed:");
         setUser(null);
       }
     } catch (error) {
@@ -60,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    setIsLoading(true)
     checkAuth();
   }, [checkAuth]);
 

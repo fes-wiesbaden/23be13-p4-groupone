@@ -37,6 +37,7 @@ interface DataGridWithAddProps<TRow extends DataRow = DataRow> {
     onEditClick: (row: TRow) => void | Promise<void>;
     onDeleteClick: (id: TRow["id"]) => void | Promise<void>;
     onRowClick?: (id: TRow) => void | Promise<void>;
+    isDisabled?: boolean
 }
 
 export default function DataGridWithAdd<TRow extends DataRow>({
@@ -45,7 +46,8 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                                             onAddClick,
                                             onEditClick,
                                             onDeleteClick,
-                                            onRowClick
+                                            onRowClick,
+                                            isDisabled
                                         }: DataGridWithAddProps<TRow>) {
     const actionCol: GridColDef<TRow> = {
         field: "actions",
@@ -62,7 +64,9 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                             event.stopPropagation();
                             onEditClick(params.row)
                         }}
-                        color="primary">
+                        color="primary"
+                        disabled={isDisabled}
+                    >
                         <EditIcon/>
                     </IconButton>
                 </Tooltip>
@@ -74,6 +78,7 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                             onDeleteClick(params.row.id)
                         }}
                         color="error"
+                        disabled={isDisabled}
                     >
                         <DeleteIcon/>
                     </IconButton>
@@ -117,6 +122,7 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                         color="primary"
                         startIcon={<AddIcon />}
                         size="small"
+                        disabled={isDisabled}
                     >
                         Hinzufügen
                     </Button>
