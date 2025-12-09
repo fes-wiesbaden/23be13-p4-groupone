@@ -16,6 +16,9 @@ import {
   MenuItem,
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
+import {QuestionType} from "~/components/fragebogen";
+import useAlertDialog from "~/components/youSurePopup";
+import CustomizedSnackbars from "~/components/snackbar";
 
 /**
  * @author: Michael Holl
@@ -23,16 +26,26 @@ import API_CONFIG from "../apiConfig";
  *   Component to add, edit & delete questions for questionnaire
  * </p>
  *
+ * @Edited by Kebba Ceesay
+ * <p>
+ *    Snackbar integration completed
+ * </p>
+ *
+ * @Edited by Noah Bach
+ * <p>
+ *    Added dialaog integration
+ * </p>
  **/
+
 interface Subject {
   id: string;
   name: string;
 }
 
-interface Question {
+export interface Question {
   id: string;
   text: string;
-  type: "TEXT" | "GRADE";
+  type: QuestionType;
   subjects: Subject[];
 }
 
@@ -62,6 +75,11 @@ export default function Question() {
   const [openDialog, setOpenDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editQuestion, setEditQuestion] = useState<Question | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const handleSnackbarClose = () => { setSnackbarOpen(false);};
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Frage wirklich löschen?");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,26 +110,29 @@ export default function Question() {
   }, []);
 
   const handleAddClick = () => setOpenDialog(true);
-  
+
   const handleCloseDialog = () => {
     setSelectedSubjects([]);
     setOpenDialog(false);
   };
-  
+
     const handleCloseEditDialog = () => {
     setSelectedSubjects([]);
     setOpenEditDialog(false);
   };
-  
+
   const handleEditClick = (row: QuestionRow) => {
     const question = row.original;
-  
+
     setEditQuestion(question);
     setSelectedSubjects(question.subjects);
     setOpenEditDialog(true);
   };
 
   const handleDeleteClick = async (id: string) => {
+    if (!await confirm())
+      return;
+
     try {
       await fetch(`${API_CONFIG.BASE_URL}/api/question/${id}`, {
         method: "DELETE",
@@ -125,9 +146,15 @@ export default function Question() {
       );
       const questionsData = await resQuestions.json();
       setAllQuestions(questionsData);
+      setSnackbarMessage("Die Frage wurde erfolgreich gelöscht!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error deleting question:", err);
+      setSnackbarMessage(`Fehler beim Bearbeiten der Frage: ${err.message}`);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
   };
 
@@ -150,10 +177,20 @@ export default function Question() {
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        const newQuestion = await res.json();
-        setAllQuestions((prev) => [...prev, newQuestion]);
+      if (!res.ok) {
+        console.error("Fehler beim Speichern der Frage:", res.statusText);
+
+        setSnackbarMessage(`Fehler beim Speichern! Code: ${res.status}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
       }
+      const newQuestion = await res.json();
+      setAllQuestions((prev) => [...prev, newQuestion]);
+      setSnackbarMessage("Die Frage wurde erfolgreich erstellt!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      handleCloseDialog();
     } catch (err) {
       console.error("Error sending form to Backend:", err);
     }
@@ -187,8 +224,16 @@ export default function Question() {
           credentials: "include" });
       const questionsData = await resQuestions.json();
       setAllQuestions(questionsData);
-    } catch (err) {
+      setSnackbarMessage("Die Frage wurde erfolgreich bearbeitet!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      handleCloseEditDialog();
+
+    } catch (err: any) {
       console.error("Error updating question:", err);
+      setSnackbarMessage(`Fehler beim Bearbeiten der Frage: ${err.message}`);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
     handleCloseEditDialog();
   };
@@ -287,7 +332,7 @@ export default function Question() {
               defaultValue={editQuestion?.text || ""}
             />
             {/* blendet die Question ID aus */}
-            <input 
+            <input
               id="id"
               name="id"
               defaultValue={editQuestion?.id || ""}
@@ -312,8 +357,8 @@ export default function Question() {
                 name="type"
                 defaultValue={editQuestion?.type || "TEXT"}
               >
-                <MenuItem value="TEXT">Text</MenuItem>
-                <MenuItem value="GRADE">Note</MenuItem>
+                <MenuItem value={QuestionType.TEXT}>Text</MenuItem>
+                <MenuItem value={QuestionType.GRADE}>Note</MenuItem>
               </Select>
             </FormControl>
           </form>
@@ -326,6 +371,13 @@ export default function Question() {
           </Button>
         </DialogActions>
       </Dialog>
+      <CustomizedSnackbars
+          open={snackbarOpen}
+          message={snackbarMessage}
+          severity={snackbarSeverity}
+          onClose={handleSnackbarClose}
+      />
+      {ConfirmDialog}
     </>
   );
 }

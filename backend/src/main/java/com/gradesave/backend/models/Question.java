@@ -96,5 +96,4 @@ public class Question {
     public void setProjectQuestions(Set<ProjectQuestion> projectQuestions) {
         this.projectQuestions = projectQuestions;
     }
-
 }

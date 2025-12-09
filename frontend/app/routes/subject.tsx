@@ -16,11 +16,23 @@ import {
   RadioGroup,
   TextField,
 } from "@mui/material";
+import useAlertDialog from "~/components/youSurePopup";
+import CustomizedSnackbars from "../components/snackbar";
 
 /**
  * @author: Michael Holl
  * <p>
  *   Component to add, edit & delete subjects
+ * </p>
+ *
+ * @Edited by Kebba Ceesay
+ * <p>
+ *    Snackbar integration completed
+ * </p>
+ *
+ * @Edited by Noah Bach
+ * <p>
+ *    Add Dialog integration
  * </p>
  *
  **/
@@ -38,6 +50,15 @@ export default function Subject() {
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [originalSubject, setOriginalSubject] = useState<Subject | null>(null);
+  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie das Fach wirklich löschen?");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,16 +98,32 @@ export default function Subject() {
   };
 
   const handleDeleteClick = async (id: string) => {
+    if (!await confirm())
+      return;
+
     try {
       //delete subject
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/subject/${id}`, {
         method: "DELETE",
         credentials: "include"
       });
-      if (res.ok)
-        setAllSubjects((prev) => prev.filter((subject) => subject.id !== id));
-    } catch (err) {
+      if (!res.ok) {
+        setSnackbarMessage(`Fehler beim Löschen: ${res.status}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        alert("Löschen fehlgeschlagen.");
+        return;
+      }
+      setAllSubjects((prev) => prev.filter((subject) => subject.id !== id));
+      setSnackbarMessage("Der Eintrag wurde erfolgreich gelöscht!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (err: any) {
       console.error("Error deleting subject:", err);
+      setSnackbarMessage(`Fehler beim Löschen: ${err.message}`);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      alert("Löschen fehlgeschlagen.");
     }
   };
 
@@ -123,6 +160,7 @@ export default function Subject() {
           setAllSubjects((prev) =>
             prev.map((s) => (s.id === updated.id ? updated : s))
           );
+          showSnackbar(`Das ${updated.learningField ? "Lernfeld" : "Schulfach"} "${updated.name}" wurde erfolgreich bearbeitet!`);
         }
       } else {
         // Create subject
@@ -135,6 +173,9 @@ export default function Subject() {
         if (res.ok) {
           const newSubject = await res.json();
           setAllSubjects((prev) => [...prev, newSubject]);
+          showSnackbar(`Das ${newSubject.learningField ? "Lernfeld" : "Schulfach"} "${newSubject.name}" wurde erfolgreich erstellt!`);
+        } else {
+          showSnackbar("Fehler beim Erstellen des Lernbereichs!", "error");
         }
       }
     } catch (err) {
@@ -249,6 +290,13 @@ export default function Subject() {
           </Button>
         </DialogActions>
       </Dialog>
+      <CustomizedSnackbars
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
+      {ConfirmDialog}
     </>
   );
 }

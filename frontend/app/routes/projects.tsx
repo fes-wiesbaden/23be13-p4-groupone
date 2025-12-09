@@ -5,6 +5,7 @@ import DataTableWithAdd, {type DataRow} from "~/components/dataTableWithAddButto
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router"
 import API_CONFIG from "~/apiConfig";
+import useAlertDialog from "~/components/youSurePopup";
 
 /**
  * @author Paul Geisthardt
@@ -81,6 +82,7 @@ export default function Projects () {
         message: string;
         retry?: (() => void);
     }>(null);
+    const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie das Projekt wirklich löschen?")
 
     const makeRetry = (fn: () => void) => () => {
         setError(null);
@@ -133,7 +135,8 @@ export default function Projects () {
     }
 
     const handleDeleteClick = async (id: string) => {
-        if (!confirm("Willst du diese Projekt wirklich löschen?")) return
+        if (!await confirm())
+            return;
 
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/project/delete/${id}`, {
@@ -162,6 +165,7 @@ export default function Projects () {
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteClick}
             />
+            {ConfirmDialog}
         </>
     );
 }

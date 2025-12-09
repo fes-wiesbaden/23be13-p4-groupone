@@ -20,5 +20,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PerformanceRepository extends JpaRepository<Performance, UUID> {
     List<Performance> findByProjectSubject_Subject_Id(UUID subjectId);
-    List<Performance> findByProjectSubject_Project_Id(UUID projectId);
+    List<Performance> findByProjectSubjectId(UUID projectSubjectId);
 }

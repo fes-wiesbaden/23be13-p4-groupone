@@ -79,7 +79,7 @@ public class PerformanceService implements CrudService<Performance, UUID> {
     @Override
     public void deleteById(UUID id) {
         if (!performanceRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Performance not found: " + id);
         }
         performanceRepository.deleteById(id);
     }
@@ -106,4 +106,9 @@ public class PerformanceService implements CrudService<Performance, UUID> {
     public long count() {
         return performanceRepository.count();
     }
+
+    public Optional<Performance> findById(UUID performanceId) {
+        return performanceRepository.findById(performanceId);
+    }
+
 }

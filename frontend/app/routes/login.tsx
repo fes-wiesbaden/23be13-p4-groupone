@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Avatar from '@mui/material/Avatar';
+import API_CONFIG from "~/apiConfig";
+import type {Role} from "~/types/models";
 
 /**
  * @author: Daniel Hess
@@ -15,12 +17,7 @@ import Avatar from '@mui/material/Avatar';
  *
  **/
 
-interface EnvConfig {
-    VITE_API_URL?: string;
-}
-
 export default function Login(): React.ReactElement {
-    const apiUrl = (import.meta.env as unknown as EnvConfig).VITE_API_URL ?? "http://localhost:8080";
     const { login } = useAuth();
 
     const [username, setUsername] = useState<string>("");
@@ -33,7 +30,7 @@ export default function Login(): React.ReactElement {
         setError("");
 
         try {
-            const res = await fetch(`${apiUrl}/api/users/login`, {
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({ username, password }),
@@ -44,8 +41,9 @@ export default function Login(): React.ReactElement {
                 const data: LoginResponse = await res.json();
 
                 login({
+                    id: data.id || "",
                     username: data.username || data.user?.username || "",
-                    role: data.role || data.user?.role || "",
+                    role: data.role as Role || data.user?.role as Role
                 });
 
                 navigate("/");

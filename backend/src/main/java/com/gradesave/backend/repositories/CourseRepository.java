@@ -24,7 +24,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     Optional<Course> findByCourseName(String courseName);
 
     @Query("select c from Course c join c.users u where u.id = ?1")
-    List<Course> findAllByUserId(UUID studentId);
+    List<Course> findAllByUserId(UUID userId);
 
     @Query("SELECT c FROM Course c WHERE c.id = ?1")
     Optional<Course> findByIdTest(UUID uuid);

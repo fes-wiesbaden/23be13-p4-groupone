@@ -7,6 +7,7 @@ import API_CONFIG from "~/apiConfig";
 import Divider from "@mui/material/Divider";
 import Accordion from '@mui/material/Accordion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CustomizedSnackbars from "~/components/snackbar"
 
 /**
  * @author Paul Geisthardt
@@ -174,6 +175,12 @@ export default function CreateOrEditCourse() {
     const [assignedStudentSearchQuery, setAssignedStudentSearchQuery] = useState('')
     const [availableTeacherSearchQuery, setAvailableTeacherSearchQuery] = useState('')
     const [availableStudentSearchQuery, setAvailableStudentSearchQuery] = useState('')
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
 
     const [retryError, setRetryError] = useState<RetryError>({
         message: "",
@@ -268,6 +275,9 @@ export default function CreateOrEditCourse() {
             });
 
             if (!res.ok) {
+                setSnackbarMessage(`Fehler beim Laden vom Kurs: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 setRetryError({
                     message: "Failed to Load Course",
                     retryMethod: fetchCourse
@@ -279,6 +289,9 @@ export default function CreateOrEditCourse() {
             setCourse(course);
             setOriginalCourse(JSON.parse(JSON.stringify(course)));
         } catch (err: any) {
+            setSnackbarMessage(`Fehler beim Laden vom Kurs: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
             setRetryError({
                 message: `Failed to Load Course: ${err.message}`,
                 retryMethod: fetchCourse
@@ -297,6 +310,9 @@ export default function CreateOrEditCourse() {
 
             if (!res.ok) {
                 console.error(`Failed to fetch teachers: ${res.status}`);
+                setSnackbarMessage(`Fehler beim Laden vom Lehrern: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 setTeacherError(`Failed to fetch teachers: ${res.status}`)
                 return
             }
@@ -304,6 +320,9 @@ export default function CreateOrEditCourse() {
             const data: Teacher[] = await res.json();
             setAllTeachers(data);
         } catch (err: any) {
+            setSnackbarMessage(`Fehler beim Laden vom Lehrern: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
             console.error(`Error fetching teachers: ${err.message}`);
             setTeacherError(`Error fetching teachers: ${err.message}`)
         } finally {
@@ -320,6 +339,9 @@ export default function CreateOrEditCourse() {
 
             if (!res.ok) {
                 console.error(`Failed to fetch students: ${res.status}`);
+                setSnackbarMessage(`Fehler beim Laden vom Schülern: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 setStudentError(`Failed to fetch students: ${res.status}`)
                 return
             }
@@ -328,6 +350,9 @@ export default function CreateOrEditCourse() {
             setAvailableStudents(data);
         } catch (err: any) {
             console.error(`Error fetching students: ${err.message}`);
+            setSnackbarMessage(`Fehler beim Laden vom Schülern: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
             setStudentError(`Error fetching students: ${err.message}`)
         } finally {
             setLoadingStudents(false)
@@ -502,12 +527,21 @@ export default function CreateOrEditCourse() {
 
             if (!res.ok) {
                 setSaveError(`Fehler beim Speicher: ${res.status}`)
+                setSnackbarMessage(`Fehler beim Speichern: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 return
             }
 
             setOriginalCourse(course);
+            setSnackbarMessage(`Erfolgreich gespeichert`);
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
         } catch (err: any) {
             setSaveError(`Fehler beim Speichern: ${err.message}`)
+            setSnackbarMessage(`Fehler beim Speichern: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true)
         } finally {
             setSaving(false);
         }
@@ -515,6 +549,9 @@ export default function CreateOrEditCourse() {
 
     const resetChanges = () => {
         setCourse(originalCourse);
+        setOriginalCourse(course);
+        setSnackbarMessage(`Zurückgesetzt`);
+        setSnackbarSeverity("success");
     }
 
     if (loadingCourse) return <>Loading ...</>

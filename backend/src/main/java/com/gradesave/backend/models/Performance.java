@@ -15,6 +15,8 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * @author: Michael Holl
@@ -40,6 +42,7 @@ public class Performance {
 
     @ManyToOne
     @JoinColumn(name = "project_subject_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ProjectSubject projectSubject;
 
     @OneToMany(mappedBy = "performance")

@@ -9,6 +9,8 @@ public record SubjectDto(
         UUID id,
         String name,
         String shortName,
+        Double duration,
+        boolean isLearningField,
         List<PerformanceDto> performances
         ) {
 
