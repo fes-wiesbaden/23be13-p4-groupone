@@ -33,6 +33,7 @@ interface AuthContextType {
   login: (user: User) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  isPublicRoute: (pathname: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         checkAuth,
+        isPublicRoute
       }}
     >
       {children}

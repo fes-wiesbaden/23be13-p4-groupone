@@ -117,6 +117,8 @@ export default function Klassen() {
     return (
         <>
             <DataTableWithAdd<CourseRow>
+                title="Klassen"
+                addButtonLabel="Neue Klasse"
                 columns={columns}
                 rows={allCourses}
                 onAddClick={handleAddClick}

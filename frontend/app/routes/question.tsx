@@ -241,6 +241,8 @@ export default function Question() {
   return (
     <>
       <DataTableWithAdd<QuestionRow>
+        title="Fragen"
+        addButtonLabel="Neue Frage"
         columns={columns}
         rows={allQuestions.map<QuestionRow>((q) => ({
           id: q.id,
