@@ -142,72 +142,33 @@ export default function ChangePassword() {
                         >
                             <TextField
                                 label="Aktuelles Passwort"
-                                type={showCurrentPassword ? "text" : "password"}
+                                type="password"
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                 required
                                 fullWidth
                                 autoComplete="current-password"
                                 autoFocus
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                aria-label="toggle password visibility"
-                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                                edge="end"
-                                            >
-                                                {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    )
-                                }}
                             />
 
                             <TextField
                                 label="Neues Passwort"
-                                type={showNewPassword ? "text" : "password"}
+                                type="password"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 required
                                 fullWidth
                                 autoComplete="new-password"
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                aria-label="toggle password visibility"
-                                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                                edge="end"
-                                            >
-                                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    )
-                                }}
                             />
 
                             <TextField
                                 label="Passwort bestätigen"
-                                type={showConfirmPassword ? "text" : "password"}
+                                type="password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
                                 fullWidth
                                 autoComplete="new-password"
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                aria-label="toggle password visibility"
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                edge="end"
-                                            >
-                                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    )
-                                }}
                             />
 
                             <Button 
