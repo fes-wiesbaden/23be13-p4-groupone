@@ -6,8 +6,10 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+
+import type {Role, User} from "~/types/models";
 import API_CONFIG from "~/apiConfig";
-import type {Role} from "~/types/models";
+import {useNavigate} from "react-router";
 
 /**
  * @author: Daniel Hess
@@ -18,11 +20,11 @@ import type {Role} from "~/types/models";
  *
  **/
 
-interface User {
-    id: string;
-    username: string;
-    role: Role;
-}
+export const PUBLIC_ROUTES = ["/login", "/register", "/change-password"];
+
+export const isPublicRoute = (pathname: string): boolean => {
+  return PUBLIC_ROUTES.includes(pathname);
+};
 
 interface AuthContextType {
   user: User | null;
@@ -31,6 +33,7 @@ interface AuthContextType {
   login: (user: User) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  isPublicRoute: (pathname: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,7 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const navigate = useNavigate()
+
   const checkAuth = useCallback(async () => {
+    setIsLoading(true)
     try {
       const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/me`, {
         credentials: "include",
@@ -49,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await res.json();
         setUser(userData);
       } else {
+        console.error(`Auth check failed: ${res.status}`);
         setUser(null);
       }
     } catch (error) {
@@ -60,11 +67,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    setIsLoading(true)
     checkAuth();
   }, [checkAuth]);
 
   const login = (userData: User) => {
     setUser(userData);
+    if (userData.needsPasswordChange) {
+        navigate("/change-password")
+    } else {
+        navigate("/")
+    }
   };
 
   const logout = async () => {
@@ -89,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         checkAuth,
+        isPublicRoute
       }}
     >
       {children}

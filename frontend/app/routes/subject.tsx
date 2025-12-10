@@ -223,6 +223,8 @@ export default function Subject() {
   return (
     <>
       <DataGridWithAdd<Subject>
+        title="Fächer"
+        addButtonLabel="Neues Fach"
         columns={[
           { label: "Name", key: "name" },
           { label: "Abkürzung", key: "shortName" },

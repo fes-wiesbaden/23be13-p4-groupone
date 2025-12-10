@@ -7,7 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Avatar from '@mui/material/Avatar';
 import API_CONFIG from "~/apiConfig";
-import type {Role} from "~/types/models";
+import type {Role, User} from "~/types/models";
 
 /**
  * @author: Daniel Hess
@@ -38,15 +38,9 @@ export default function Login(): React.ReactElement {
             });
 
             if (res.ok) {
-                const data: LoginResponse = await res.json();
+                const data: User = await res.json();
 
-                login({
-                    id: data.id || "",
-                    username: data.username || data.user?.username || "",
-                    role: data.role as Role || data.user?.role as Role
-                });
-
-                navigate("/");
+                login(data);
             } else {
                 let msg = "Login failed";
                 try {
@@ -73,10 +67,20 @@ export default function Login(): React.ReactElement {
         <Box
             sx={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                position: 'relative',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%)',
+                },
             }}
         >
             <Container component="main" maxWidth="xs">
@@ -86,30 +90,66 @@ export default function Login(): React.ReactElement {
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        position: 'relative',
+                        zIndex: 1,
                     }}
                 >
                 <Paper
-                    elevation={6}
+                    elevation={24}
                     sx={{
-                        padding: 4,
+                        padding: 5,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        borderRadius: 2,
+                        borderRadius: 4,
+                        background: 'linear-gradient(145deg, #1e1e1e 0%, #2d2d2d 100%)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 100px rgba(102, 126, 234, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                     }}
                 >
-                    <Avatar sx={{ m: 1, bgcolor: 'primary.main', width: 56, height: 56 }}>
-                        <LockOutlinedIcon sx={{ fontSize: 32 }} />
+                    <Avatar 
+                        sx={{ 
+                            m: 1, 
+                            mb: 2,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            width: 64, 
+                            height: 64,
+                            boxShadow: '0 8px 20px rgba(102, 126, 234, 0.5)',
+                        }}
+                    >
+                        <LockOutlinedIcon sx={{ fontSize: 36 }} />
                     </Avatar>
                     
-                    <Typography component="h1" variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
+                    <Typography 
+                        component="h1" 
+                        variant="h4" 
+                        sx={{ 
+                            mb: 1, 
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                        }}
+                    >
                         GradeSave
+                    </Typography>
+                    
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            mb: 4, 
+                            fontWeight: 500,
+                            color: 'rgba(255, 255, 255, 0.7)',
+                        }}
+                    >
+                        Melden Sie sich an, um fortzufahren
                     </Typography>
 
                     <Box
                         component="form"
                         onSubmit={handleSubmit}
-                        sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}
+                        sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2.5 }}
                     >
                         <TextField
                             label="Username"
@@ -119,6 +159,36 @@ export default function Login(): React.ReactElement {
                             fullWidth
                             autoComplete="username"
                             autoFocus
+                            variant="outlined"
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    color: '#ffffff',
+                                    transition: 'all 0.3s',
+                                    '& fieldset': {
+                                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                        '& fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        },
+                                    },
+                                    '&.Mui-focused': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        '& fieldset': {
+                                            borderColor: '#667eea',
+                                            borderWidth: '2px',
+                                        },
+                                    },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    '&.Mui-focused': {
+                                        color: '#667eea',
+                                    },
+                                },
+                            }}
                         />
 
                         <TextField
@@ -129,6 +199,36 @@ export default function Login(): React.ReactElement {
                             required
                             fullWidth
                             autoComplete="current-password"
+                            variant="outlined"
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    color: '#ffffff',
+                                    transition: 'all 0.3s',
+                                    '& fieldset': {
+                                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                        '& fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        },
+                                    },
+                                    '&.Mui-focused': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        '& fieldset': {
+                                            borderColor: '#667eea',
+                                            borderWidth: '2px',
+                                        },
+                                    },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    '&.Mui-focused': {
+                                        color: '#667eea',
+                                    },
+                                },
+                            }}
                         />
 
                         <Button 
@@ -136,13 +236,38 @@ export default function Login(): React.ReactElement {
                             variant="contained" 
                             fullWidth
                             size="large"
-                            sx={{ mt: 2, py: 1.5 }}
+                            sx={{ 
+                                mt: 2, 
+                                py: 1.8,
+                                fontSize: '1.1rem',
+                                fontWeight: 600,
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                boxShadow: '0 4px 20px rgba(102, 126, 234, 0.5)',
+                                '&:hover': {
+                                    background: 'linear-gradient(135deg, #7b8ff0 0%, #8a5cb2 100%)',
+                                    boxShadow: '0 6px 25px rgba(102, 126, 234, 0.7)',
+                                    transform: 'translateY(-2px)',
+                                },
+                                transition: 'all 0.3s',
+                            }}
                         >
-                            Login
+                            Anmelden
                         </Button>
 
                         {error && (
-                            <Typography color="error" role="alert" sx={{ mt: 1, textAlign: 'center' }}>
+                            <Typography 
+                                role="alert" 
+                                sx={{ 
+                                    mt: 1, 
+                                    textAlign: 'center',
+                                    p: 2,
+                                    bgcolor: 'rgba(244, 67, 54, 0.1)',
+                                    borderRadius: 2,
+                                    fontSize: '0.9rem',
+                                    border: '1px solid rgba(244, 67, 54, 0.3)',
+                                    color: '#ff6b6b',
+                                }}
+                            >
                                 {error}
                             </Typography>
                         )}

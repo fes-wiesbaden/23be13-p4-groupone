@@ -269,6 +269,8 @@ export default function UsersPage() {
         doAfterUpload={load}
       />
       <DataGridWithAdd<UserRow>
+        title="Benutzer"
+        addButtonLabel="Neuer Benutzer"
         columns={columns}
         rows={rows}
         onAddClick={onAddClick}

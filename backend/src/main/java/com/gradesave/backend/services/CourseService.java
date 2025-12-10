@@ -1,6 +1,10 @@
 package com.gradesave.backend.services;
 
 import com.gradesave.backend.dto.course.CoursePatchRequestDTO;
+import com.gradesave.backend.dto.course.CourseSelectionWithMembersDto;
+import com.gradesave.backend.dto.group.GroupMembersDTO;
+import com.gradesave.backend.dto.project.ProjectSelectionWithMembersDto;
+import com.gradesave.backend.dto.user.StudentDTO;
 import com.gradesave.backend.models.Course;
 import com.gradesave.backend.dto.course.UpdateCourseRequest;
 import com.gradesave.backend.dto.course.CourseSelectionDto;
@@ -198,5 +202,9 @@ public class CourseService {
                     projectDtos);
 
         }).toList();
+    }
+
+    public List<Course> getAllWithUser(User user) {
+        return courseRepository.findAllByUserId(user.getId());
     }
 }

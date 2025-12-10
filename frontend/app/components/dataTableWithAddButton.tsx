@@ -5,8 +5,7 @@ import {
     type GridRenderCellParams,
 } from "@mui/x-data-grid";
 import {deDE} from "@mui/x-data-grid/locales";
-import {createTheme, ThemeProvider} from "@mui/material/styles";
-import {Stack, IconButton, Tooltip, Button, Paper} from "@mui/material";
+import {Stack, IconButton, Tooltip, Button, Paper, Typography} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -37,6 +36,9 @@ interface DataGridWithAddProps<TRow extends DataRow = DataRow> {
     onEditClick: (row: TRow) => void | Promise<void>;
     onDeleteClick: (id: TRow["id"]) => void | Promise<void>;
     onRowClick?: (id: TRow) => void | Promise<void>;
+    isDisabled?: boolean;
+    title?: string;
+    addButtonLabel?: string;
 }
 
 export default function DataGridWithAdd<TRow extends DataRow>({
@@ -45,7 +47,10 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                                             onAddClick,
                                             onEditClick,
                                             onDeleteClick,
-                                            onRowClick
+                                            onRowClick,
+                                            isDisabled,
+                                            title,
+                                            addButtonLabel = "Hinzufügen"
                                         }: DataGridWithAddProps<TRow>) {
     const actionCol: GridColDef<TRow> = {
         field: "actions",
@@ -62,7 +67,9 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                             event.stopPropagation();
                             onEditClick(params.row)
                         }}
-                        color="primary">
+                        color="primary"
+                        disabled={isDisabled}
+                    >
                         <EditIcon/>
                     </IconButton>
                 </Tooltip>
@@ -74,6 +81,7 @@ export default function DataGridWithAdd<TRow extends DataRow>({
                             onDeleteClick(params.row.id)
                         }}
                         color="error"
+                        disabled={isDisabled}
                     >
                         <DeleteIcon/>
                     </IconButton>
@@ -100,38 +108,92 @@ export default function DataGridWithAdd<TRow extends DataRow>({
         actionCol,
     ];
 
-    const theme = createTheme(
-        {
-            palette: {primary: {main: "#1976d2"}},
-        },
-        deDE
-    );
-
     return (
-        <ThemeProvider theme={theme}>
-            <Paper elevation={3} sx={{ p: 2, width: "100%" }}>
-                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1} mb={2}>
-                    <Button
-                        onClick={onAddClick}
-                        variant="contained"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        size="small"
-                    >
-                        Hinzufügen
-                    </Button>
-                </Stack>
+        <Paper
+            elevation={2}
+            sx={{
+                p: 3,
+                width: "100%",
+                borderRadius: 3,
+                background: 'background.paper',
+            }}
+        >
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                spacing={2}
+                mb={3}
+            >
+                {title && (
+                    <Typography variant="h5" fontWeight={600}>
+                        {title}
+                    </Typography>
+                )}
+                <Button
+                    onClick={onAddClick}
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    disabled={isDisabled}
+                    sx={{
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1,
+                        fontWeight: 600,
+                        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                        '&:hover': {
+                            boxShadow: '0 6px 16px rgba(25, 118, 210, 0.35)',
+                        },
+                        marginLeft: title ? 0 : 'auto',
+                    }}
+                >
+                    {addButtonLabel}
+                </Button>
+            </Stack>
 
-                <DataGrid
-                    rows={rows}
-                    columns={gridColumns}
-                    pagination
-                    disableRowSelectionOnClick
-                    autoHeight
-                    localeText={deDE.components.MuiDataGrid.defaultProps?.localeText}
-                    onRowClick={(params) => onRowClick?.(params.row)}
-                />
-            </Paper>
-        </ThemeProvider>
+            <DataGrid
+                rows={rows}
+                columns={gridColumns}
+                pagination
+                disableRowSelectionOnClick
+                autoHeight
+                localeText={deDE.components.MuiDataGrid.defaultProps?.localeText}
+                onRowClick={(params) => onRowClick?.(params.row)}
+                sx={{
+                    border: 'none',
+                    '& .MuiDataGrid-main': {
+                        borderRadius: 2,
+                    },
+                    '& .MuiDataGrid-columnHeaders': {
+                        backgroundColor: 'action.hover',
+                        borderRadius: '8px 8px 0 0',
+                        borderBottom: 'none',
+                    },
+                    '& .MuiDataGrid-columnHeaderTitle': {
+                        fontWeight: 600,
+                    },
+                    '& .MuiDataGrid-cell': {
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                    },
+                    '& .MuiDataGrid-row': {
+                        '&:hover': {
+                            backgroundColor: 'action.hover',
+                            cursor: onRowClick ? 'pointer' : 'default',
+                        },
+                        '&:last-child .MuiDataGrid-cell': {
+                            borderBottom: 'none',
+                        },
+                    },
+                    '& .MuiDataGrid-footerContainer': {
+                        borderTop: '2px solid',
+                        borderColor: 'divider',
+                        backgroundColor: 'action.hover',
+                        borderRadius: '0 0 8px 8px',
+                    },
+                }}
+            />
+        </Paper>
     );
 }

@@ -3,6 +3,8 @@ package com.gradesave.backend.services;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +24,7 @@ public class UserService implements CrudService<User, UUID> {
     private final PdfService pdfService;
 
     public UserService(com.gradesave.backend.repositories.UserRepository repo, PasswordEncoder encoder,
-            CourseService courseService, PdfService pdfService) {
+                       CourseService courseService, PdfService pdfService) {
         this.repo = repo;
         this.encoder = encoder;
         this.courseService = courseService;
@@ -86,6 +88,7 @@ public class UserService implements CrudService<User, UUID> {
         existing.setFirstName(patch.getFirstName());
         existing.setLastName(patch.getLastName());
         existing.setRole(patch.getRole());
+        existing.setChangedDefaultPassword(patch.getChangedDefaultPassword());
 
         if (patch.getPassword() != null && !patch.getPassword().isBlank()) {
             existing.setPassword(encoder.encode(patch.getPassword()));
@@ -141,5 +144,38 @@ public class UserService implements CrudService<User, UUID> {
 
     public List<User> getUsersByIds(List<UUID> uuids) {
         return repo.findAllById(uuids);
+    }
+
+    public Optional<User> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser")) {
+            return Optional.empty();
+        }
+
+        String username = authentication.getName();
+        User user = this.findByUsername(username);
+
+        if (user == null)
+            return Optional.empty();
+
+        return Optional.of(user);
+    }
+
+    public PasswordEncoder getPasswordEncoder() {
+        return encoder;
+    }
+
+    public void validatePassword(String password) {
+        if (password == null) {
+            throw new IllegalArgumentException("Passwort darf nicht null sein");
+        }
+
+        String trimmed = password.trim();
+
+        if (trimmed.length() < 8 || trimmed.length() > 50) {
+            throw new IllegalArgumentException("Passwort muss zwischen 8 und 50 Zeichen lang sein");
+        }
     }
 }
