@@ -5,6 +5,8 @@ import com.gradesave.backend.repositories.GradeRepository;
 import com.gradesave.backend.repositories.PerformanceRepository;
 import com.gradesave.backend.repositories.UserRepository;
 import com.gradesave.backend.repositories.SubjectRepository;
+import com.gradesave.backend.repositories.ProjectSubjectRepository;
+import com.gradesave.backend.repositories.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -40,6 +42,18 @@ class GradeServiceTest {
     @Mock
     private SubjectRepository subjectRepository;
 
+    @Mock
+    private ProjectSubjectRepository projectSubjectRepository;
+
+    @Mock
+    private ProjectRepository projectRepository;
+
+    @Mock
+    private CourseService courseService;
+
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private GradeService gradeService;
 
@@ -51,7 +65,7 @@ class GradeServiceTest {
     @BeforeEach
     void setUp() {
         testGradeId = UUID.randomUUID();
-        
+
         // Create test student
         testStudent = new User();
         testStudent.setId(UUID.randomUUID());
@@ -135,7 +149,7 @@ class GradeServiceTest {
         // Arrange
         Grade updatedGrade = new Grade();
         updatedGrade.setGrade(3.0);
-        
+
         when(gradeRepository.findById(testGradeId)).thenReturn(Optional.of(testGrade));
         when(gradeRepository.save(any(Grade.class))).thenReturn(testGrade);
 
@@ -249,52 +263,64 @@ class GradeServiceTest {
         // Arrange
         UUID projectId = UUID.randomUUID();
         UUID groupId = UUID.randomUUID();
-        
+
         Subject subject = new Subject();
         subject.setId(UUID.randomUUID());
         subject.setName("Math");
         subject.setShortName("M");
-        
+
         ProjectSubject projectSubject = new ProjectSubject();
         projectSubject.setId(UUID.randomUUID());
         projectSubject.setSubject(subject);
-        
+
         Performance performance = new Performance();
         performance.setId(UUID.randomUUID());
         performance.setName("Test 1");
         performance.setShortName("T1");
         performance.setWeight(0.5);
         performance.setProjectSubject(projectSubject);
-        
+
         User student = new User();
         student.setId(UUID.randomUUID());
         student.setFirstName("John");
         student.setLastName("Doe");
-        
+
         Group group = new Group();
         group.setId(groupId);
         group.setName("Group 1");
-        
+
         Project project = new Project();
         project.setId(projectId);
-        
+
         group.setProject(project);
         student.setGroups(new java.util.HashSet<>(java.util.Arrays.asList(group)));
-        
-        when(subjectRepository.findByProjectSubjects_Project_Id(projectId))
-            .thenReturn(java.util.Arrays.asList(subject));
-        when(performanceRepository.findByProjectSubject_Subject_Id(subject.getId()))
-            .thenReturn(java.util.Arrays.asList(performance));
+
+        User teacher = new User();
+        teacher.setId(UUID.randomUUID());
+        teacher.setRole(Role.TEACHER);
+        performance.setAssignedTeacher(teacher);
+
+        Course course = new Course();
+        project.setCourse(course);
+
+        when(projectSubjectRepository.findByProjectId(projectId))
+                .thenReturn(java.util.Arrays.asList(projectSubject));
+        when(performanceRepository.findByProjectSubjectId(projectSubject.getId()))
+                .thenReturn(java.util.Arrays.asList(performance));
+        when(userRepository.findById(testStudent.getId()))
+                .thenReturn(Optional.of(testStudent));
+        when(projectRepository.findById(projectId))
+                .thenReturn(Optional.of(project));
         when(userRepository.findByGroups_IdAndRole(groupId, Role.STUDENT))
-            .thenReturn(java.util.Arrays.asList(student));
-        when(performanceRepository.findByProjectSubject_Project_Id(projectId))
-            .thenReturn(java.util.Arrays.asList(performance));
+                .thenReturn(java.util.Arrays.asList(student));
         when(gradeRepository.findByProjectId(projectId))
-            .thenReturn(java.util.Arrays.asList());
-        
+                .thenReturn(java.util.Arrays.asList());
+        when(courseService.getTeachers(course))
+                .thenReturn(java.util.Arrays.asList());
+
         // Act
-        var result = gradeService.loadGradeOverview(projectId, groupId);
-        
+        var result = gradeService.loadGradeOverview(projectId, groupId, testStudent.getId());
+
         // Assert
         assertNotNull(result);
         assertEquals(1, result.subjects().size());
@@ -306,32 +332,46 @@ class GradeServiceTest {
     void testLoadGradeOverview_WithoutGroupId_Success() {
         // Arrange
         UUID projectId = UUID.randomUUID();
-        
+
         Subject subject = new Subject();
         subject.setId(UUID.randomUUID());
         subject.setName("Math");
         subject.setShortName("M");
-        
+
+        ProjectSubject projectSubject = new ProjectSubject();
+        projectSubject.setId(UUID.randomUUID());
+        projectSubject.setSubject(subject);
+
         User student = new User();
         student.setId(UUID.randomUUID());
         student.setFirstName("Jane");
         student.setLastName("Smith");
         student.setGroups(new java.util.HashSet<>());
-        
-        when(subjectRepository.findByProjectSubjects_Project_Id(projectId))
-            .thenReturn(java.util.Arrays.asList(subject));
-        when(performanceRepository.findByProjectSubject_Subject_Id(subject.getId()))
-            .thenReturn(java.util.Arrays.asList());
+
+        Project project = new Project();
+        project.setId(projectId);
+
+        Course course = new Course();
+        project.setCourse(course);
+
+        when(projectSubjectRepository.findByProjectId(projectId))
+                .thenReturn(java.util.Arrays.asList(projectSubject));
+        when(performanceRepository.findByProjectSubjectId(projectSubject.getId()))
+                .thenReturn(java.util.Arrays.asList());
+        when(userRepository.findById(testStudent.getId()))
+                .thenReturn(Optional.of(testStudent));
+        when(projectRepository.findById(projectId))
+                .thenReturn(Optional.of(project));
         when(userRepository.findByCourses_Projects_IdAndRole(projectId, Role.STUDENT))
-            .thenReturn(java.util.Arrays.asList(student));
-        when(performanceRepository.findByProjectSubject_Project_Id(projectId))
-            .thenReturn(java.util.Arrays.asList());
+                .thenReturn(java.util.Arrays.asList(student));
         when(gradeRepository.findByProjectId(projectId))
-            .thenReturn(java.util.Arrays.asList());
-        
+                .thenReturn(java.util.Arrays.asList());
+        when(courseService.getTeachers(course))
+                .thenReturn(java.util.Arrays.asList());
+
         // Act
-        var result = gradeService.loadGradeOverview(projectId, null);
-        
+        var result = gradeService.loadGradeOverview(projectId, null, testStudent.getId());
+
         // Assert
         assertNotNull(result);
         assertEquals(1, result.subjects().size());
@@ -344,30 +384,38 @@ class GradeServiceTest {
         // Arrange
         UUID studentId = UUID.randomUUID();
         UUID performanceId = UUID.randomUUID();
-        
+
         User student = new User();
         student.setId(studentId);
-        
+
+        User currentUser = new User();
+        currentUser.setId(UUID.randomUUID());
+        currentUser.setRole(Role.TEACHER);
+
         Performance performance = new Performance();
         performance.setId(performanceId);
-        
-        com.gradesave.backend.dto.grade.GradeDto gradeDto = 
-            new com.gradesave.backend.dto.grade.GradeDto(null, performanceId, 2.0);
-        com.gradesave.backend.dto.grade.UpdateGradeRequest request = 
-            new com.gradesave.backend.dto.grade.UpdateGradeRequest(studentId, java.util.Arrays.asList(gradeDto));
-        
-        when(gradeRepository.findByPerformanceIdAndStudentId(performanceId, studentId))
-            .thenReturn(null);
+        performance.setAssignedTeacher(currentUser);
+
+        com.gradesave.backend.dto.grade.GradeDto gradeDto = new com.gradesave.backend.dto.grade.GradeDto(performanceId,
+                null, 2.0);
+        com.gradesave.backend.dto.grade.UpdateGradeRequest request = new com.gradesave.backend.dto.grade.UpdateGradeRequest(
+                studentId, java.util.Arrays.asList(gradeDto));
+
+        when(userService.getCurrentUser())
+                .thenReturn(Optional.of(currentUser));
         when(performanceRepository.findById(performanceId))
-            .thenReturn(Optional.of(performance));
+                .thenReturn(Optional.of(performance));
+        when(gradeRepository.findByStudentIdAndPerformanceIdOrProjectSubjectId(eq(studentId), eq(performanceId),
+                isNull()))
+                .thenReturn(null);
         when(userRepository.findById(studentId))
-            .thenReturn(Optional.of(student));
+                .thenReturn(Optional.of(student));
         when(gradeRepository.save(any(Grade.class)))
-            .thenReturn(testGrade);
-        
+                .thenReturn(testGrade);
+
         // Act
         gradeService.saveGradeOverview(java.util.Arrays.asList(request));
-        
+
         // Assert
         verify(gradeRepository, times(1)).save(any(Grade.class));
     }
@@ -377,24 +425,37 @@ class GradeServiceTest {
         // Arrange
         UUID studentId = UUID.randomUUID();
         UUID performanceId = UUID.randomUUID();
-        
+
+        User currentUser = new User();
+        currentUser.setId(UUID.randomUUID());
+        currentUser.setRole(Role.TEACHER);
+
+        Performance performance = new Performance();
+        performance.setId(performanceId);
+        performance.setAssignedTeacher(currentUser);
+
         Grade existingGrade = new Grade();
         existingGrade.setId(UUID.randomUUID());
         existingGrade.setGrade(1.5);
-        
-        com.gradesave.backend.dto.grade.GradeDto gradeDto = 
-            new com.gradesave.backend.dto.grade.GradeDto(existingGrade.getId(), performanceId, 2.5);
-        com.gradesave.backend.dto.grade.UpdateGradeRequest request = 
-            new com.gradesave.backend.dto.grade.UpdateGradeRequest(studentId, java.util.Arrays.asList(gradeDto));
-        
-        when(gradeRepository.findByPerformanceIdAndStudentId(performanceId, studentId))
-            .thenReturn(existingGrade);
+
+        com.gradesave.backend.dto.grade.GradeDto gradeDto = new com.gradesave.backend.dto.grade.GradeDto(performanceId,
+                null, 2.5);
+        com.gradesave.backend.dto.grade.UpdateGradeRequest request = new com.gradesave.backend.dto.grade.UpdateGradeRequest(
+                studentId, java.util.Arrays.asList(gradeDto));
+
+        when(userService.getCurrentUser())
+                .thenReturn(Optional.of(currentUser));
+        when(performanceRepository.findById(performanceId))
+                .thenReturn(Optional.of(performance));
+        when(gradeRepository.findByStudentIdAndPerformanceIdOrProjectSubjectId(eq(studentId), eq(performanceId),
+                isNull()))
+                .thenReturn(existingGrade);
         when(gradeRepository.save(any(Grade.class)))
-            .thenReturn(existingGrade);
-        
+                .thenReturn(existingGrade);
+
         // Act
         gradeService.saveGradeOverview(java.util.Arrays.asList(request));
-        
+
         // Assert
         verify(gradeRepository, times(1)).save(existingGrade);
         assertEquals(2.5, existingGrade.getGrade());
@@ -403,14 +464,14 @@ class GradeServiceTest {
     @Test
     void testSaveGradeOverview_WithNullStudentId_SkipsEntry() {
         // Arrange
-        com.gradesave.backend.dto.grade.GradeDto gradeDto = 
-            new com.gradesave.backend.dto.grade.GradeDto(null, UUID.randomUUID(), 2.0);
-        com.gradesave.backend.dto.grade.UpdateGradeRequest request = 
-            new com.gradesave.backend.dto.grade.UpdateGradeRequest(null, java.util.Arrays.asList(gradeDto));
-        
+        com.gradesave.backend.dto.grade.GradeDto gradeDto = new com.gradesave.backend.dto.grade.GradeDto(null,
+                UUID.randomUUID(), 2.0);
+        com.gradesave.backend.dto.grade.UpdateGradeRequest request = new com.gradesave.backend.dto.grade.UpdateGradeRequest(
+                null, java.util.Arrays.asList(gradeDto));
+
         // Act
         gradeService.saveGradeOverview(java.util.Arrays.asList(request));
-        
+
         // Assert
         verify(gradeRepository, never()).save(any(Grade.class));
     }
@@ -419,32 +480,60 @@ class GradeServiceTest {
     void testSaveGradeOverview_WithNullGradeValue_SkipsGrade() {
         // Arrange
         UUID studentId = UUID.randomUUID();
-        
-        com.gradesave.backend.dto.grade.GradeDto gradeDto = 
-            new com.gradesave.backend.dto.grade.GradeDto(null, UUID.randomUUID(), null);
-        com.gradesave.backend.dto.grade.UpdateGradeRequest request = 
-            new com.gradesave.backend.dto.grade.UpdateGradeRequest(studentId, java.util.Arrays.asList(gradeDto));
-        
+        UUID performanceId = UUID.randomUUID();
+
+        User currentUser = new User();
+        currentUser.setId(UUID.randomUUID());
+        currentUser.setRole(Role.TEACHER);
+
+        Performance performance = new Performance();
+        performance.setId(performanceId);
+        performance.setAssignedTeacher(currentUser);
+
+        Grade existingGrade = new Grade();
+        existingGrade.setId(UUID.randomUUID());
+        existingGrade.setGrade(2.0);
+
+        com.gradesave.backend.dto.grade.GradeDto gradeDto = new com.gradesave.backend.dto.grade.GradeDto(performanceId,
+                null, null);
+        com.gradesave.backend.dto.grade.UpdateGradeRequest request = new com.gradesave.backend.dto.grade.UpdateGradeRequest(
+                studentId, java.util.Arrays.asList(gradeDto));
+
+        when(userService.getCurrentUser())
+                .thenReturn(Optional.of(currentUser));
+        when(performanceRepository.findById(performanceId))
+                .thenReturn(Optional.of(performance));
+        when(gradeRepository.findByStudentIdAndPerformanceIdOrProjectSubjectId(eq(studentId), eq(performanceId),
+                isNull()))
+                .thenReturn(existingGrade);
+
         // Act
         gradeService.saveGradeOverview(java.util.Arrays.asList(request));
-        
+
         // Assert
-        verify(gradeRepository, never()).save(any(Grade.class));
+        verify(gradeRepository, times(1)).deleteById(existingGrade.getId());
     }
 
     @Test
     void testSaveGradeOverview_WithNullPerformanceId_SkipsGrade() {
         // Arrange
         UUID studentId = UUID.randomUUID();
-        
-        com.gradesave.backend.dto.grade.GradeDto gradeDto = 
-            new com.gradesave.backend.dto.grade.GradeDto(null, null, 2.0);
-        com.gradesave.backend.dto.grade.UpdateGradeRequest request = 
-            new com.gradesave.backend.dto.grade.UpdateGradeRequest(studentId, java.util.Arrays.asList(gradeDto));
-        
+
+        User currentUser = new User();
+        currentUser.setId(UUID.randomUUID());
+        currentUser.setRole(Role.TEACHER);
+
+        com.gradesave.backend.dto.grade.GradeDto gradeDto = new com.gradesave.backend.dto.grade.GradeDto(null, null,
+                2.0);
+        com.gradesave.backend.dto.grade.UpdateGradeRequest request = new com.gradesave.backend.dto.grade.UpdateGradeRequest(
+                studentId, java.util.Arrays.asList(gradeDto));
+
+        when(userService.getCurrentUser())
+                .thenReturn(Optional.of(currentUser));
+
         // Act
         gradeService.saveGradeOverview(java.util.Arrays.asList(request));
-        
+
         // Assert
         verify(gradeRepository, never()).save(any(Grade.class));
     }
