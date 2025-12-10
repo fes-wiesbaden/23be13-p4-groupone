@@ -169,7 +169,6 @@ export default function Question() {
 
     if (formJson.question.length > 1000){
       setQuestionTextError("Frage darf nicht länger als 1000 sein");
-      console.log(questionTextError)
       return
     }
 
@@ -214,7 +213,6 @@ export default function Question() {
 
     if (formJson.question.length > 1000){
       setQuestionTextError("Frage darf nicht länger als 1000 sein");
-      console.log(questionTextError)
       return
     }
 
