@@ -29,7 +29,8 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for CourseService
- * Tests business logic methods including student management, course patching, and grade overview options
+ * Tests business logic methods including student management, course patching,
+ * and grade overview options
  */
 @ExtendWith(MockitoExtension.class)
 class CourseServiceTest {
@@ -57,21 +58,21 @@ class CourseServiceTest {
     @BeforeEach
     void setUp() {
         testCourseId = UUID.randomUUID();
-        
+
         testTeacher = new User();
         testTeacher.setId(UUID.randomUUID());
         testTeacher.setUsername("teacher1");
         testTeacher.setRole(Role.TEACHER);
         testTeacher.setFirstName("John");
         testTeacher.setLastName("Teacher");
-        
+
         testStudent = new User();
         testStudent.setId(UUID.randomUUID());
         testStudent.setUsername("student1");
         testStudent.setRole(Role.STUDENT);
         testStudent.setFirstName("Jane");
         testStudent.setLastName("Student");
-        
+
         testCourse = new Course();
         testCourse.setId(testCourseId);
         testCourse.setCourseName("Test Course");
@@ -313,10 +314,10 @@ class CourseServiceTest {
     void testRemoveUserFromAllCourses_MultipleCoursesWithFailure() {
         Course course2 = new Course();
         course2.setUsers(new HashSet<>());
-        
+
         testCourse.getUsers().add(testStudent);
         course2.getUsers().add(testStudent);
-        
+
         when(userRepository.findById(testStudent.getId())).thenReturn(Optional.of(testStudent));
         when(courseRepository.findAllByUserId(testStudent.getId())).thenReturn(Arrays.asList(testCourse, course2));
         when(courseRepository.save(any(Course.class))).thenReturn(testCourse);
@@ -344,7 +345,7 @@ class CourseServiceTest {
     void testPatchCourse_RemoveTeacher_Success() {
         testCourse.setClassTeacher(testTeacher);
         testCourse.getUsers().add(testTeacher);
-        
+
         CoursePatchRequestDTO request = new CoursePatchRequestDTO("", null);
         when(courseRepository.save(any(Course.class))).thenReturn(testCourse);
 
@@ -381,16 +382,18 @@ class CourseServiceTest {
         project.setId(UUID.randomUUID());
         project.setName("Test Project");
         project.setProjectStart(LocalDate.now());
+        project.setCourse(testCourse);
 
         Group group = new Group();
         group.setId(UUID.randomUUID());
         group.setName("Test Group");
 
-        when(courseRepository.findAll()).thenReturn(Arrays.asList(testCourse));
+        when(userRepository.findById(testTeacher.getId())).thenReturn(Optional.of(testTeacher));
+        when(courseRepository.findAllByUserId(testTeacher.getId())).thenReturn(Arrays.asList(testCourse));
         when(projectRepository.findByCourseId(testCourse.getId())).thenReturn(Arrays.asList(project));
         when(groupRepository.findByProjectId(project.getId())).thenReturn(Arrays.asList(group));
 
-        List<CourseSelectionDto> result = courseService.findGradeOverviewOptions();
+        List<CourseSelectionDto> result = courseService.findGradeOverviewOptions(testTeacher.getId());
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -399,21 +402,24 @@ class CourseServiceTest {
         assertEquals(testCourse.getCourseName(), courseDto.name());
         assertEquals(1, courseDto.projects().size());
         assertEquals(1, courseDto.projects().get(0).groups().size());
-        
-        verify(courseRepository, times(1)).findAll();
+
+        verify(userRepository, times(1)).findById(testTeacher.getId());
+        verify(courseRepository, times(1)).findAllByUserId(testTeacher.getId());
         verify(projectRepository, times(1)).findByCourseId(testCourse.getId());
         verify(groupRepository, times(1)).findByProjectId(project.getId());
     }
 
     @Test
     void testFindGradeOverviewOptions_EmptyResults() {
-        when(courseRepository.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findById(testTeacher.getId())).thenReturn(Optional.of(testTeacher));
+        when(courseRepository.findAllByUserId(testTeacher.getId())).thenReturn(Collections.emptyList());
 
-        List<CourseSelectionDto> result = courseService.findGradeOverviewOptions();
+        List<CourseSelectionDto> result = courseService.findGradeOverviewOptions(testTeacher.getId());
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(courseRepository, times(1)).findAll();
+        verify(userRepository, times(1)).findById(testTeacher.getId());
+        verify(courseRepository, times(1)).findAllByUserId(testTeacher.getId());
     }
 
     @Test

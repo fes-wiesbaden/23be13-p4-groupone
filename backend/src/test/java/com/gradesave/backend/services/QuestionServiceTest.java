@@ -43,15 +43,15 @@ class QuestionServiceTest {
     @BeforeEach
     void setUp() {
         testQuestionId = UUID.randomUUID();
-        
+
         testSubject1 = new Subject();
         testSubject1.setId(UUID.randomUUID());
         testSubject1.setName("Mathematics");
-        
+
         testSubject2 = new Subject();
         testSubject2.setId(UUID.randomUUID());
         testSubject2.setName("Physics");
-        
+
         testQuestion = new Question();
         testQuestion.setId(testQuestionId);
         testQuestion.setText("What is 2+2?");
@@ -63,7 +63,7 @@ class QuestionServiceTest {
     void testCreate_WithValidSubjects_Success() {
         Set<UUID> subjectIds = new HashSet<>(Arrays.asList(testSubject1.getId(), testSubject2.getId()));
         List<Subject> foundSubjects = Arrays.asList(testSubject1, testSubject2);
-        
+
         when(subjectRepository.findAllById(subjectIds)).thenReturn(foundSubjects);
         when(questionRepository.save(any(Question.class))).thenReturn(testQuestion);
 
@@ -80,7 +80,7 @@ class QuestionServiceTest {
     void testCreate_WithMissingSubjects_ThrowsException() {
         Set<UUID> subjectIds = new HashSet<>(Arrays.asList(testSubject1.getId(), testSubject2.getId()));
         List<Subject> foundSubjects = Arrays.asList(testSubject1); // Only one subject found
-        
+
         when(subjectRepository.findAllById(subjectIds)).thenReturn(foundSubjects);
 
         assertThrows(RuntimeException.class, () -> {
@@ -92,7 +92,7 @@ class QuestionServiceTest {
     @Test
     void testCreate_WithNoSubjects_Success() {
         testQuestion.setSubjects(new HashSet<>());
-        
+
         when(subjectRepository.findAllById(anySet())).thenReturn(Collections.emptyList());
         when(questionRepository.save(any(Question.class))).thenReturn(testQuestion);
 
@@ -105,7 +105,7 @@ class QuestionServiceTest {
     @Test
     void testGetById_ReturnsEmpty() {
         UUID anyId = UUID.randomUUID();
-        
+
         Optional<Question> result = questionService.getById(anyId);
 
         assertFalse(result.isPresent());
@@ -139,7 +139,7 @@ class QuestionServiceTest {
         updatedQuestion.setText("Updated question text");
         updatedQuestion.setType(QuestionType.GRADE);
         updatedQuestion.setSubjects(new HashSet<>(Arrays.asList(testSubject1)));
-        
+
         when(questionRepository.findById(testQuestionId)).thenReturn(Optional.of(testQuestion));
         when(questionRepository.save(any(Question.class))).thenReturn(testQuestion);
 
@@ -156,7 +156,7 @@ class QuestionServiceTest {
         UUID nonExistentId = UUID.randomUUID();
         Question updatedQuestion = new Question();
         updatedQuestion.setText("Updated text");
-        
+
         when(questionRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> {
@@ -167,16 +167,21 @@ class QuestionServiceTest {
 
     @Test
     void testDeleteById_Success() {
-        doNothing().when(questionRepository).deleteById(testQuestionId);
+        testQuestion.setProjectQuestions(new HashSet<>());
+
+        when(questionRepository.findById(testQuestionId)).thenReturn(Optional.of(testQuestion));
+        doNothing().when(questionRepository).delete(testQuestion);
 
         questionService.deleteById(testQuestionId);
 
-        verify(questionRepository, times(1)).deleteById(testQuestionId);
+        verify(questionRepository, times(1)).findById(testQuestionId);
+        verify(questionRepository, times(1)).delete(testQuestion);
     }
 
     @Test
     void testDeleteIfExists_AlwaysReturnsFalse() {
-        // getById always returns Optional.empty(), so deleteIfExists always returns false
+        // getById always returns Optional.empty(), so deleteIfExists always returns
+        // false
         UUID anyId = UUID.randomUUID();
 
         boolean result = questionService.deleteIfExists(anyId);
