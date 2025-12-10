@@ -201,9 +201,9 @@ export default function Grades() {
                 valueOptions: ["1", "2", "3", "4", "5", "6"],
                 flex: 1,
                 minWidth: 80,
-                editable: !isStudent && (isAssignedToSubject || isAdmin),
+                editable: !isStudent && isAssignedToSubject,
                 cellClassName: () => {
-                    return (!isStudent && (isAssignedToSubject || isAdmin)) ? 'editable-cell' : '';
+                    return (!isStudent && isAssignedToSubject) ? 'editable-cell' : '';
                 },
             };
 
@@ -240,9 +240,9 @@ export default function Grades() {
                     valueOptions: ["1", "2", "3", "4", "5", "6"],
                     flex: 1,
                     minWidth: 80,
-                    editable: !isStudent && (perf.assignedTeacherId === user?.id || isAdmin),
+                    editable: !isStudent && (perf.assignedTeacherId === user?.id),
                     cellClassName: () => {
-                        return (!isStudent && (perf.assignedTeacherId === user?.id || isAdmin)) ? 'editable-cell' : '';
+                        return (!isStudent && perf.assignedTeacherId === user?.id) ? 'editable-cell' : '';
                     },
                 }));
 
@@ -362,8 +362,8 @@ export default function Grades() {
         },
         ...(gradeOverview?.subjects.map(subject => ({
             groupId: subject.id,
-            headerName: `${subject.name.length < 15 ? subject.name : subject.shortName} (${subject.duration})`,
-            description: `Name: ${subject.name}`,
+            headerName: `${subject.name.length < 15 ? subject.name : subject.shortName} (${subject.duration}h)`,
+            description: `Name: ${subject.name}\nDauer: ${subject.duration} Stunden${subject.name.length >= 15 ? `\nVoller Name: ${subject.name}` : ""}`,
             children: [
                 ...(subject.performances.length ? subject.performances.map(p => ({field: p.id})) : [{field: `${subject.id}-empty`}]),
                 {field: `${subject.id}-ZV`},

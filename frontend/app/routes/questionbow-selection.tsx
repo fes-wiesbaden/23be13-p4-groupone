@@ -123,7 +123,7 @@ export default function QuestionbowSelection() {
     };
 
     return (
-        <>
+        <Box p={2}>
             <Box display="flex" gap={2} mb={2}>
                 <Autocomplete
                     options={courses}
@@ -174,6 +174,6 @@ export default function QuestionbowSelection() {
                 severity={snackbarSeverity}
                 onClose={handleSnackbarClose}
             />
-        </>
+        </Box>
     );
 }

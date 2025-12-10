@@ -7,6 +7,7 @@ import {useNavigate} from "react-router";
 import type {CourseDto} from "~/types/models";
 import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "~/components/snackbar"
+import Box from "@mui/material/Box";
 
 /**
  * @author Noah Bach
@@ -27,8 +28,13 @@ import CustomizedSnackbars from "~/components/snackbar"
 interface CourseRow extends DataRow {
     id: string;
     courseName: string;
-    teacherId?: string;
     teacherName?: string;
+}
+
+interface CourseBareDto {
+    id: string,
+    courseName: string,
+    classTeacherName: string
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -88,16 +94,13 @@ export default function Klassen() {
                 setSnackbarOpen(true);
                 return;
             }
-            const coursesData = await resCourses.json();
+            const coursesData: CourseBareDto[] = await resCourses.json();
 
-            const mapped: CourseRow[] = coursesData.map((c: CourseDto) => {
+            const mapped: CourseRow[] = coursesData.map((c: CourseBareDto) => {
                 return {
                     id: c.id,
                     courseName: c.courseName,
-                    teacherId: c.classTeacher?.id ?? undefined,
-                    teacherName: c.classTeacher
-                        ? `${c.classTeacher.firstName} ${c.classTeacher.lastName}`
-                        : "",
+                    teacherName: c.classTeacherName
                 };
             });
             setAllCourses(mapped);
@@ -115,7 +118,7 @@ export default function Klassen() {
         })();
     }, []);
     return (
-        <>
+        <Box p={2}>
             <DataTableWithAdd<CourseRow>
                 title="Klassen"
                 addButtonLabel="Neue Klasse"
@@ -132,6 +135,6 @@ export default function Klassen() {
                 severity={snackbarSeverity}
                 onClose={handleSnackbarClose}
             />
-        </>
+        </Box>
     );
 }

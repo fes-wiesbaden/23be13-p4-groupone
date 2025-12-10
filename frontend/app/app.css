@@ -54,3 +54,7 @@ html {
 [data-mui-color-scheme="dark"] ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
+
+.MuiTooltip-tooltip {
+    white-space: pre-line;
+}

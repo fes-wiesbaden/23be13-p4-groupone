@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import API_CONFIG from "~/apiConfig";
 import CustomizedSnackbars from "~/components/snackbar";
-import {type Teacher} from "~/types/models"
+import type {Teacher} from "~/types/models";
 
 interface DialogProps {
     open: boolean;
@@ -339,7 +339,7 @@ export default function FormDialog({
                 <DialogTitle>Tabelle anpassen</DialogTitle>
 
                 <form onSubmit={handleSubmit} id="newPerformanceForm">
-                    <DialogContent sx={{ pt: 1 }}>
+                    <DialogContent sx={{pt: 1}}>
                         <Box sx={{display: "grid", gap: 1.5}}>
                             <FormControl fullWidth>
                                 <InputLabel>Aktion</InputLabel>
@@ -460,9 +460,8 @@ export default function FormDialog({
                                         )}
                                     </Select>
                                 </FormControl>
-                            )
+                            )}
 
-                            }
                             <TextField
                                 required
                                 name="shortName"
