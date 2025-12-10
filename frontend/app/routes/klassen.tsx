@@ -6,6 +6,8 @@ import DataTableWithAdd, {
 } from "../components/dataTableWithAddButton";
 import API_CONFIG from "../apiConfig";
 import { useNavigate } from "react-router";
+import CustomizedSnackbars from "../components/snackbar";
+import { useLocation } from "react-router";
 
 /**
  * @author Noah Bach
@@ -48,6 +50,24 @@ import useAlertDialog from "~/components/youSurePopup";
 export default function Klassen() {
   const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
   const navigate = useNavigate();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const showSnackbar = (message: string, severity: 'success' | 'error') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.snackbarMessage) {
+      setSnackbarMessage(location.state.snackbarMessage);
+      setSnackbarSeverity(location.state.snackbarSeverity || "success");
+      setSnackbarOpen(true);
+    }
+  }, [location.state]);
 
   const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Klasse wirklich löschen?")
 
@@ -60,12 +80,17 @@ export default function Klassen() {
   }
 
   async function handleDeleteClick(id: string) {
-    if (!await confirm())
-      return;
-
-    await deleteCourse(id);
-    await fetchData();
+    if (!await confirm()) return;
+  
+    try {
+      await deleteCourse(id, showSnackbar);
+      await fetchData();
+    } catch (error) {
+      console.error(error);
+    }
   }
+
+
 
   const fetchData = async () => {
     try {
@@ -106,6 +131,12 @@ export default function Klassen() {
         onDeleteClick={handleDeleteClick}
       />
       {ConfirmDialog}
+      <CustomizedSnackbars
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
     </>
   );
 }

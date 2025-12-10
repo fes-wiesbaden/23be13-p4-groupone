@@ -6,6 +6,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router"
 import API_CONFIG from "~/apiConfig";
 import useAlertDialog from "~/components/youSurePopup";
+import CustomizedSnackbars from "../components/snackbar";
+import { useLocation } from "react-router";
 
 /**
  * @author Paul Geisthardt
@@ -78,6 +80,24 @@ export default function Projects () {
     const navigate = useNavigate();
     const [projects, setProjects] = useState<ProjectResponse[]>([]);
     const [loading, setLoading] = useState(true);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+    const showSnackbar = (message: string, severity: 'success' | 'error') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.snackbarMessage) {
+        setSnackbarMessage(location.state.snackbarMessage);
+        setSnackbarSeverity(location.state.snackbarSeverity || "success");
+        setSnackbarOpen(true);
+        }
+    }, [location.state]);
+
     const [error, setError] = useState<null | {
         message: string;
         retry?: (() => void);
@@ -146,10 +166,12 @@ export default function Projects () {
 
             if (!res.ok) {
                 alert("Failed to delete project")
-                return
+                showSnackbar("Fehler beim Löschen des Projekts!", "error");
+                return;
             }
 
             setProjects(prevState => prevState.filter(p => p.projectId !== id))
+            showSnackbar("Das Projekt wurde erfolgreich gelöscht!", "success");
         } catch (err: any) {
             alert(`Failed to delete project: ${err.message}`)
         }
@@ -166,6 +188,12 @@ export default function Projects () {
                 onDeleteClick={handleDeleteClick}
             />
             {ConfirmDialog}
+            <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={() => setSnackbarOpen(false)}
+            />
         </>
     );
 }

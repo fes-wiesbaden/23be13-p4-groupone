@@ -1,5 +1,6 @@
 import React from "react";
 import API_CONFIG from "./apiConfig";
+import { useState } from "react";
 
 export async function postNewTestCourseEntry() {
   try {
@@ -16,13 +17,21 @@ export async function postNewTestCourseEntry() {
   }
 }
 
-export async function deleteCourse(id: string) {
-  try {
-    await fetch(`${API_CONFIG.BASE_URL}/api/course/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-  } catch (e) {
-    console.error("Request failed: ", e);
+  export async function deleteCourse(id: string, showSnackbar: (message: string, severity: "success" | "error") => void) {
+    try {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        showSnackbar(`Fehler beim Löschen der Klasse! ${res.status}`, "error");
+        return;
+      }
+
+      showSnackbar("Die Klasse wurde erfolgreich gelöscht!", "success");
+    } catch (e) {
+      console.error("Request failed: ", e);
+      showSnackbar("Fehler beim Löschen der Klasse!", "error");
+    }
   }
-}

@@ -501,7 +501,13 @@ export default function createOrEditProject() {
 
             if (!res.ok) {
                 alert("Fehler bei der Erstellung")
-                return
+                navigate("/projekte", {
+                    state: {
+                        snackbarMessage: `Fehler bei der Projekterstellung!`,
+                        snackbarSeverity: "error"
+                    }
+                });
+                return;
             }
 
             const created = await res.json();
@@ -524,9 +530,20 @@ export default function createOrEditProject() {
                 }
             }
 
-            navigate(`/projekte`)
+            navigate("/projekte", {
+                state: {
+                    snackbarMessage: `Das Projekt "${projectCreateDetails.projectName}" wurde erfolgreich erstellt!`,
+                    snackbarSeverity: "success"
+                }
+            });
         } catch (err: any) {
-            alert(`Fehler: ${err.message}`)
+            alert(`Fehler: ${err.message}`);
+            navigate("/projekte", {
+                state: {
+                    snackbarMessage: `Fehler: ${err.message}`,
+                    snackbarSeverity: "error"
+                }
+            });
         }
     }
 
@@ -551,7 +568,13 @@ export default function createOrEditProject() {
 
             if (!res.ok) {
                 setSaveError(`Fehler beim Speichern: ${res.status}`)
-                return
+                navigate("/projekte", {
+                    state: {
+                        snackbarMessage: `Fehler bei der Projekt Bearbeitung!`,
+                        snackbarSeverity: "error"
+                    }
+                });
+                return;
             }
 
             const originalSubjectIds = new Set(originalProject?.subjects.map(s => s.projectSubjectId) ?? []);
@@ -591,8 +614,20 @@ export default function createOrEditProject() {
             }
 
             setOriginalProject(JSON.parse(JSON.stringify(project)));
+            navigate("/projekte", {
+                state: {
+                    snackbarMessage: `Das Projekt "${project.projectName}" wurde erfolgreich bearbeitet!`,
+                    snackbarSeverity: "success"
+                }
+            });
         } catch (err: any) {
-            setSaveError(`Fehler beim Speichern: ${err.message}`)
+            setSaveError(`Fehler beim Speichern: ${err.message}`);
+            navigate("/projekte", {
+                state: {
+                    snackbarMessage: `Fehler beim Speichern: ${err.message}`,
+                    snackbarSeverity: "error"
+                }
+            });
         } finally {
             setSaving(false);
         }
