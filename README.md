@@ -1,8 +1,10 @@
-Nahhhh Michael, schaust du auch gut beim Review
-
 # GradeSave
 
 Ein modernes Notenverwaltungssystem, entwickelt mit React, Spring Boot und PostgreSQL. GradeSave bietet eine intuitive Oberfläche für Lehrer und Administratoren zur effizienten Verwaltung von Kursen, Schülern, Noten und Projekten.
+
+## Weitere Dokumentation
+
+[Benutzerhandbuch](docs/user-manual.md)
 
 ## Funktionen
 
