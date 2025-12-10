@@ -1,3 +1,5 @@
+Nahhhh Michael, schaust du auch gut beim Review
+
 # GradeSave
 
 Ein modernes Notenverwaltungssystem, entwickelt mit React, Spring Boot und PostgreSQL. GradeSave bietet eine intuitive Oberfläche für Lehrer und Administratoren zur effizienten Verwaltung von Kursen, Schülern, Noten und Projekten.
@@ -18,8 +20,8 @@ Ein modernes Notenverwaltungssystem, entwickelt mit React, Spring Boot und Postg
 
 Folgende Software muss installiert sein:
 - Docker Desktop (mit Docker Compose)
-- Java 17+ (für lokale Backend-Entwicklung)
-- Node.js 18+ und npm (für lokale Frontend-Entwicklung)
+- Java 21 (für lokale Backend-Entwicklung)
+- Node.js 25 und npm (für lokale Frontend-Entwicklung)
 - Git
 
 ### Installation
@@ -105,13 +107,11 @@ docker compose down
 
 ## Port-Konfiguration
 
-| Service  | Host-Port | Container-Port | Beschreibung |
-|----------|-----------|----------------|--------------|
-| Frontend | 3000      | 3000           | React Anwendung |
-| Backend  | 8080      | 8080           | Spring Boot API |
+| Service  | Host-Port | Container-Port | Beschreibung         |
+|----------|-----------|----------------|----------------------|
+| Frontend | 3000      | 3000           | React Anwendung      |
+| Backend  | 8080      | 8080           | Spring Boot API      |
 | Database | 5432      | 5432           | PostgreSQL Datenbank |
-
-Hinweis: Die Datenbank verwendet Port 5432 auf dem Host.
 
 ## Entwicklung
 
@@ -126,7 +126,7 @@ cd backend
 # Anwendung bauen
 ./gradlew build
 
-# Mit Hot Reload starten
+# Anwendung direkt starten
 ./gradlew bootRun
 ```
 
@@ -215,7 +215,7 @@ GPLv3
 
 ## Team
 
-Entwickelt von Gruppe One (Michael Holl, Daniel Hess, Paul Geisthardt, Noah Bach, Kebba Cessay, Yvan Kamgang) - P4 2025
+Entwickelt von Gruppe Eins (Michael Holl, Daniel Hess, Paul Geisthardt, Noah Bach, Kebba Cessay, Yvan Kamgang) - P4 2025
 
 ---
 
