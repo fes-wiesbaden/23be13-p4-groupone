@@ -1,5 +1,7 @@
 package com.gradesave.backend.dto.performance;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.UUID;
 
 /**
@@ -14,7 +16,10 @@ public record NewPerformanceRequest(
         UUID projectSubjectId,
         String name,
         String shortName,
-        double weight
+        double weight,
+
+        @NotNull
+        UUID assignedTeacherId
 ) {
 
 }

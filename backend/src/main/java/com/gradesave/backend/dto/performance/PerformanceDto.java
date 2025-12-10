@@ -14,7 +14,8 @@ public record PerformanceDto(
         UUID id,
         String name,
         String shortName,
-        double weight
+        double weight,
+        UUID assignedTeacherId
 ) {
 
 }

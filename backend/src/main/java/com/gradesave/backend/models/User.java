@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -56,6 +57,9 @@ public class User {
     @ManyToMany(mappedBy = "users")
     @JsonIgnore
     private Set<Group> groups = new HashSet<>();
+
+    @OneToMany(mappedBy = "assignedTeacher")
+    private List<Performance> performances;
 
     private boolean changedDefaultPassword = false;
 
@@ -129,5 +133,13 @@ public class User {
 
     public void setChangedDefaultPassword(boolean changedDefaultPassword) {
         this.changedDefaultPassword = changedDefaultPassword;
+    }
+
+    public List<Performance> getPerformances() {
+        return performances;
+    }
+
+    public void setPerformances(List<Performance> performances) {
+        this.performances = performances;
     }
 }

@@ -1,27 +1,34 @@
 import * as React from "react";
+import {useEffect, useState} from "react";
 import {
+    Autocomplete,
+    Box,
     Button,
-    TextField,
+    Checkbox,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
-    Box,
+    FormControl,
+    FormControlLabel,
+    FormLabel,
     InputLabel,
     MenuItem,
-    FormControl,
-    Select, Checkbox,
-    FormControlLabel, Autocomplete, FormLabel, RadioGroup, Radio,
+    Radio,
+    RadioGroup,
+    Select,
+    TextField,
 } from "@mui/material";
-import {useEffect, useState} from "react";
 import API_CONFIG from "~/apiConfig";
 import CustomizedSnackbars from "~/components/snackbar";
+import {type Teacher} from "~/types/models"
 
 interface DialogProps {
     open: boolean;
     onClose: () => void;
     projectId: string | undefined;
     projectSubjects: ProjectSubject[];
+    teachers: Teacher[]
     onSubmitSuccess?: () => void;
 }
 
@@ -54,6 +61,7 @@ export interface NewPerformanceRequest {
     name: string;
     shortName: string;
     weight: number;
+    assignedTeacherId: string
 }
 
 export interface NewProjectSubjectRequest {
@@ -71,11 +79,19 @@ export interface EditProjecSubject {
     learningField: boolean,
 }
 
-export default function FormDialog({open, onClose, projectId, projectSubjects, onSubmitSuccess}: DialogProps) {
+export default function FormDialog({
+                                       open,
+                                       onClose,
+                                       projectId,
+                                       projectSubjects,
+                                       teachers,
+                                       onSubmitSuccess
+                                   }: DialogProps) {
     const [isSubject, setIsSubject] = useState<boolean>(false);
     const [selectedProjectSubjectId, setSelectedProjectSubjectId] = useState<string | undefined>(undefined);
     const [selectedSubjectId, setSelectedSubjectId] = useState<string | undefined>(undefined);
     const [selectedPerformanceId, setSelectedPerformanceId] = useState<string | undefined>(undefined);
+    const [assignedTeacherId, setAssignedTeacherId] = useState("")
 
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [shortName, setShortName] = useState<string>();
@@ -220,11 +236,13 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                 } else {
                     controller = "performance";
                     endpoint = "save";
+                    if (!assignedTeacherId.trim()) console.log("WHYY")
                     payload = {
                         projectSubjectId: formJson.subject ?? "",
                         name: formJson.name,
                         shortName: formJson.shortName,
                         weight: Number(formJson.weight.replace(",", ".")) / 100,
+                        assignedTeacherId: assignedTeacherId
                     };
                 }
                 break;
@@ -291,6 +309,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
             setSelectedSubjectId(undefined);
             setShortName("");
             setDisplayWeight("");
+            setAssignedTeacherId("");
         } catch (err) {
             console.error(err);
         }
@@ -300,6 +319,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
         setSelectedSubjectId(undefined);
         setShortName("");
         setDisplayWeight("");
+        setAssignedTeacherId("");
         if (!createMore) {
             handleClose();
         }
@@ -339,31 +359,55 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                             </FormControl>
 
                             {!isSubject && (
-                                <FormControl fullWidth>
-                                    <InputLabel>Bildungsbereich</InputLabel>
-                                    <Select
-                                        required
-                                        name="subject"
-                                        value={selectedProjectSubjectId ?? ""}
-                                        onChange={(e) => {
-                                            const newId = e.target.value;
-                                            setSelectedProjectSubjectId(newId);
+                                <>
+                                    <FormControl fullWidth>
+                                        <InputLabel>Bildungsbereich</InputLabel>
+                                        <Select
+                                            required
+                                            name="subject"
+                                            value={selectedProjectSubjectId ?? ""}
+                                            onChange={(e) => {
+                                                const newId = e.target.value;
+                                                setSelectedProjectSubjectId(newId);
 
-                                            setShortName("");
-                                            setDisplayWeight("");
-                                        }}
-                                    >
-                                        {subjectOptions && subjectOptions.length > 0 ? (
-                                            subjectOptions.map((option) => (
-                                                <MenuItem key={option.id} value={option.id}>
-                                                    {option.name}
-                                                </MenuItem>
-                                            ))
-                                        ) : (
-                                            <MenuItem disabled>Es existiert kein Bildungsbereich im Projekt</MenuItem>
-                                        )}
-                                    </Select>
-                                </FormControl>
+                                                setShortName("");
+                                                setDisplayWeight("");
+                                            }}
+                                        >
+                                            {subjectOptions && subjectOptions.length > 0 ? (
+                                                subjectOptions.map((option) => (
+                                                    <MenuItem key={option.id} value={option.id}>
+                                                        {option.name}
+                                                    </MenuItem>
+                                                ))
+                                            ) : (
+                                                <MenuItem disabled>Es existiert kein Bildungsbereich im
+                                                    Projekt</MenuItem>
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                    <FormControl fullWidth>
+                                        <InputLabel>Zugewiesener Lehrer</InputLabel>
+                                        <Select
+                                            required
+                                            name="assigned_teacher"
+                                            value={assignedTeacherId ?? ""}
+                                            onChange={(e) => {
+                                                setAssignedTeacherId(e.target.value)
+                                            }}
+                                        >
+                                            {teachers && teachers.length > 0 ? (
+                                                teachers.map((t) => (
+                                                    <MenuItem key={t.teacherId} value={t.teacherId}>
+                                                        {t.firstName} {t.lastName}
+                                                    </MenuItem>
+                                                ))
+                                            ) : (
+                                                <MenuItem disabled>Dem Kurs wurden keine Lehrer zugeordnet</MenuItem>
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                </>
                             )}
 
                             {!isSubject && columnAction === "add" && (

@@ -36,18 +36,22 @@ public class GradeService implements CrudService<Grade, UUID>{
     private final SubjectRepository subjectRepository;
     private final ProjectSubjectRepository projectSubjectRepository;
     private final ProjectRepository projectRepository;
+    private final CourseService courseService;
+    private final UserService userService;
 
     public GradeService(PerformanceRepository performanceRepository,
                         GradeRepository gradeRepository,
                         UserRepository userRepository,
                         SubjectRepository subjectRepository,
-                        ProjectSubjectRepository projectSubjectRepository, ProjectRepository projectRepository) {
+                        ProjectSubjectRepository projectSubjectRepository, ProjectRepository projectRepository, CourseService courseService, UserService userService) {
         this.performanceRepository = performanceRepository;
         this.gradeRepository = gradeRepository;
         this.userRepository = userRepository;
         this.subjectRepository = subjectRepository;
         this.projectSubjectRepository = projectSubjectRepository;
         this.projectRepository = projectRepository;
+        this.courseService = courseService;
+        this.userService = userService;
     }
 
     @Override
@@ -105,10 +109,12 @@ public class GradeService implements CrudService<Grade, UUID>{
 
         User user = userRepository.findById(userId).orElse(null);
 
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projekt nicht gefunden"));
+
         // if user is no member in project, load no user and grades
         if (user != null && user.getRole() == Role.ADMIN) {
             if (!projectRepository.existsUserInProject(userId, projectId)) {
-                return new GradeOverviewDto(subjects, List.of());
+                return new GradeOverviewDto(subjects, List.of(), courseService.getTeachers(project.getCourse()));
             }
         }
 
@@ -119,7 +125,7 @@ public class GradeService implements CrudService<Grade, UUID>{
 
         List<UserGradeDto> userGrades = getGradesForUsers(projectId, users);
 
-        return new GradeOverviewDto(subjects, userGrades);
+        return new GradeOverviewDto(subjects, userGrades, courseService.getTeachers(project.getCourse()));
     }
 
     public List<SubjectDto> loadSubjectsWithPerformances(UUID projectId) {
@@ -136,7 +142,8 @@ public class GradeService implements CrudService<Grade, UUID>{
                                         p.getId(),
                                         p.getName(),
                                         p.getShortName(),
-                                        weight.doubleValue()
+                                        weight.doubleValue(),
+                                        p.getAssignedTeacher().getId()
                                 );
                             })
                             .toList();
@@ -190,8 +197,20 @@ public class GradeService implements CrudService<Grade, UUID>{
                 return;
             }
 
+            User currentUser = userService.getCurrentUser().orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "not logged in"));
+
             r.grades().forEach(g -> {
                 // Try to find an existing grade for this student and performance
+                Optional<Performance> performanceOpt = performanceRepository.findById(g.performanceId());
+
+                if (performanceOpt.isEmpty())
+                    return;
+
+                Performance performance = performanceOpt.get();
+
+                if (performance.getAssignedTeacher().getId() != currentUser.getId())
+                    return;
+
                 Grade grade = gradeRepository.findByStudentIdAndPerformanceIdOrProjectSubjectId(r.studentId(), g.performanceId(), g.projectSubjectId());
                 if (grade != null && g.grade() == null) {
                     gradeRepository.deleteById(grade.getId());

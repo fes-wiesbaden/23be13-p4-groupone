@@ -73,6 +73,8 @@ public class PerformanceService implements CrudService<Performance, UUID> {
             existing.setWeight(null);
         }
 
+        existing.setAssignedTeacher(patch.getAssignedTeacher());
+
         return performanceRepository.save(existing);
     }
 

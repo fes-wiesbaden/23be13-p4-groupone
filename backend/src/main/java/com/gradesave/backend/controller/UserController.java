@@ -141,7 +141,7 @@ public class UserController {
         String newPassword = body.get("newPassword");
 
 
-        if (!userService.getPasswordEncoder().matches(currentPassword, user.getPassword())) {
+        if (user.getChangedDefaultPassword() && !userService.getPasswordEncoder().matches(currentPassword, user.getPassword())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Aktuelles Passwort ist falsch!"));
         }
 

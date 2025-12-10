@@ -2,7 +2,7 @@ import {useAuth} from "~/contexts/AuthContext";
 import {useNavigate} from "react-router";
 import React, {useState} from "react";
 import CustomizedSnackbars from "~/components/snackbar"
-import {Button, CircularProgress, TextField, Typography, Paper, Container, Avatar} from "@mui/material";
+import {Avatar, Button, CircularProgress, Container, Paper, TextField, Typography} from "@mui/material";
 import Box from "@mui/material/Box";
 import API_CONFIG from "~/apiConfig";
 import LockResetIcon from '@mui/icons-material/LockReset';
@@ -11,7 +11,6 @@ export default function ChangePassword() {
     const {user, checkAuth, isLoading} = useAuth()
     const navigate = useNavigate()
 
-    const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [saving, setSaving] = useState(false)
@@ -35,26 +34,20 @@ export default function ChangePassword() {
             setSnackbarOpen(true);
             return;
         }
-        if (!currentPassword) {
-            setError("Bitte geben Sie Ihr aktuelles Passwort ein");
-            setSnackbarMessage(`Bitte geben Sie Ihr aktuelles Passwort ein`);
+        const trimmedPassword: string = newPassword.trim();
+        if (trimmedPassword.length < 8 || trimmedPassword.length > 50) {
+            setError("Passwort muss zwischen 8 und 50 Zeichen lang sein");
+            setSnackbarMessage("Passwort muss zwischen 8 und 50 Zeichen lang sein");
             setSnackbarSeverity("error");
             setSnackbarOpen(true);
             return;
-        }
-        const trimmedPassword: string = newPassword.trim();
-            if (trimmedPassword.length < 8 || trimmedPassword.length > 50) {
-                setError("Passwort muss zwischen 8 und 50 Zeichen lang sein");
-                setSnackbarMessage("Passwort muss zwischen 8 und 50 Zeichen lang sein");
-                setSnackbarSeverity("error");
-                setSnackbarOpen(true);
-                return;
 
         }
 
         setSaving(true)
 
         try {
+            const currentPassword = "test" // to keep up with kebba weird code
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/me/update-password`, {
                 method: "PUT",
                 headers: {"Content-Type": "application/json"},
@@ -142,24 +135,24 @@ export default function ChangePassword() {
                             border: '1px solid rgba(255, 255, 255, 0.1)',
                         }}
                     >
-                        <Avatar 
-                            sx={{ 
-                                m: 1, 
+                        <Avatar
+                            sx={{
+                                m: 1,
                                 mb: 2,
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                width: 64, 
+                                width: 64,
                                 height: 64,
                                 boxShadow: '0 8px 20px rgba(102, 126, 234, 0.5)',
                             }}
                         >
-                            <LockResetIcon sx={{ fontSize: 36 }} />
+                            <LockResetIcon sx={{fontSize: 36}}/>
                         </Avatar>
-                        
-                        <Typography 
-                            component="h1" 
-                            variant="h4" 
-                            sx={{ 
-                                mb: 1, 
+
+                        <Typography
+                            component="h1"
+                            variant="h4"
+                            sx={{
+                                mb: 1,
                                 fontWeight: 700,
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                 WebkitBackgroundClip: 'text',
@@ -170,10 +163,10 @@ export default function ChangePassword() {
                             Passwort ändern
                         </Typography>
 
-                        <Typography 
-                            variant="body2" 
-                            sx={{ 
-                                mb: 4, 
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                mb: 4,
                                 fontWeight: 500,
                                 color: 'rgba(255, 255, 255, 0.7)',
                             }}
@@ -184,49 +177,8 @@ export default function ChangePassword() {
                         <Box
                             component="form"
                             onSubmit={handlePasswordChange}
-                            sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2.5 }}
+                            sx={{width: '100%', display: 'flex', flexDirection: 'column', gap: 2.5}}
                         >
-                            <TextField
-                                label="Aktuelles Passwort"
-                                type="password"
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                required
-                                fullWidth
-                                autoComplete="current-password"
-                                autoFocus
-                                variant="outlined"
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        color: '#ffffff',
-                                        transition: 'all 0.3s',
-                                        '& fieldset': {
-                                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                                        },
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                                            '& fieldset': {
-                                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                            },
-                                        },
-                                        '&.Mui-focused': {
-                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                            '& fieldset': {
-                                                borderColor: '#667eea',
-                                                borderWidth: '2px',
-                                            },
-                                        },
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        color: 'rgba(255, 255, 255, 0.7)',
-                                        '&.Mui-focused': {
-                                            color: '#667eea',
-                                        },
-                                    },
-                                }}
-                            />
-
                             <TextField
                                 label="Neues Passwort"
                                 type="password"
@@ -307,14 +259,14 @@ export default function ChangePassword() {
                                 }}
                             />
 
-                            <Button 
-                                type="submit" 
-                                variant="contained" 
+                            <Button
+                                type="submit"
+                                variant="contained"
                                 fullWidth
                                 size="large"
                                 disabled={saving}
-                                sx={{ 
-                                    mt: 2, 
+                                sx={{
+                                    mt: 2,
                                     py: 1.8,
                                     fontSize: '1.1rem',
                                     fontWeight: 600,
@@ -332,10 +284,10 @@ export default function ChangePassword() {
                             </Button>
 
                             {error && (
-                                <Typography 
-                                    role="alert" 
-                                    sx={{ 
-                                        mt: 1, 
+                                <Typography
+                                    role="alert"
+                                    sx={{
+                                        mt: 1,
                                         textAlign: 'center',
                                         p: 2,
                                         bgcolor: 'rgba(244, 67, 54, 0.1)',

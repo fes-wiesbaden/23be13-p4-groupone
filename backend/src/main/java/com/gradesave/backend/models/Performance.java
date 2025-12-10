@@ -48,6 +48,10 @@ public class Performance {
     @OneToMany(mappedBy = "performance")
     private List<Grade> grades;
 
+    @ManyToOne
+    @JoinColumn(name = "assigned_teacher_id", nullable = false)
+    private User assignedTeacher;
+
     @NotNull(message = "Weight is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Weight must be greater than 0")
     @DecimalMax(value = "1.0", inclusive = true, message = "Weight must be less than or equal to 1")
@@ -101,4 +105,11 @@ public class Performance {
         this.weight = weight;
     }
 
+    public User getAssignedTeacher() {
+        return assignedTeacher;
+    }
+
+    public void setAssignedTeacher(User assignedTeacher) {
+        this.assignedTeacher = assignedTeacher;
+    }
 }

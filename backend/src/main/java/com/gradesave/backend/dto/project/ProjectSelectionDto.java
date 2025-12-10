@@ -10,7 +10,8 @@ public record ProjectSelectionDto(
         UUID id,
         String name,
         LocalDate projectStart,
-        List<GroupSelectionDto> groups
+        List<GroupSelectionDto> groups,
+        boolean canEdit
         ) {
 
 }
