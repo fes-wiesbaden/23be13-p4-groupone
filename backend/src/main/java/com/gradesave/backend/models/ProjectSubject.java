@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 /**
  * @author: Michael Holl
@@ -35,6 +36,7 @@ public class ProjectSubject {
     private Subject subject;
 
     @NotNull(message = "Duration is required")
+    @Positive(message = "duration must be a positive number")
     private Double duration;
 
     public UUID getId() {

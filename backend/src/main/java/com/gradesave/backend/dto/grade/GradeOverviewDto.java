@@ -1,6 +1,7 @@
 package com.gradesave.backend.dto.grade;
 
 import com.gradesave.backend.dto.subject.SubjectDto;
+import com.gradesave.backend.dto.user.TeacherDTO;
 
 import java.util.List;
 
@@ -14,7 +15,8 @@ import java.util.List;
 
 public record GradeOverviewDto(
         List<SubjectDto> subjects,
-        List<UserGradeDto> users
+        List<UserGradeDto> users,
+        List<TeacherDTO> teachers
         ) {
 
 }

@@ -19,6 +19,7 @@ import API_CONFIG from "../apiConfig";
 import {QuestionType} from "~/components/fragebogen";
 import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "~/components/snackbar";
+import Box from "@mui/material/Box";
 
 /**
  * @author: Michael Holl
@@ -253,7 +254,7 @@ export default function Question() {
   };
 
   return (
-    <>
+    <Box p={2}>
       <DataTableWithAdd<QuestionRow>
         title="Fragen"
         addButtonLabel="Neue Frage"
@@ -300,7 +301,7 @@ export default function Question() {
               onChange={(event, newValue) => setSelectedSubjects(newValue)}
               getOptionLabel={(option) => option.name}
               renderInput={(params) => (
-                <TextField {...params} label="Fächer" variant="standard" />
+                <TextField {...params} label="Bildungsbereiche" variant="standard" />
               )}
             />
 
@@ -365,7 +366,7 @@ export default function Question() {
               onChange={(event, newValue) => setSelectedSubjects(newValue)}
               getOptionLabel={(option) => option.name}
               renderInput={(params) => (
-                <TextField {...params} label="Fächer" variant="standard" />
+                <TextField {...params} label="Bildungsbereiche" variant="standard" />
               )}
             />
 
@@ -398,6 +399,6 @@ export default function Question() {
           onClose={handleSnackbarClose}
       />
       {ConfirmDialog}
-    </>
+    </Box>
   );
 }

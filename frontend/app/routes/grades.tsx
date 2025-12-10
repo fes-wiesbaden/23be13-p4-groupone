@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import API_CONFIG from "../apiConfig";
 import Tooltip from "@mui/material/Tooltip";
-import { Autocomplete, Box, Button, FormControlLabel, Paper, Stack, Switch, TextField } from "@mui/material";
-import { useAuth } from "../contexts/AuthContext";
-import { DataGrid, type GridColDef, type GridColumnGroupingModel } from "@mui/x-data-grid";
-import { Role } from "~/types/models";
+import {Autocomplete, Box, Button, FormControlLabel, Paper, Stack, Switch, TextField} from "@mui/material";
+import {useAuth} from "~/contexts/AuthContext";
+import {DataGrid, type GridColDef, type GridColumnGroupingModel} from "@mui/x-data-grid";
+import {Role, type Teacher} from "~/types/models";
 import FormDialog from "~/components/addColumn";
 import CustomizedSnackbars from '../components/snackbar';
 
@@ -20,19 +20,73 @@ import CustomizedSnackbars from '../components/snackbar';
  * Snackbar integration completed
  */
 
-export interface GroupOption { id: string; name: string; }
-export interface ProjectOption { id: string; name: string; groups: GroupOption[]; }
-export interface GradeOverviewOption { id: string; name: string; projects: ProjectOption[]; }
-export interface GradeOverview { subjects: Subject[]; users: User[]; }
-export interface Subject { id: string; name: string; shortName: string; duration: number; isLearningField: boolean; performances: Performance[]; }
-export interface Performance { id: string; name: string; shortName: string; weight: number; }
-export interface User { id: string; firstName: string; lastName: string; group: string; grades: Grade[]; }
-export interface Grade { performanceId?: string; projectSubjectId?: string; grade?: number | null; }
-export interface UpdateGradeRequest { studentId: string; grades: Grade[]; }
-export interface CalculateSubjectGrade { grade?: number; weight: number; }
+export interface GroupOption {
+    id: string;
+    name: string;
+}
+
+export interface ProjectOption {
+    id: string;
+    name: string;
+    groups: GroupOption[];
+    canEdit: boolean
+}
+
+export interface GradeOverviewOption {
+    id: string;
+    name: string;
+    projects: ProjectOption[];
+}
+
+export interface GradeOverview {
+    subjects: Subject[];
+    users: User[];
+    teachers: Teacher[]
+}
+
+export interface Subject {
+    id: string;
+    name: string;
+    shortName: string;
+    duration: number;
+    isLearningField: boolean;
+    performances: Performance[];
+}
+
+export interface Performance {
+    id: string;
+    name: string;
+    shortName: string;
+    weight: number;
+    assignedTeacherId: string
+}
+
+export interface User {
+    id: string;
+    firstName: string;
+    lastName: string;
+    group: string;
+    grades: Grade[];
+}
+
+export interface Grade {
+    performanceId?: string;
+    projectSubjectId?: string;
+    grade?: number | null;
+}
+
+export interface UpdateGradeRequest {
+    studentId: string;
+    grades: Grade[];
+}
+
+export interface CalculateSubjectGrade {
+    grade?: number;
+    weight: number;
+}
 
 export default function Grades() {
-    const { user } = useAuth();
+    const {user} = useAuth();
 
     const [gradeOverviewOptions, setGradeOverviewOptions] = useState<GradeOverviewOption[]>([]);
     const [selectedCourse, setSelectedCourse] = useState<GradeOverviewOption | null>(null);
@@ -57,6 +111,9 @@ export default function Grades() {
 
     const isStudent = user?.role === Role.STUDENT;
 
+    const isAdmin = user?.role === Role.ADMIN;
+
+
     const filterUser = (overview: GradeOverview, userId: string) => ({
         ...overview,
         users: overview.users.filter(u => u.id === userId)
@@ -64,19 +121,21 @@ export default function Grades() {
 
     const fetchOptions = async () => {
         try {
-            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/findGradeOverviewOptions?userId=${user?.id}`, { credentials: "include" });
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/findGradeOverviewOptions?userId=${user?.id}`, {credentials: "include"});
             if (!res.ok) return;
             const data = await res.json();
             setGradeOverviewOptions(data);
             setSelectedCourse(data[0] ?? null);
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const calculateSubjectGrade = async (grades: CalculateSubjectGrade[]) => {
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/grade/calculateSubjectGrade`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 credentials: "include",
                 body: JSON.stringify(grades),
             });
@@ -106,12 +165,12 @@ export default function Grades() {
                     const zv = await calculateSubjectGrade(perfGrades);
                     const zvEntry = grades.find(g => g.projectSubjectId === subject.id && g.performanceId === "ZV");
                     if (zvEntry) zvEntry.grade = zv;
-                    else grades.push({ projectSubjectId: subject.id, performanceId: "ZV", grade: zv });
+                    else grades.push({projectSubjectId: subject.id, performanceId: "ZV", grade: zv});
                 }
-                return { ...user, grades };
+                return {...user, grades};
             })
         );
-        setGradeOverview({ ...overview, users: newUsers });
+        setGradeOverview({...overview, users: newUsers});
     };
 
     useEffect(() => {
@@ -126,6 +185,9 @@ export default function Grades() {
         }
 
         const cols = gradeOverview.subjects.flatMap(subject => {
+            // Check if current user is assigned to any performance in this subject
+            const isAssignedToSubject = subject.performances.some(p => p.assignedTeacherId === user?.id);
+
             // Z columns
             const subjectGradeFinalHeader: GridColDef = {
                 field: `${subject.id}-Z`,
@@ -139,7 +201,10 @@ export default function Grades() {
                 valueOptions: ["1", "2", "3", "4", "5", "6"],
                 flex: 1,
                 minWidth: 80,
-                editable: !isStudent,
+                editable: !isStudent && isAssignedToSubject,
+                cellClassName: () => {
+                    return (!isStudent && isAssignedToSubject) ? 'editable-cell' : '';
+                },
             };
 
             if (!showPerformances) {
@@ -149,25 +214,36 @@ export default function Grades() {
             const performanceGradeHeader: GridColDef[] =
                 subject.performances.map(perf => ({
                     field: perf.id,
-                    headerName: `${perf.shortName} (${perf.weight}%)`,
+                    headerName: `${perf.shortName} (${perf.weight})`,
                     renderHeader: () => (
                         <Tooltip
                             title={
                                 <div>
                                     Name: {perf.name}
                                     <br/>
-                                    Gewichtung: {perf.weight}%
+                                    Gewichtung: {perf.weight}
+                                    <br/>
+                                    Lehrer: {
+                                    (() => {
+                                        const t = gradeOverview?.teachers?.find(
+                                        x => x.teacherId === perf.assignedTeacherId
+                                        );
+                                        return t ? `${t.firstName} ${t.lastName}` : "-";
+                                    })()}
                                 </div>
                             }
                         >
-                            <span>{`${perf.shortName} (${perf.weight}%)`}</span>
+                            <span>{`${perf.shortName} (${perf.weight})`}</span>
                         </Tooltip>
                     ),
                     type: "singleSelect",
                     valueOptions: ["1", "2", "3", "4", "5", "6"],
                     flex: 1,
                     minWidth: 80,
-                    editable: !isStudent,
+                    editable: !isStudent && (perf.assignedTeacherId === user?.id),
+                    cellClassName: () => {
+                        return (!isStudent && perf.assignedTeacherId === user?.id) ? 'editable-cell' : '';
+                    },
                 }));
 
             const subjectGradeDraftHeader: GridColDef | null =
@@ -180,8 +256,6 @@ export default function Grades() {
                                 <span>ZV</span>
                             </Tooltip>
                         ),
-                        type: "singleSelect",
-                        valueOptions: ["1", "2", "3", "4", "5", "6"],
                         flex: 1,
                         minWidth: 80,
                         editable: false,
@@ -215,10 +289,12 @@ export default function Grades() {
             setSnackbarOpen(true);
             return;
         }
+        setCourseError(false);
+        setProjectError(false);
 
         try {
-            const url = `${API_CONFIG.BASE_URL}/api/grade/overview?projectId=${selectedProject.id}${selectedGroup ? `&groupId=${selectedGroup.id}` : ""}`;
-            const res = await fetch(url, { credentials: "include" });
+            const url = `${API_CONFIG.BASE_URL}/api/grade/overview?projectId=${selectedProject.id}${selectedGroup ? `&groupId=${selectedGroup.id}` : ""}&userId=${user?.id}`;
+            const res = await fetch(url, {credentials: "include"});
             if (!res.ok) return;
             let data: GradeOverview = await res.json();
 
@@ -249,7 +325,7 @@ export default function Grades() {
             }));
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/grade/save`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 credentials: "include",
                 body: JSON.stringify(payload)
             });
@@ -265,14 +341,16 @@ export default function Grades() {
             setSnackbarMessage("Noten erfolgreich gespeichert!");
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const columns: GridColDef[] = [
-        { field: "nr", headerName: "Nr.", width: 80 },
-        { field: "nachname", headerName: "Nachname", width: 150 },
-        { field: "vorname", headerName: "Vorname", width: 150 },
-        { field: "gruppe", headerName: "Gruppe", width: 120 },
+        {field: "nr", headerName: "Nr.", width: 80},
+        {field: "nachname", headerName: "Nachname", width: 150},
+        {field: "vorname", headerName: "Vorname", width: 150},
+        {field: "gruppe", headerName: "Gruppe", width: 120},
         ...performancesColumns
     ];
 
@@ -280,22 +358,22 @@ export default function Grades() {
         {
             groupId: "bildungsbereich",
             headerName: "Bildungsbereich",
-            children: [{ field: "nr" }, { field: "nachname" }, { field: "vorname" }, { field: "gruppe" }],
+            children: [{field: "nr"}, {field: "nachname"}, {field: "vorname"}, {field: "gruppe"}],
         },
         ...(gradeOverview?.subjects.map(subject => ({
             groupId: subject.id,
-            headerName: `${subject.name.length < 15 ? subject.name : subject.shortName} (${subject.duration})`,
-            description: `Name: ${subject.name}`,
+            headerName: `${subject.name.length < 15 ? subject.name : subject.shortName} (${subject.duration}h)`,
+            description: `Name: ${subject.name}\nDauer: ${subject.duration} Stunden${subject.name.length >= 15 ? `\nVoller Name: ${subject.name}` : ""}`,
             children: [
-                ...(subject.performances.length ? subject.performances.map(p => ({ field: p.id })) : [{ field: `${subject.id}-empty` }]),
-                { field: `${subject.id}-ZV` },
-                { field: `${subject.id}-Z` }
+                ...(subject.performances.length ? subject.performances.map(p => ({field: p.id})) : [{field: `${subject.id}-empty`}]),
+                {field: `${subject.id}-ZV`},
+                {field: `${subject.id}-Z`}
             ]
         })) || [])
     ];
 
     const rows = gradeOverview?.users.map((u, i) => {
-        const row: any = { id: u.id, nr: i + 1, nachname: u.lastName, vorname: u.firstName, gruppe: u.group };
+        const row: any = {id: u.id, nr: i + 1, nachname: u.lastName, vorname: u.firstName, gruppe: u.group};
 
         if (showGrades) {
             u.grades.forEach(g => {
@@ -310,40 +388,40 @@ export default function Grades() {
 
     return (
         <Box p={3} width="100%">
-            <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+            <Paper elevation={2} sx={{p: 2, mb: 3}}>
+                <Stack direction={{xs: "column", sm: "row"}} spacing={2} alignItems="center">
                     {!isStudent && (
                         <Autocomplete
                             options={gradeOverviewOptions}
                             getOptionLabel={o => o.name}
                             renderInput={params => (
-                                <TextField {...params} label="Klasse" error={projectError} />
+                                <TextField {...params} label="Klasse" error={projectError}/>
                             )}
                             onChange={(_, v) => setSelectedCourse(v)}
-                            sx={{ minWidth: 200, flex: 1 }}
+                            sx={{minWidth: 200, flex: 1}}
                         />
                     )}
 
                     <Autocomplete
                         options={selectedCourse?.projects && selectedCourse.projects.length > 0
                             ? selectedCourse.projects
-                            : [{ id: "none", name: "Keine Projekte vorhanden", groups: [] }]}
+                            : [{id: "none", name: "Keine Projekte vorhanden", groups: [], canEdit: false}]}
                         getOptionLabel={o => o.name}
                         getOptionDisabled={o => o.id === "none"}
-                        renderInput={params => <TextField {...params} label="Projekt" error={projectError} />}
+                        renderInput={params => <TextField {...params} label="Projekt" error={projectError}/>}
                         onChange={(_, v) => setSelectedProject(v?.id === "none" ? null : v)}
                         disabled={!selectedCourse && !isStudent}
-                        sx={{ minWidth: 200, flex: 1 }}
+                        sx={{minWidth: 200, flex: 1}}
                     />
 
                     {!isStudent && (
                         <Autocomplete
                             options={selectedProject?.groups || []}
                             getOptionLabel={o => o.name}
-                            renderInput={params => <TextField {...params} label="Gruppe" />}
+                            renderInput={params => <TextField {...params} label="Gruppe"/>}
                             onChange={(_, v) => setSelectedGroup(v)}
                             disabled={!selectedProject}
-                            sx={{ minWidth: 200, flex: 1 }}
+                            sx={{minWidth: 200, flex: 1}}
                         />
                     )}
 
@@ -351,7 +429,7 @@ export default function Grades() {
                         variant="contained"
                         color="primary"
                         onClick={() => loadGrades(true)}
-                        sx={{ height: 56 }}
+                        sx={{height: 56}}
                     >
                         Anzeigen
                     </Button>
@@ -359,25 +437,26 @@ export default function Grades() {
             </Paper>
 
             {renderGradeTable && (
-                <Paper elevation={2} sx={{ p: 2 }}>
+                <Paper elevation={2} sx={{p: 2}}>
                     {!isStudent && (
                         <Stack direction="row" justifyContent="space-between" mb={2} alignItems="center">
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={() => setDialogOpen(true)}
-                            >
-                                Tabelle anpassen
-                            </Button>
-
+                            {selectedProject?.canEdit &&
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => setDialogOpen(true)}
+                                >
+                                    Tabelle anpassen
+                                </Button>
+                            }
                             <Stack direction="row" spacing={4}>
                                 <FormControlLabel
-                                    control={<Switch defaultChecked />}
+                                    control={<Switch defaultChecked/>}
                                     label="Noten anzeigen"
                                     onChange={(_, checked) => setShowGrades(checked)}
                                 />
                                 <FormControlLabel
-                                    control={<Switch defaultChecked />}
+                                    control={<Switch defaultChecked/>}
                                     label="Leistungen anzeigen"
                                     onChange={(_, checked) => setShowPerformances(checked)}
                                 />
@@ -399,12 +478,12 @@ export default function Grades() {
                             const grades = [...(userToUpdate.grades ?? [])];
 
                             Object.keys(updatedRow).forEach(key => {
-                                if (["id","nr","nachname","vorname","gruppe"].includes(key)) return;
+                                if (["id", "nr", "nachname", "vorname", "gruppe"].includes(key)) return;
                                 if (typeof updatedRow[key] !== "string") return;
 
                                 const isSubjectGrade = key.endsWith("-Z");
                                 const perfId = isSubjectGrade ? undefined : key;
-                                const subjId = isSubjectGrade ? key.replace("-Z","") : undefined;
+                                const subjId = isSubjectGrade ? key.replace("-Z", "") : undefined;
                                 const newValue = updatedRow[key] === "" ? null : Number(updatedRow[key]);
 
                                 const existing = grades.find(
@@ -412,7 +491,7 @@ export default function Grades() {
                                 );
 
                                 if (existing) existing.grade = newValue;
-                                else grades.push({ performanceId: perfId, projectSubjectId: subjId, grade: newValue });
+                                else grades.push({performanceId: perfId, projectSubjectId: subjId, grade: newValue});
                             });
 
                             const zvCalculations = gradeOverview.subjects.map(async (subject) => {
@@ -426,7 +505,7 @@ export default function Grades() {
 
                                 const zvEntry = grades.find(g => g.projectSubjectId === subject.id && g.performanceId === "ZV");
                                 if (zvEntry) zvEntry.grade = zvGrade;
-                                else grades.push({ projectSubjectId: subject.id, performanceId: "ZV", grade: zvGrade });
+                                else grades.push({projectSubjectId: subject.id, performanceId: "ZV", grade: zvGrade});
 
                                 updatedRow[`${subject.id}-ZV`] = zvGrade ?? null;
                             });
@@ -435,12 +514,12 @@ export default function Grades() {
 
                             setUpdatedGrades(prev => [
                                 ...prev.filter(g => g.studentId !== updatedRow.id),
-                                { studentId: updatedRow.id, grades }
+                                {studentId: updatedRow.id, grades}
                             ]);
 
                             setGradeOverview(prev => ({
                                 ...prev!,
-                                users: prev!.users.map(u => u.id === updatedRow.id ? { ...userToUpdate, grades } : u)
+                                users: prev!.users.map(u => u.id === updatedRow.id ? {...userToUpdate, grades} : u)
                             }));
 
                             return updatedRow;
@@ -448,10 +527,17 @@ export default function Grades() {
                         sx={{
                             width: "100%",
                             maxHeight: 500,
-                            "& .MuiDataGrid-virtualScroller": { overflowX: "auto", overflowY: "auto" },
-                            "& .MuiDataGrid-cell": { display: "flex", justifyContent: "center", alignItems: "center" },
-                            "& .MuiDataGrid-columnHeader .MuiDataGrid-columnHeaderTitleContainer": { justifyContent: "center" },
-                            "& .MuiDataGrid-columnHeaderGroup .MuiDataGrid-columnHeaderTitleContainer": { justifyContent: "center" },
+                            "& .MuiDataGrid-virtualScroller": {overflowX: "auto", overflowY: "auto"},
+                            "& .MuiDataGrid-cell": {display: "flex", justifyContent: "center", alignItems: "center"},
+                            "& .MuiDataGrid-columnHeader .MuiDataGrid-columnHeaderTitleContainer": {justifyContent: "center"},
+                            "& .MuiDataGrid-columnHeaderGroup .MuiDataGrid-columnHeaderTitleContainer": {justifyContent: "center"},
+                            "& .editable-cell": {
+                                backgroundColor: "rgba(56, 142, 60, 0.25)",
+                                border: "1px solid rgba(56, 142, 60, 0.6)",
+                                "&:hover": {
+                                    backgroundColor: "rgba(56, 142, 60, 0.35)",
+                                },
+                            },
                         }}
                     />
 
@@ -467,23 +553,26 @@ export default function Grades() {
                         </Stack>
                     )}
 
-                    <FormDialog
-                        open={dialogOpen}
-                        onClose={() => setDialogOpen(false)}
-                        projectId={selectedProject?.id}
-                        projectSubjects={gradeOverview?.subjects.map(s => ({
-                            id: s.id,
-                            name: s.name,
-                            shortName: s.shortName,
-                            learningField: s.isLearningField,
-                            weight: s.duration,
-                            performances: s.performances
-                        })) ?? []}
-                        onSubmitSuccess={async () => {
-                            await loadGrades(false);
-                            await fetchOptions();
-                        }}
-                    />
+                    {selectedProject?.canEdit && (
+                        <FormDialog
+                            open={dialogOpen}
+                            onClose={() => setDialogOpen(false)}
+                            projectId={selectedProject?.id}
+                            projectSubjects={gradeOverview?.subjects.map(s => ({
+                                id: s.id,
+                                name: s.name,
+                                shortName: s.shortName,
+                                learningField: s.isLearningField,
+                                weight: s.duration,
+                                performances: s.performances
+                            })) ?? []}
+                            teachers={gradeOverview?.teachers ?? []}
+                            onSubmitSuccess={async () => {
+                                await loadGrades(false);
+                                await fetchOptions();
+                            }}
+                        />
+                    )}
                 </Paper>
             )}
             <CustomizedSnackbars

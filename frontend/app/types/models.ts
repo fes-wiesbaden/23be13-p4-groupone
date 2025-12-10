@@ -19,3 +19,11 @@ export interface CourseDto {
   courseName: string;
   classTeacher: User;
 }
+
+export interface Teacher {
+    teacherId: string,
+    username: string;
+    firstName: string;
+    lastName: string;
+}
+

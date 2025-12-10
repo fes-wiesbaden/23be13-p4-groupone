@@ -5,11 +5,13 @@ import com.gradesave.backend.dto.course.CourseSelectionWithMembersDto;
 import com.gradesave.backend.dto.group.GroupMembersDTO;
 import com.gradesave.backend.dto.project.ProjectSelectionWithMembersDto;
 import com.gradesave.backend.dto.user.StudentDTO;
+import com.gradesave.backend.dto.user.TeacherDTO;
 import com.gradesave.backend.models.Course;
 import com.gradesave.backend.dto.course.UpdateCourseRequest;
 import com.gradesave.backend.dto.course.CourseSelectionDto;
 import com.gradesave.backend.dto.group.GroupSelectionDto;
 import com.gradesave.backend.dto.project.ProjectSelectionDto;
+import com.gradesave.backend.models.Project;
 import com.gradesave.backend.models.Role;
 import com.gradesave.backend.models.User;
 import com.gradesave.backend.repositories.CourseRepository;
@@ -177,7 +179,13 @@ public class CourseService {
     public List<CourseSelectionDto> findGradeOverviewOptions(UUID userId) {
         User currentUser = userRepo.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
 
-        List<Course> courses = courseRepository.findAllByUserId(currentUser.getId());
+        List<Course> courses;
+        // admins can select all classes
+        if (currentUser.getRole() == Role.ADMIN) {
+            courses = getAll();
+        } else {
+            courses = courseRepository.findAllByUserId(currentUser.getId());
+        }
 
         return courses.stream().map(course -> {
 
@@ -193,7 +201,8 @@ public class CourseService {
                                 project.getId(),
                                 project.getName(),
                                 project.getProjectStart(),
-                                groupDtos);
+                                groupDtos,
+                                canEditGrades(currentUser, project));
                     }).toList();
 
             return new CourseSelectionDto(
@@ -204,7 +213,21 @@ public class CourseService {
         }).toList();
     }
 
+    private boolean canEditGrades(User user, Project project) {
+        if (user.getRole() != Role.ADMIN && user.getRole() != Role.TEACHER)
+            return false;
+
+        if (user.getRole() == Role.TEACHER && project.getCourse().getClassTeacher().getId() != user.getId())
+            return false;
+
+        return true;
+    }
+
     public List<Course> getAllWithUser(User user) {
         return courseRepository.findAllByUserId(user.getId());
+    }
+
+    public List<TeacherDTO> getTeachers(Course course) {
+        return course.getUsers().stream().filter(u -> u.getRole() == Role.ADMIN || u.getRole() == Role.TEACHER).map(TeacherDTO::fromEntity).toList();
     }
 }

@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
+import Box from "@mui/material/Box";
 
 /**
  * @author: Michael Holl
@@ -221,7 +222,7 @@ export default function Subject() {
   };
 
   return (
-    <>
+    <Box p={2}>
       <DataGridWithAdd<Subject>
         title="Fächer"
         addButtonLabel="Neues Fach"
@@ -340,6 +341,6 @@ export default function Subject() {
         onClose={() => setSnackbarOpen(false)}
       />
       {ConfirmDialog}
-    </>
+    </Box>
   );
 }

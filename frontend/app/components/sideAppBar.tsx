@@ -52,7 +52,7 @@ import ColorModeToggle from "./colorModeToggle";
 
 const drawerWidth = 240;
 
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
+const settings = ["Profil", "Abmelden"];
 
 const openedMixin = (theme: Theme): CSSObject => ({
   width: drawerWidth,
@@ -280,7 +280,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
       text: "Lernbereich",
       icon: <LearningIcon />,
       path: "/lernbereich",
-      roles: [Role.ADMIN, Role.TEACHER],
+      roles: [Role.ADMIN],
     },
     {
       text: "Fragebogen",
@@ -292,7 +292,6 @@ export default function SideAppBar({children}: SideAppBarProps) {
 
   const bottomItems: MenuItem[] = [
     { text: "Profil", icon: <AccountCircleIcon />, path: "/profil" },
-    { text: "Einstellungen", icon: <SettingsIcon />, path: "/einstellungen" },
     { text: "Abmelden", icon: <LogoutIcon />, path: "/logout" },
   ];
 
@@ -461,8 +460,10 @@ export default function SideAppBar({children}: SideAppBarProps) {
                       key={setting}
                       onClick={() => {
                         handleCloseUserMenu();
-                        if (setting === "Logout") {
+                        if (setting === "Abmelden") {
                           handleLogout();
+                        } else if (setting === "Profil") {
+                            navigate("/profil")
                         }
                       }}
                     >

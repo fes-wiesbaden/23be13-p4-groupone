@@ -66,9 +66,9 @@ public class CourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Course>> getAllCourses() {
+    public ResponseEntity<List<CourseBareDTO>> getAllCourses() {
         List<Course> courses = courseService.getAll();
-        return ResponseEntity.ok(courses);
+        return ResponseEntity.ok(courses.stream().map(CourseBareDTO::fromEntity).toList());
     }
 
     @PutMapping("/{id}")

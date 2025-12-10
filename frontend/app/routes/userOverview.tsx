@@ -36,6 +36,8 @@ import FileUpload from "~/components/fileUpload";
 import CsvType from "~/types/csvType";
 import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
 
@@ -259,7 +261,7 @@ export default function UsersPage() {
   };
 
   return (
-    <>
+    <Box p={2}>
       <FileUpload
         accept={".csv"}
         type={CsvType.USERS}
@@ -268,6 +270,11 @@ export default function UsersPage() {
         select_name={"Wählen Sie eine Nutzer-CSV aus"}
         doAfterUpload={load}
       />
+
+      <Box py={2}>
+        <Divider/>
+      </Box>
+
       <DataGridWithAdd<UserRow>
         title="Benutzer"
         addButtonLabel="Neuer Benutzer"
@@ -364,6 +371,6 @@ export default function UsersPage() {
           onClose={handleSnackbarClose}
       />
       {ConfirmDialog}
-    </>
+    </Box>
   );
 }

@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router"
 import API_CONFIG from "~/apiConfig";
 import useAlertDialog from "~/components/youSurePopup";
+import Box from "@mui/material/Box";
 
 /**
  * @author Paul Geisthardt
@@ -157,7 +158,7 @@ export default function Projects () {
     }
 
     return (
-        <>
+        <Box p={2}>
             <DataTableWithAdd<ProjectRow>
                 title="Projekte"
                 addButtonLabel="Neues Projekt"
@@ -168,6 +169,6 @@ export default function Projects () {
                 onDeleteClick={handleDeleteClick}
             />
             {ConfirmDialog}
-        </>
+        </Box>
     );
 }

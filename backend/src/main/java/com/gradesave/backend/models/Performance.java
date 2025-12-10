@@ -10,11 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -48,9 +44,12 @@ public class Performance {
     @OneToMany(mappedBy = "performance")
     private List<Grade> grades;
 
+    @ManyToOne
+    @JoinColumn(name = "assigned_teacher_id", nullable = false)
+    private User assignedTeacher;
+
     @NotNull(message = "Weight is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Weight must be greater than 0")
-    @DecimalMax(value = "1.0", inclusive = true, message = "Weight must be less than or equal to 1")
+    @Positive(message = "Weight must be a positive number")
     private Double weight;
 
     public UUID getId() {
@@ -101,4 +100,11 @@ public class Performance {
         this.weight = weight;
     }
 
+    public User getAssignedTeacher() {
+        return assignedTeacher;
+    }
+
+    public void setAssignedTeacher(User assignedTeacher) {
+        this.assignedTeacher = assignedTeacher;
+    }
 }
