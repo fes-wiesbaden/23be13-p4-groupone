@@ -1,5 +1,7 @@
 package com.gradesave.backend.dto.performance;
 
+import jakarta.validation.constraints.Positive;
+
 import java.util.UUID;
 
 /**
@@ -14,6 +16,7 @@ public record PerformanceDto(
         UUID id,
         String name,
         String shortName,
+        @Positive(message = "Gewichtung muss eine positive Zahl sein")
         double weight,
         UUID assignedTeacherId
 ) {

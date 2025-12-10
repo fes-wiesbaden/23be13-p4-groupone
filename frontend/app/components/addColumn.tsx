@@ -46,6 +46,7 @@ export interface Performance {
     name: string;
     shortName?: string;
     weight: number;
+    assignedTeacherId: string;
 }
 
 interface Subject {
@@ -87,14 +88,16 @@ export default function FormDialog({
                                        teachers,
                                        onSubmitSuccess
                                    }: DialogProps) {
-    const [isSubject, setIsSubject] = useState<boolean>(false);
+    const [isSubject, setIsSubject] = useState<boolean>(true);
     const [selectedProjectSubjectId, setSelectedProjectSubjectId] = useState<string | undefined>(undefined);
     const [selectedSubjectId, setSelectedSubjectId] = useState<string | undefined>(undefined);
     const [selectedPerformanceId, setSelectedPerformanceId] = useState<string | undefined>(undefined);
-    const [assignedTeacherId, setAssignedTeacherId] = useState("")
+    const [assignedTeacherId, setAssignedTeacherId] = useState("");
+
 
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [shortName, setShortName] = useState<string>();
+    const [name, setName] = useState<string>();
     const [displayWeight, setDisplayWeight] = useState<string | undefined>();
     const [performanceOptions, setPerformanceOptions] = useState<Performance[] | undefined>();
     const [subjectOptions, setSubjectOptions] = useState<ProjectSubject[] | undefined>();
@@ -128,6 +131,8 @@ export default function FormDialog({
     useEffect(() => {
         if (!selectedOption) return;
         if (!isSubject && columnAction !== "add") {
+            const performance = performanceOptions?.find(p => p.id === selectedPerformanceId);
+            setAssignedTeacherId(performance?.assignedTeacherId ?? "");
             setShortName(selectedOption.shortName ?? "");
             setDisplayWeight(String(selectedOption.weight ?? ""));
         }
@@ -136,15 +141,20 @@ export default function FormDialog({
     useEffect(() => {
         setShortName("");
         setDisplayWeight("");
+        setAssignedTeacherId("");
+        setSelectedPerformanceId(undefined);
+        setName("");
     }, [selectedSubjectId, selectedProjectSubjectId, isSubject]);
 
     useEffect(() => {
         setSelectedSubjectId(undefined);
         setSelectedProjectSubjectId(undefined);
         setSelectedPerformanceId(undefined);
+        setAssignedTeacherId("");
         setShortName("");
         setDisplayWeight("");
         setLearningField("true");
+        setName("")
     }, [isSubject, columnAction, open]);
 
 
@@ -171,7 +181,7 @@ export default function FormDialog({
             if (columnAction !== "add") {
                 const projectSubject = projectSubjects.find(ps => ps.id === selectedProjectSubjectId);
                 if (projectSubject) {
-                    setShortName(projectSubject?.shortName || undefined)
+                    setShortName(projectSubject?.shortName || undefined);
                     setLearningField(projectSubject.learningField ? "true" : "false");
                     setDisplayWeight(String(projectSubject?.weight) || undefined);
                 }
@@ -203,6 +213,8 @@ export default function FormDialog({
     const handleClose = () => {
         setCreateMore(false);
         setSelectedSubjectId(undefined);
+        setColumnAction("add");
+        setName("");
         onClose();
     };
 
@@ -236,12 +248,11 @@ export default function FormDialog({
                 } else {
                     controller = "performance";
                     endpoint = "save";
-                    if (!assignedTeacherId.trim()) console.log("WHYY")
                     payload = {
                         projectSubjectId: formJson.subject ?? "",
                         name: formJson.name,
                         shortName: formJson.shortName,
-                        weight: Number(formJson.weight.replace(",", ".")) / 100,
+                        weight: Number(formJson.weight.replace(",", ".")),
                         assignedTeacherId: assignedTeacherId
                     };
                 }
@@ -275,7 +286,8 @@ export default function FormDialog({
                         id: selectedOption.id,
                         name: selectedOption.name,
                         shortName: formJson.shortName,
-                        weight: Number(formJson.weight.replace(",", ".")) / 100,
+                        weight: Number(formJson.weight.replace(",", ".")),
+                        assignedTeacherId: assignedTeacherId
                     };
                 }
                 break;
@@ -286,7 +298,6 @@ export default function FormDialog({
         }
         try {
             const url = `${API_CONFIG.BASE_URL}/api/${controller}/${endpoint}`;
-
             const res = await fetch(url, {
                 method: method,
                 headers: {"Content-Type": "application/json"},
@@ -305,11 +316,6 @@ export default function FormDialog({
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
             if (onSubmitSuccess) onSubmitSuccess();
-            setSelectedProjectSubjectId(undefined);
-            setSelectedSubjectId(undefined);
-            setShortName("");
-            setDisplayWeight("");
-            setAssignedTeacherId("");
         } catch (err) {
             console.error(err);
         }
@@ -317,9 +323,11 @@ export default function FormDialog({
         await fetchSubjects();
         setSelectedProjectSubjectId(undefined);
         setSelectedSubjectId(undefined);
+        setAssignedTeacherId("");
         setShortName("");
         setDisplayWeight("");
         setAssignedTeacherId("");
+        setName("");
         if (!createMore) {
             handleClose();
         }
@@ -331,8 +339,8 @@ export default function FormDialog({
                 <DialogTitle>Tabelle anpassen</DialogTitle>
 
                 <form onSubmit={handleSubmit} id="newPerformanceForm">
-                    <DialogContent>
-                        <Box sx={{display: "grid", gap: 2}}>
+                    <DialogContent sx={{ pt: 1 }}>
+                        <Box sx={{display: "grid", gap: 1.5}}>
                             <FormControl fullWidth>
                                 <InputLabel>Aktion</InputLabel>
                                 <Select
@@ -361,7 +369,7 @@ export default function FormDialog({
                             {!isSubject && (
                                 <>
                                     <FormControl fullWidth>
-                                        <InputLabel>Bildungsbereich</InputLabel>
+                                        <InputLabel>Bildungsbereich*</InputLabel>
                                         <Select
                                             required
                                             name="subject"
@@ -386,27 +394,6 @@ export default function FormDialog({
                                             )}
                                         </Select>
                                     </FormControl>
-                                    <FormControl fullWidth>
-                                        <InputLabel>Zugewiesener Lehrer</InputLabel>
-                                        <Select
-                                            required
-                                            name="assigned_teacher"
-                                            value={assignedTeacherId ?? ""}
-                                            onChange={(e) => {
-                                                setAssignedTeacherId(e.target.value)
-                                            }}
-                                        >
-                                            {teachers && teachers.length > 0 ? (
-                                                teachers.map((t) => (
-                                                    <MenuItem key={t.teacherId} value={t.teacherId}>
-                                                        {t.firstName} {t.lastName}
-                                                    </MenuItem>
-                                                ))
-                                            ) : (
-                                                <MenuItem disabled>Dem Kurs wurden keine Lehrer zugeordnet</MenuItem>
-                                            )}
-                                        </Select>
-                                    </FormControl>
                                 </>
                             )}
 
@@ -417,6 +404,8 @@ export default function FormDialog({
                                     name="name"
                                     label="Name"
                                     fullWidth
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     variant="outlined"
                                 />
                             )}
@@ -438,7 +427,7 @@ export default function FormDialog({
                                         } else {
                                             setSelectedProjectSubjectId(undefined);
                                             setSelectedSubjectId(undefined);
-                                            setShortName(undefined);
+                                            setShortName("");
                                         }
                                     }}
                                     renderInput={(params) => (
@@ -449,6 +438,31 @@ export default function FormDialog({
                                 />
                             )}
 
+                            {!isSubject && (
+                                <FormControl fullWidth>
+                                    <InputLabel>Zugewiesene Lehrkraft*</InputLabel>
+                                    <Select
+                                        required
+                                        name="assigned_teacher"
+                                        value={assignedTeacherId ?? ""}
+                                        onChange={(e) => {
+                                            setAssignedTeacherId(e.target.value)
+                                        }}
+                                    >
+                                        {teachers && teachers.length > 0 ? (
+                                            teachers.map((t) => (
+                                                <MenuItem key={t.teacherId} value={t.teacherId}>
+                                                    {t.firstName} {t.lastName}
+                                                </MenuItem>
+                                            ))
+                                        ) : (
+                                            <MenuItem disabled>Dem Kurs wurden keine Lehrer zugeordnet</MenuItem>
+                                        )}
+                                    </Select>
+                                </FormControl>
+                            )
+
+                            }
                             <TextField
                                 required
                                 name="shortName"
@@ -463,8 +477,8 @@ export default function FormDialog({
                             <TextField
                                 required
                                 name="weight"
-                                label={isSubject ? "Dauer in Stunden" : "Gewichtung in %"}
-                                value={displayWeight} // "" statt undefined
+                                label={isSubject ? "Dauer in Stunden" : "Gewichtung"}
+                                value={displayWeight}
                                 disabled={columnAction === "delete"}
                                 type="text"
                                 onChange={(e) => {

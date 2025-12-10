@@ -300,7 +300,7 @@ export default function Question() {
               onChange={(event, newValue) => setSelectedSubjects(newValue)}
               getOptionLabel={(option) => option.name}
               renderInput={(params) => (
-                <TextField {...params} label="Fächer" variant="standard" />
+                <TextField {...params} label="Bildungsbereiche" variant="standard" />
               )}
             />
 
@@ -365,7 +365,7 @@ export default function Question() {
               onChange={(event, newValue) => setSelectedSubjects(newValue)}
               getOptionLabel={(option) => option.name}
               renderInput={(params) => (
-                <TextField {...params} label="Fächer" variant="standard" />
+                <TextField {...params} label="Bildungsbereiche" variant="standard" />
               )}
             />
 

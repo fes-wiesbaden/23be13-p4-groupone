@@ -135,14 +135,11 @@ public class GradeService implements CrudService<Grade, UUID>{
                             .findByProjectSubjectId(projectSubject.getId())
                             .stream()
                             .map(p -> {
-                                BigDecimal weight = BigDecimal.valueOf(p.getWeight())
-                                        .multiply(BigDecimal.valueOf(100))
-                                        .setScale(2, RoundingMode.HALF_UP);
                                 return new PerformanceDto(
                                         p.getId(),
                                         p.getName(),
                                         p.getShortName(),
-                                        weight.doubleValue(),
+                                        p.getWeight(),
                                         p.getAssignedTeacher().getId()
                                 );
                             })

@@ -280,7 +280,7 @@ export default function SideAppBar({children}: SideAppBarProps) {
       text: "Lernbereich",
       icon: <LearningIcon />,
       path: "/lernbereich",
-      roles: [Role.ADMIN, Role.TEACHER],
+      roles: [Role.ADMIN],
     },
     {
       text: "Fragebogen",

@@ -92,14 +92,21 @@ public class PerformanceController {
 
     @Transactional
     @PutMapping("/edit")
-    public ResponseEntity<Map<String, String>> editPerformanceById(@RequestBody @Valid PerformanceDto performance) {
+    public ResponseEntity<Map<String, String>> editPerformance(@RequestBody @Valid PerformanceDto performance) {
         Optional<Performance> performanceOpt = performanceService.findById(performance.id());
 
         if (performanceOpt.isPresent()) {
             Performance p = performanceOpt.get();
             p.setName(performance.name());
             p.setShortName(performance.shortName());
-            if (performance.weight() < 0 || performance.weight() > 1) {
+            Optional<User> teacherOpt = userRepository.findById(performance.assignedTeacherId());
+            if (teacherOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Teacher doesnt exist"));
+            }
+            User teacher = teacherOpt.get();
+            p.setAssignedTeacher(teacher);
+            if (performance.weight() < 0) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Weight of performance is not valid"));
             }

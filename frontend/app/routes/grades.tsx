@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import API_CONFIG from "../apiConfig";
 import Tooltip from "@mui/material/Tooltip";
 import {Autocomplete, Box, Button, FormControlLabel, Paper, Stack, Switch, TextField} from "@mui/material";
-import {useAuth} from "../contexts/AuthContext";
+import {useAuth} from "~/contexts/AuthContext";
 import {DataGrid, type GridColDef, type GridColumnGroupingModel} from "@mui/x-data-grid";
 import {Role, type Teacher} from "~/types/models";
 import FormDialog from "~/components/addColumn";
@@ -203,7 +203,7 @@ export default function Grades() {
                 minWidth: 80,
                 editable: !isStudent && (isAssignedToSubject || isAdmin),
                 cellClassName: () => {
-                    return (!isStudent && (isAssignedToSubject || isAdmin)) ? 'editable-cell' : 'non-editable-cell';
+                    return (!isStudent && (isAssignedToSubject || isAdmin)) ? 'editable-cell' : '';
                 },
             };
 
@@ -214,14 +214,14 @@ export default function Grades() {
             const performanceGradeHeader: GridColDef[] =
                 subject.performances.map(perf => ({
                     field: perf.id,
-                    headerName: `${perf.shortName} (${perf.weight}%)`,
+                    headerName: `${perf.shortName} (${perf.weight})`,
                     renderHeader: () => (
                         <Tooltip
                             title={
                                 <div>
                                     Name: {perf.name}
                                     <br/>
-                                    Gewichtung: {perf.weight}%
+                                    Gewichtung: {perf.weight}
                                     <br/>
                                     Lehrer: {
                                     (() => {
@@ -233,7 +233,7 @@ export default function Grades() {
                                 </div>
                             }
                         >
-                            <span>{`${perf.shortName} (${perf.weight}%)`}</span>
+                            <span>{`${perf.shortName} (${perf.weight})`}</span>
                         </Tooltip>
                     ),
                     type: "singleSelect",
@@ -242,7 +242,7 @@ export default function Grades() {
                     minWidth: 80,
                     editable: !isStudent && (perf.assignedTeacherId === user?.id || isAdmin),
                     cellClassName: () => {
-                        return (!isStudent && (perf.assignedTeacherId === user?.id || isAdmin)) ? 'editable-cell' : 'non-editable-cell';
+                        return (!isStudent && (perf.assignedTeacherId === user?.id || isAdmin)) ? 'editable-cell' : '';
                     },
                 }));
 
@@ -256,12 +256,9 @@ export default function Grades() {
                                 <span>ZV</span>
                             </Tooltip>
                         ),
-                        type: "singleSelect",
-                        valueOptions: ["1", "2", "3", "4", "5", "6"],
                         flex: 1,
                         minWidth: 80,
                         editable: false,
-                        cellClassName: 'non-editable-cell'
                     }
                     : null;
 
@@ -292,6 +289,8 @@ export default function Grades() {
             setSnackbarOpen(true);
             return;
         }
+        setCourseError(false);
+        setProjectError(false);
 
         try {
             const url = `${API_CONFIG.BASE_URL}/api/grade/overview?projectId=${selectedProject.id}${selectedGroup ? `&groupId=${selectedGroup.id}` : ""}&userId=${user?.id}`;
@@ -538,14 +537,6 @@ export default function Grades() {
                                 "&:hover": {
                                     backgroundColor: "rgba(56, 142, 60, 0.35)",
                                 },
-                            },
-
-                            "& .non-editable-cell": {
-                                backgroundColor: "rgba(189, 189, 189, 0.25)",
-                                color: "rgba(0, 0, 0, 0.5)",
-                                border: "1px solid rgba(120, 120, 120, 0.5)",
-                                backgroundImage:
-                                    "repeating-linear-gradient(45deg, rgba(0,0,0,0.07) 0, rgba(0,0,0,0.07) 4px, transparent 4px, transparent 8px)",
                             },
                         }}
                     />
