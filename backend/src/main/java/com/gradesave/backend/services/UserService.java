@@ -88,6 +88,7 @@ public class UserService implements CrudService<User, UUID> {
         existing.setFirstName(patch.getFirstName());
         existing.setLastName(patch.getLastName());
         existing.setRole(patch.getRole());
+        existing.setChangedDefaultPassword(patch.getChangedDefaultPassword());
 
         if (patch.getPassword() != null && !patch.getPassword().isBlank()) {
             existing.setPassword(encoder.encode(patch.getPassword()));
@@ -164,5 +165,17 @@ public class UserService implements CrudService<User, UUID> {
 
     public PasswordEncoder getPasswordEncoder() {
         return encoder;
+    }
+
+    public void validatePassword(String password) {
+        if (password == null) {
+            throw new IllegalArgumentException("Passwort darf nicht null sein");
+        }
+
+        String trimmed = password.trim();
+
+        if (trimmed.length() < 8 || trimmed.length() > 50) {
+            throw new IllegalArgumentException("Passwort muss zwischen 8 und 50 Zeichen lang sein");
+        }
     }
 }

@@ -13,8 +13,8 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import SideAppBar from "~/components/sideAppBar";
-import React, { useEffect } from "react";
-import { AuthProvider, useAuth } from "~/contexts/AuthContext";
+import React, {useEffect} from "react";
+import {AuthProvider, useAuth, isPublicRoute} from "~/contexts/AuthContext";
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from "~/theme";
@@ -57,40 +57,52 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 function ProtectedApp() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+    const {isAuthenticated, isLoading, user} = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  const publicRoutes = ["/login", "/register"];
-  const isPublicRoute = publicRoutes.includes(location.pathname);
+    const isPublic = isPublicRoute(location.pathname);
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated && !isPublicRoute) {
-      navigate("/login", { replace: true });
+    useEffect(() => {
+        if (!isLoading) {
+            if (!isAuthenticated && !isPublic) {
+                navigate("/login", {replace: true});
+            } else if (
+                isAuthenticated
+                && user
+                && user.needsPasswordChange
+                && !isPublic
+            ) {
+                navigate("/change-password", {replace: true});
+            }
+        }
+    }, [isAuthenticated, isLoading, isPublic, user, navigate]);
+
+
+    if (isLoading) {
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100vh",
+                }}
+            >
+                Loading...
+            </div>
+        );
     }
-  }, [isAuthenticated, isLoading, isPublicRoute, navigate]);
 
+    if (isPublic) {
+        return <Outlet/>;
+    }
 
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        Loading...
-      </div>
-    );
-  }
+    if (isAuthenticated && user?.needsPasswordChange && location.pathname !== "/change-password") {
+        return null;
+    }
 
-  if (isPublicRoute) {
-    return <Outlet />;
-  }
-
-  return isAuthenticated ? <Outlet /> : null;
+    return isAuthenticated ? <Outlet/> : null;
 }
 
 export default function App() {

@@ -1,5 +1,5 @@
 import {useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
 import Typography from "@mui/material/Typography";
 import {AccordionDetails, AccordionSummary, Box, Button, MenuItem, TextField} from "@mui/material";
@@ -993,6 +993,12 @@ export default function CreateOrEditCourse() {
                     </Accordion>
                 </Box>
             </Box>
+            <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+            />
         </Box>
     )
 }

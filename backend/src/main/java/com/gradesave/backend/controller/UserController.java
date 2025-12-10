@@ -68,12 +68,7 @@ public class UserController {
                 return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
             }
 
-            return ResponseEntity.ok(Map.of(
-                    "message", "Login successful",
-                    "id", user.getId(),
-                    "role", user.getRole(),
-                    "username", user.getUsername()
-            ));
+            return ResponseEntity.ok(MeDTO.fromEntity(user));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
@@ -145,15 +140,18 @@ public class UserController {
         String currentPassword = body.get("currentPassword");
         String newPassword = body.get("newPassword");
 
-        if (currentPassword == null || currentPassword.isBlank() ||
-            newPassword == null || newPassword.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Passwords missing"));
-        }
 
         if (!userService.getPasswordEncoder().matches(currentPassword, user.getPassword())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Aktuelles Passwort ist falsch!"));
         }
 
+        try {
+            userService.validatePassword(newPassword);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("valid", false, "error", e.getMessage()));
+        }
+
+        user.setChangedDefaultPassword(true);
         user.setPassword(newPassword);
         userService.update(user.getId(), user);
 
@@ -187,6 +185,7 @@ public class UserController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest req) {
         User entity = new User();
+
         entity.setUsername(req.username());
         entity.setFirstName(req.firstName());
         entity.setLastName(req.lastName());

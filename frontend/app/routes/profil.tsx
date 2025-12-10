@@ -14,6 +14,7 @@ import {useAuth} from "~/contexts/AuthContext";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import type {CourseDto, User} from "~/types/models";
 import CustomizedSnackbars from "~/components/snackbar"
+import API_CONFIG from "~/apiConfig";
 
 
 /**
@@ -39,7 +40,6 @@ interface UserProfile {
 }
 
 export default function Profile(): React.ReactElement {
-    const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
     const {user: authUser} = useAuth();
 
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -66,7 +66,7 @@ export default function Profile(): React.ReactElement {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await fetch(`${apiUrl}/api/users/me`, {
+                const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/me`, {
                     credentials: "include",
                 });
                 if (!res.ok) {
@@ -105,9 +105,18 @@ export default function Profile(): React.ReactElement {
             setError("Bitte aktuelles Passwort eingeben");
             return;
         }
+        if (currentPassword.trim().length > 0) {
+            const password = newPassword;
+
+            if (password.length < 8 || password.length > 50) {
+                setError("Passwort muss zwischen 8 und 50 Zeichen lang sein");
+                return;
+            }
+        }
+
 
         try {
-            const res = await fetch(`${apiUrl}/api/users/me/update-password`, {
+            const res = await fetch(`${API_CONFIG.BASE_URL}/api/users/me/update-password`, {
                 method: "PUT",
                 headers: {"Content-Type": "application/json"},
                 credentials: "include",

@@ -57,6 +57,8 @@ public class User {
     @JsonIgnore
     private Set<Group> groups = new HashSet<>();
 
+    private boolean changedDefaultPassword = false;
+
     public UUID getId() {
         return id;
     }
@@ -119,5 +121,13 @@ public class User {
 
     public void setGroups(Set<Group> groups) {
         this.groups = groups;
+    }
+
+    public boolean getChangedDefaultPassword() {
+        return changedDefaultPassword;
+    }
+
+    public void setChangedDefaultPassword(boolean changedDefaultPassword) {
+        this.changedDefaultPassword = changedDefaultPassword;
     }
 }

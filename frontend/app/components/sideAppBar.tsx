@@ -12,7 +12,7 @@ import {
 } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import PollIcon from "@mui/icons-material/Poll";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MuiDrawer from "@mui/material/Drawer";
 import MuiAppBar, {
   type AppBarProps as MuiAppBarProps,
@@ -46,7 +46,7 @@ import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import ProfileIcon from "../assets/test_profile_icon.jpg";
-import { useAuth } from "~/contexts/AuthContext";
+import { useAuth, isPublicRoute } from "~/contexts/AuthContext";
 import { Role } from "~/types/models";
 import ColorModeToggle from "./colorModeToggle";
 
@@ -221,15 +221,18 @@ interface SideAppBarProps {
   children?: React.ReactNode;
 }
 
-export default function SideAppBar({ children }: SideAppBarProps) {
-  const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
-  const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
+export default function SideAppBar({children}: SideAppBarProps) {
+    const theme = useTheme();
+    const [open, setOpen] = React.useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const {user, isAuthenticated, logout} = useAuth();
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
+    const isPublic = isPublicRoute(location.pathname);
+
+    const handleDrawerOpen = () => {
+        setOpen(true);
+    };
 
   const handleDrawerClose = () => {
     setOpen(false);
@@ -277,7 +280,7 @@ export default function SideAppBar({ children }: SideAppBarProps) {
       text: "Lernbereich",
       icon: <LearningIcon />,
       path: "/lernbereich",
-      roles: [Role.ADMIN, Role.TEACHER, Role.STUDENT],
+      roles: [Role.ADMIN, Role.TEACHER],
     },
     {
       text: "Fragebogen",
@@ -330,7 +333,7 @@ export default function SideAppBar({ children }: SideAppBarProps) {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      {isAuthenticated && (
+      {isAuthenticated && !isPublic && (
         <>
           <AppBar position="fixed" open={open}>
             <Toolbar>
@@ -510,7 +513,7 @@ export default function SideAppBar({ children }: SideAppBarProps) {
           minWidth: 0,
         }}
       >
-        {isAuthenticated && <Toolbar />}
+        {isAuthenticated && !isPublic && <Toolbar />}
         {children}
       </Box>
     </Box>
