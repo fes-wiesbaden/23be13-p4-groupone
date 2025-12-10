@@ -19,6 +19,15 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
+    @Query("""
+        SELECT CASE WHEN COUNT(p) > 0 THEN TRUE ELSE FALSE END
+        FROM Project p
+        JOIN p.course c
+        JOIN c.users u
+        WHERE u.id = :userId
+            AND p.id = :projectId
+    """)
+    boolean existsUserInProject(UUID userId, UUID projectId);
 
     List<Project> findByCourseId(UUID courseId);
 }

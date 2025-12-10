@@ -57,6 +57,9 @@ export default function Grades() {
 
     const isStudent = user?.role === Role.STUDENT;
 
+    const isAdmin = user?.role === Role.ADMIN;
+
+
     const filterUser = (overview: GradeOverview, userId: string) => ({
         ...overview,
         users: overview.users.filter(u => u.id === userId)
@@ -217,7 +220,7 @@ export default function Grades() {
         }
 
         try {
-            const url = `${API_CONFIG.BASE_URL}/api/grade/overview?projectId=${selectedProject.id}${selectedGroup ? `&groupId=${selectedGroup.id}` : ""}`;
+            const url = `${API_CONFIG.BASE_URL}/api/grade/overview?projectId=${selectedProject.id}${selectedGroup ? `&groupId=${selectedGroup.id}` : ""}&userId=${user?.id}`;
             const res = await fetch(url, { credentials: "include" });
             if (!res.ok) return;
             let data: GradeOverview = await res.json();
@@ -362,14 +365,15 @@ export default function Grades() {
                 <Paper elevation={2} sx={{ p: 2 }}>
                     {!isStudent && (
                         <Stack direction="row" justifyContent="space-between" mb={2} alignItems="center">
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={() => setDialogOpen(true)}
-                            >
-                                Tabelle anpassen
-                            </Button>
-
+                            {isAdmin &&
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => setDialogOpen(true)}
+                                >
+                                    Tabelle anpassen
+                                </Button>
+                            }
                             <Stack direction="row" spacing={4}>
                                 <FormControlLabel
                                     control={<Switch defaultChecked />}
