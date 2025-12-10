@@ -11,6 +11,7 @@ import com.gradesave.backend.dto.project.QuestionnaireActivityStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * @author: Michael Holl
@@ -34,6 +35,7 @@ public class Project {
     private Course course;
 
     @NotBlank
+    @Size(max = 100, message = "name must not exceed 100 characters")
     private String name;
 
     @NotNull(message = "projectStart is required")

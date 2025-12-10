@@ -14,6 +14,8 @@ import CustomizedSnackbars from "~/components/snackbar"
  *
  * Editing/Creating courses and assigning students
  *
+ * @Edited by Noah Bach
+ *    Form Validation
  */
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
@@ -175,6 +177,7 @@ export default function CreateOrEditCourse() {
     const [assignedStudentSearchQuery, setAssignedStudentSearchQuery] = useState('')
     const [availableTeacherSearchQuery, setAvailableTeacherSearchQuery] = useState('')
     const [availableStudentSearchQuery, setAvailableStudentSearchQuery] = useState('')
+    const [nameError, setNameError] = useState("")
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
@@ -483,6 +486,11 @@ export default function CreateOrEditCourse() {
     const handleCreateCourse = async () => {
         if (isEdit || !courseCreateDetails.courseName.trim()) return;
 
+        if (courseCreateDetails.courseName.length > 100){
+            setNameError("Name darf nicht länger als 100 sein")
+            return
+        }
+
         setCreatingCourse(true)
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/full`, {
@@ -635,6 +643,8 @@ export default function CreateOrEditCourse() {
                     onChange={e => handleCourseNameChange(e.target.value)}
                     disabled={creatingCourse}
                     sx={{flex: "1 1 250px"}}
+                    helperText={nameError}
+                    error={Boolean(nameError)}
                 />
 
                 <TextField

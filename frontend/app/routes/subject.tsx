@@ -33,6 +33,7 @@ import CustomizedSnackbars from "../components/snackbar";
  * @Edited by Noah Bach
  * <p>
  *    Add Dialog integration
+ *    Form Validation
  * </p>
  *
  **/
@@ -54,6 +55,9 @@ export default function Subject() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [nameError, setNameError] = useState("");
+  const [shortNameError, setShortNameError] = useState("");
+  const [descriptionError, setDescriptionError] = useState("");
   const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
@@ -76,7 +80,12 @@ export default function Subject() {
     fetchData();
   }, []);
 
-  const handleCloseDialog = () => setOpenDialog(false);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setNameError("");
+    setShortNameError("");
+    setDescriptionError("");
+  }
 
   const handleAddClick = () => {
     const newSubject: Subject = {
@@ -138,9 +147,30 @@ export default function Subject() {
       editingSubject.description === originalSubject.description &&
       editingSubject.learningField === originalSubject.learningField
     ) {
-      setOpenDialog(false);
+      handleCloseDialog();
       return;
     }
+
+    let isInvalid: boolean = false;
+
+    setNameError("");
+    setShortNameError("");
+    setDescriptionError("");
+    if (editingSubject.name.length > 100){
+      setNameError("Name darf nicht länger als 100 sein");
+      isInvalid = true;
+    }
+    if (editingSubject.shortName.length > 5){
+      setShortNameError("Abkürzung darf nicht länger als 5 sein");
+      isInvalid = true;
+    }
+    if (editingSubject.description.length > 1000){
+      setDescriptionError("Beschreibung darf nicht länger als 1000 sein");
+      isInvalid = true;
+    }
+    
+    if (isInvalid)
+      return;
 
     try {
       let res;
@@ -161,15 +191,20 @@ export default function Subject() {
             prev.map((s) => (s.id === updated.id ? updated : s))
           );
           showSnackbar(`Das ${updated.learningField ? "Lernfeld" : "Schulfach"} "${updated.name}" wurde erfolgreich bearbeitet!`);
+        } else {
+          showSnackbar(`Fehler beim Bearbeiten des ${editingSubject.learningField ? "Lernfelds" : "Schulfachs"}!`, "error")
         }
       } else {
         // Create subject
-        res = await fetch(`${API_CONFIG.BASE_URL}/api/subject`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(editingSubject),
-        });
+        res = await fetch(
+          `${API_CONFIG.BASE_URL}/api/subject`, 
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(editingSubject),
+          }
+        );
         if (res.ok) {
           const newSubject = await res.json();
           setAllSubjects((prev) => [...prev, newSubject]);
@@ -182,7 +217,7 @@ export default function Subject() {
       console.error("Error submitting subject:", err);
     }
 
-    setOpenDialog(false);
+    handleCloseDialog();
   };
 
   return (
@@ -228,6 +263,8 @@ export default function Subject() {
                 editingSubject &&
                 setEditingSubject({ ...editingSubject, name: e.target.value })
               }
+              helperText={nameError}
+              error={Boolean(nameError)}
             />
             <TextField
                 autoFocus
@@ -240,6 +277,8 @@ export default function Subject() {
                     editingSubject &&
                     setEditingSubject({ ...editingSubject, shortName: e.target.value })
                 }
+                helperText={shortNameError}
+                error={Boolean(shortNameError)}
             />
             <TextField
               margin="dense"
@@ -254,6 +293,8 @@ export default function Subject() {
                   description: e.target.value,
                 })
               }
+              helperText={descriptionError}
+              error={Boolean(descriptionError)}
             />
             <FormControl>
               <FormLabel required id="type-label">
