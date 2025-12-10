@@ -57,11 +57,11 @@ Menü -> **Benutzerverwaltung**
 
 ## Rollen im System
 
-| Rolle                                                                                                                                                                          | Rechte                                                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Schüler**                                                                                                                                                                    | Nur eigene Zeugnisnoten sehen<br>Kann Fragebögen (Selbstbewertung) ausfüllen                                                                             |
-| **Lehrer**                                                                                                                                                                     | Noten eintragen (nur bei zugewiesenen Leistungen)<br>Fragebögen für Projekte erstellen & auswerten<br>Notenvorschläge einsehen und Zeugnisnote festlegen |
-| **Admin**     Alle Rechte +<br>Nutzer, Klassen, Lernbereiche, Projekte und Leistungen anlegen<br>Kann keine Noten sehen/eingeben, wenn er nicht gleichzeitig Klassenlehrer ist |
+| Rolle       | Rechte                                                                                                                                                           |
+|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Schüler** | Nur eigene Zeugnisnoten sehen<br>Kann Fragebögen (Selbstbewertung) ausfüllen                                                                                     |
+| **Lehrer**  | Noten eintragen (nur bei zugewiesenen Leistungen)<br>Fragebögen für Projekte erstellen & auswerten<br>Notenvorschläge einsehen und Zeugnisnote festlegen         |
+| **Admin**   | Alle Rechte +<br>Nutzer, Klassen, Lernbereiche, Projekte und Leistungen anlegen<br>Kann keine Noten sehen/eingeben, wenn er nicht gleichzeitig Klassenlehrer ist |
 
 > [!IMPORTANT]
 > Zusätzliche Admins können **nur** durch einen Nutzer mit Datenbankzugriff in dieser manuell hochgestuft werden
