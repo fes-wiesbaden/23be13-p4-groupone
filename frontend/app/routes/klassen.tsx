@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import type {Route} from "./+types/home";
-import {deleteCourse} from "~/adminfunctions";
+// import {deleteCourse} from "~/adminfunctions";
 import DataTableWithAdd, {type DataRow,} from "../components/dataTableWithAddButton";
 import API_CONFIG from "../apiConfig";
 import { useNavigate } from "react-router";
@@ -121,11 +121,31 @@ export default function Klassen() {
     }
   }
 
+  const deleteCourse = async function(id: string, showSnackbar: (message: string, severity: "success" | "error") => void) {
+    try {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        showSnackbar(`Fehler beim Löschen der Klasse! ${res.status}`, "error");
+        return;
+      }
+
+      showSnackbar("Die Klasse wurde erfolgreich gelöscht!", "success");
+    } catch (e) {
+      console.error("Request failed: ", e);
+      showSnackbar("Fehler beim Löschen der Klasse!", "error");
+    }
+  }
+
   useEffect(() => {
     (async () => {
       await fetchData();
     })();
   }, []);
+
   return (
     <>
       <DataTableWithAdd<CourseRow>
