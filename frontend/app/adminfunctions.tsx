@@ -1,20 +1,19 @@
-import React from "react";
 import API_CONFIG from "./apiConfig";
 import { useState } from "react";
 
 export async function postNewTestCourseEntry() {
-  try {
-    await fetch(`${API_CONFIG.BASE_URL}/api/course`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: '{"courseName":"test-name"}',
-    });
-  } catch (e) {
-    console.error("Request failed: ", e);
-  }
+    try {
+        await fetch(`${API_CONFIG.BASE_URL}/api/course`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: '{"courseName":"test-name"}',
+        });
+    } catch (e) {
+        console.error("Request failed: ", e);
+    }
 }
 
   export async function deleteCourse(id: string, showSnackbar: (message: string, severity: "success" | "error") => void) {

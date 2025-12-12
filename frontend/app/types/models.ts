@@ -1,7 +1,7 @@
 export enum Role {
-   STUDENT = "STUDENT",
-   TEACHER = "TEACHER",
-   ADMIN = "ADMIN"
+    STUDENT = "STUDENT",
+    TEACHER = "TEACHER",
+    ADMIN = "ADMIN"
 }
 
 export interface User {
@@ -10,6 +10,8 @@ export interface User {
   firstName: string;
   lastName: string;
   role: Role;
+  courses: CourseDto[];
+  needsPasswordChange: boolean
 }
 
 export interface CourseDto {
@@ -17,3 +19,11 @@ export interface CourseDto {
   courseName: string;
   classTeacher: User;
 }
+
+export interface Teacher {
+    teacherId: string,
+    username: string;
+    firstName: string;
+    lastName: string;
+}
+

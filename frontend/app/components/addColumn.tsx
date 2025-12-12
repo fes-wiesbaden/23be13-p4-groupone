@@ -1,27 +1,34 @@
 import * as React from "react";
+import {useEffect, useState} from "react";
 import {
+    Autocomplete,
+    Box,
     Button,
-    TextField,
+    Checkbox,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
-    Box,
+    FormControl,
+    FormControlLabel,
+    FormLabel,
     InputLabel,
     MenuItem,
-    FormControl,
-    Select, Checkbox,
-    FormControlLabel, Autocomplete, FormLabel, RadioGroup, Radio,
+    Radio,
+    RadioGroup,
+    Select,
+    TextField,
 } from "@mui/material";
-import {useEffect, useState} from "react";
 import API_CONFIG from "~/apiConfig";
 import CustomizedSnackbars from "~/components/snackbar";
+import type {Teacher} from "~/types/models";
 
 interface DialogProps {
     open: boolean;
     onClose: () => void;
     projectId: string | undefined;
     projectSubjects: ProjectSubject[];
+    teachers: Teacher[]
     onSubmitSuccess?: () => void;
 }
 
@@ -39,6 +46,7 @@ export interface Performance {
     name: string;
     shortName?: string;
     weight: number;
+    assignedTeacherId: string;
 }
 
 interface Subject {
@@ -54,6 +62,7 @@ export interface NewPerformanceRequest {
     name: string;
     shortName: string;
     weight: number;
+    assignedTeacherId: string
 }
 
 export interface NewProjectSubjectRequest {
@@ -71,14 +80,24 @@ export interface EditProjecSubject {
     learningField: boolean,
 }
 
-export default function FormDialog({open, onClose, projectId, projectSubjects, onSubmitSuccess}: DialogProps) {
-    const [isSubject, setIsSubject] = useState<boolean>(false);
+export default function FormDialog({
+                                       open,
+                                       onClose,
+                                       projectId,
+                                       projectSubjects,
+                                       teachers,
+                                       onSubmitSuccess
+                                   }: DialogProps) {
+    const [isSubject, setIsSubject] = useState<boolean>(true);
     const [selectedProjectSubjectId, setSelectedProjectSubjectId] = useState<string | undefined>(undefined);
     const [selectedSubjectId, setSelectedSubjectId] = useState<string | undefined>(undefined);
     const [selectedPerformanceId, setSelectedPerformanceId] = useState<string | undefined>(undefined);
+    const [assignedTeacherId, setAssignedTeacherId] = useState("");
+
 
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [shortName, setShortName] = useState<string>();
+    const [name, setName] = useState<string>();
     const [displayWeight, setDisplayWeight] = useState<string | undefined>();
     const [performanceOptions, setPerformanceOptions] = useState<Performance[] | undefined>();
     const [subjectOptions, setSubjectOptions] = useState<ProjectSubject[] | undefined>();
@@ -112,6 +131,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
     useEffect(() => {
         if (!selectedOption) return;
         if (!isSubject && columnAction !== "add") {
+            const performance = performanceOptions?.find(p => p.id === selectedPerformanceId);
+            setAssignedTeacherId(performance?.assignedTeacherId ?? "");
             setShortName(selectedOption.shortName ?? "");
             setDisplayWeight(String(selectedOption.weight ?? ""));
         }
@@ -120,15 +141,20 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
     useEffect(() => {
         setShortName("");
         setDisplayWeight("");
+        setAssignedTeacherId("");
+        setSelectedPerformanceId(undefined);
+        setName("");
     }, [selectedSubjectId, selectedProjectSubjectId, isSubject]);
 
     useEffect(() => {
         setSelectedSubjectId(undefined);
         setSelectedProjectSubjectId(undefined);
         setSelectedPerformanceId(undefined);
+        setAssignedTeacherId("");
         setShortName("");
         setDisplayWeight("");
         setLearningField("true");
+        setName("")
     }, [isSubject, columnAction, open]);
 
 
@@ -155,7 +181,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
             if (columnAction !== "add") {
                 const projectSubject = projectSubjects.find(ps => ps.id === selectedProjectSubjectId);
                 if (projectSubject) {
-                    setShortName(projectSubject?.shortName || undefined)
+                    setShortName(projectSubject?.shortName || undefined);
                     setLearningField(projectSubject.learningField ? "true" : "false");
                     setDisplayWeight(String(projectSubject?.weight) || undefined);
                 }
@@ -187,6 +213,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
     const handleClose = () => {
         setCreateMore(false);
         setSelectedSubjectId(undefined);
+        setColumnAction("add");
+        setName("");
         onClose();
     };
 
@@ -224,7 +252,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                         projectSubjectId: formJson.subject ?? "",
                         name: formJson.name,
                         shortName: formJson.shortName,
-                        weight: Number(formJson.weight.replace(",", ".")) / 100,
+                        weight: Number(formJson.weight.replace(",", ".")),
+                        assignedTeacherId: assignedTeacherId
                     };
                 }
                 break;
@@ -257,7 +286,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                         id: selectedOption.id,
                         name: selectedOption.name,
                         shortName: formJson.shortName,
-                        weight: Number(formJson.weight.replace(",", ".")) / 100,
+                        weight: Number(formJson.weight.replace(",", ".")),
+                        assignedTeacherId: assignedTeacherId
                     };
                 }
                 break;
@@ -268,7 +298,6 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
         }
         try {
             const url = `${API_CONFIG.BASE_URL}/api/${controller}/${endpoint}`;
-
             const res = await fetch(url, {
                 method: method,
                 headers: {"Content-Type": "application/json"},
@@ -287,10 +316,6 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
             if (onSubmitSuccess) onSubmitSuccess();
-            setSelectedProjectSubjectId(undefined);
-            setSelectedSubjectId(undefined);
-            setShortName("");
-            setDisplayWeight("");
         } catch (err) {
             console.error(err);
         }
@@ -298,8 +323,11 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
         await fetchSubjects();
         setSelectedProjectSubjectId(undefined);
         setSelectedSubjectId(undefined);
+        setAssignedTeacherId("");
         setShortName("");
         setDisplayWeight("");
+        setAssignedTeacherId("");
+        setName("");
         if (!createMore) {
             handleClose();
         }
@@ -311,8 +339,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                 <DialogTitle>Tabelle anpassen</DialogTitle>
 
                 <form onSubmit={handleSubmit} id="newPerformanceForm">
-                    <DialogContent>
-                        <Box sx={{display: "grid", gap: 2}}>
+                    <DialogContent sx={{pt: 1}}>
+                        <Box sx={{display: "grid", gap: 1.5}}>
                             <FormControl fullWidth>
                                 <InputLabel>Aktion</InputLabel>
                                 <Select
@@ -339,31 +367,34 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                             </FormControl>
 
                             {!isSubject && (
-                                <FormControl fullWidth>
-                                    <InputLabel>Bildungsbereich</InputLabel>
-                                    <Select
-                                        required
-                                        name="subject"
-                                        value={selectedProjectSubjectId ?? ""}
-                                        onChange={(e) => {
-                                            const newId = e.target.value;
-                                            setSelectedProjectSubjectId(newId);
+                                <>
+                                    <FormControl fullWidth>
+                                        <InputLabel>Bildungsbereich*</InputLabel>
+                                        <Select
+                                            required
+                                            name="subject"
+                                            value={selectedProjectSubjectId ?? ""}
+                                            onChange={(e) => {
+                                                const newId = e.target.value;
+                                                setSelectedProjectSubjectId(newId);
 
-                                            setShortName("");
-                                            setDisplayWeight("");
-                                        }}
-                                    >
-                                        {subjectOptions && subjectOptions.length > 0 ? (
-                                            subjectOptions.map((option) => (
-                                                <MenuItem key={option.id} value={option.id}>
-                                                    {option.name}
-                                                </MenuItem>
-                                            ))
-                                        ) : (
-                                            <MenuItem disabled>Es existiert kein Bildungsbereich im Projekt</MenuItem>
-                                        )}
-                                    </Select>
-                                </FormControl>
+                                                setShortName("");
+                                                setDisplayWeight("");
+                                            }}
+                                        >
+                                            {subjectOptions && subjectOptions.length > 0 ? (
+                                                subjectOptions.map((option) => (
+                                                    <MenuItem key={option.id} value={option.id}>
+                                                        {option.name}
+                                                    </MenuItem>
+                                                ))
+                                            ) : (
+                                                <MenuItem disabled>Es existiert kein Bildungsbereich im
+                                                    Projekt</MenuItem>
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                </>
                             )}
 
                             {!isSubject && columnAction === "add" && (
@@ -373,6 +404,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                                     name="name"
                                     label="Name"
                                     fullWidth
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     variant="outlined"
                                 />
                             )}
@@ -394,7 +427,7 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                                         } else {
                                             setSelectedProjectSubjectId(undefined);
                                             setSelectedSubjectId(undefined);
-                                            setShortName(undefined);
+                                            setShortName("");
                                         }
                                     }}
                                     renderInput={(params) => (
@@ -403,6 +436,30 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                                     )}
                                     fullWidth
                                 />
+                            )}
+
+                            {!isSubject && (
+                                <FormControl fullWidth>
+                                    <InputLabel>Zugewiesene Lehrkraft*</InputLabel>
+                                    <Select
+                                        required
+                                        name="assigned_teacher"
+                                        value={assignedTeacherId ?? ""}
+                                        onChange={(e) => {
+                                            setAssignedTeacherId(e.target.value)
+                                        }}
+                                    >
+                                        {teachers && teachers.length > 0 ? (
+                                            teachers.map((t) => (
+                                                <MenuItem key={t.teacherId} value={t.teacherId}>
+                                                    {t.firstName} {t.lastName}
+                                                </MenuItem>
+                                            ))
+                                        ) : (
+                                            <MenuItem disabled>Dem Kurs wurden keine Lehrer zugeordnet</MenuItem>
+                                        )}
+                                    </Select>
+                                </FormControl>
                             )}
 
                             <TextField
@@ -419,8 +476,8 @@ export default function FormDialog({open, onClose, projectId, projectSubjects, o
                             <TextField
                                 required
                                 name="weight"
-                                label={isSubject ? "Dauer in Stunden" : "Gewichtung in %"}
-                                value={displayWeight} // "" statt undefined
+                                label={isSubject ? "Dauer in Stunden" : "Gewichtung"}
+                                value={displayWeight}
                                 disabled={columnAction === "delete"}
                                 type="text"
                                 onChange={(e) => {

@@ -13,8 +13,8 @@ import com.gradesave.backend.dto.grade.GradeOverviewDto;
 /**
  * @author: Michael Holl
  * <p>
- *       Controller for handling Grade REST endpoints.
- *       Provides endpoints to create, retrieve and update grades.
+ * Controller for handling Grade REST endpoints.
+ * Provides endpoints to create, retrieve and update grades.
  * </p>
  *
  **/
@@ -30,8 +30,11 @@ public class GradeController {
     }
 
     @GetMapping("/overview")
-    public GradeOverviewDto getGradeOverview(@RequestParam UUID projectId, @RequestParam(required = false) UUID groupId) {
-        return gradeService.loadGradeOverview(projectId, groupId);
+    public GradeOverviewDto getGradeOverview(@RequestParam UUID projectId,
+                                             @RequestParam(required = false) UUID groupId,
+                                             @RequestParam UUID userId) {
+
+        return gradeService.loadGradeOverview(projectId, groupId, userId);
     }
 
     @PostMapping("/save")

@@ -7,9 +7,11 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.gradesave.backend.dto.project.QuestionnaireActivityStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * @author: Michael Holl
@@ -33,13 +35,14 @@ public class Project {
     private Course course;
 
     @NotBlank
+    @Size(max = 100, message = "name must not exceed 100 characters")
     private String name;
 
     @NotNull(message = "projectStart is required")
     @Column(name = "project_start")
     private LocalDate projectStart;
 
-    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<ProjectQuestion> projectQuestions = new HashSet<>();
 
@@ -50,6 +53,10 @@ public class Project {
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<Group> groups = new HashSet<>();
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private QuestionnaireActivityStatus activityStatus = QuestionnaireActivityStatus.EDITING;
 
     public UUID getId() {
         return id;
@@ -83,14 +90,6 @@ public class Project {
         this.projectStart = projectStart;
     }
 
-    public Set<ProjectQuestion> getProjectQuestions() {
-        return projectQuestions;
-    }
-
-    public void setProjectQuestions(Set<ProjectQuestion> projectQuestions) {
-        this.projectQuestions = projectQuestions;
-    }
-
     public Set<ProjectSubject> getProjectSubjects() {
         return projectSubjects;
     }
@@ -105,5 +104,21 @@ public class Project {
 
     public void setGroups(Set<Group> groups) {
         this.groups = groups;
+    }
+
+    public Set<ProjectQuestion> getProjectQuestions() {
+        return projectQuestions;
+    }
+
+    public void setProjectQuestions(Set<ProjectQuestion> projectQuestions) {
+        this.projectQuestions = projectQuestions;
+    }
+
+    public QuestionnaireActivityStatus getActivityStatus() {
+        return activityStatus;
+    }
+
+    public void setActivityStatus(QuestionnaireActivityStatus activityStatus) {
+        this.activityStatus = activityStatus;
     }
 }

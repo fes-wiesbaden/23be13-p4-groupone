@@ -8,6 +8,7 @@ import API_CONFIG from "~/apiConfig";
 import useAlertDialog from "~/components/youSurePopup";
 import CustomizedSnackbars from "../components/snackbar";
 import { useLocation } from "react-router";
+import Box from "@mui/material/Box";
 
 /**
  * @author Paul Geisthardt
@@ -179,8 +180,10 @@ export default function Projects () {
     }
 
     return (
-        <>
+        <Box p={2}>
             <DataTableWithAdd<ProjectRow>
+                title="Projekte"
+                addButtonLabel="Neues Projekt"
                 columns={columns}
                 rows={rows}
                 onAddClick={handleAddClick}
@@ -194,6 +197,6 @@ export default function Projects () {
                 severity={snackbarSeverity}
                 onClose={() => setSnackbarOpen(false)}
             />
-        </>
+        </Box>
     );
 }

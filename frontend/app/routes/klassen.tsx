@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
-import type { Route } from "./+types/home";
-import { deleteCourse } from "~/adminfunctions";
-import DataTableWithAdd, {
-  type DataRow,
-} from "../components/dataTableWithAddButton";
+import React, {useEffect, useState} from "react";
+import type {Route} from "./+types/home";
+import {deleteCourse} from "~/adminfunctions";
+import DataTableWithAdd, {type DataRow,} from "../components/dataTableWithAddButton";
 import API_CONFIG from "../apiConfig";
 import { useNavigate } from "react-router";
 import CustomizedSnackbars from "../components/snackbar";
 import { useLocation } from "react-router";
+import useAlertDialog from "~/components/youSurePopup";
+import type { CourseDto } from "~/types/models";
 
 /**
  * @author Noah Bach
@@ -26,26 +26,28 @@ import { useLocation } from "react-router";
  */
 
 interface CourseRow extends DataRow {
-  id: string;
-  courseName: string;
-  teacherId?: string;
-  teacherName?: string;
+    id: string;
+    courseName: string;
+    teacherName?: string;
+}
+
+interface CourseBareDto {
+    id: string,
+    courseName: string,
+    classTeacherName: string
 }
 
 export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "Klassenübersicht" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
+    return [
+        {title: "Klassenübersicht"},
+        {name: "description", content: "Welcome to React Router!"},
+    ];
 }
 
 const columns = [
-  { label: "Klasse", key: "courseName" },
-  { label: "Klassenlehrer", key: "teacherName" },
+    {label: "Klasse", key: "courseName"},
+    {label: "Klassenlehrer", key: "teacherName"},
 ];
-
-import type { User, Role, CourseDto } from "../types/models";
-import useAlertDialog from "~/components/youSurePopup";
 
 export default function Klassen() {
   const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
@@ -69,7 +71,10 @@ export default function Klassen() {
     }
   }, [location.state]);
 
-  const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Klasse wirklich löschen?")
+    const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Klasse wirklich löschen?")
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
 
   async function handleEditClick(row: CourseRow) {
     navigate(`/klassen/${row.id}`);
@@ -114,7 +119,7 @@ export default function Klassen() {
     } catch (e) {
       console.error("Error fetching courses: ", e);
     }
-  };
+  }
 
   useEffect(() => {
     (async () => {

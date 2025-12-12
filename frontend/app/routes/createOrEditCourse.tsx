@@ -1,5 +1,5 @@
 import {useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
 import Typography from "@mui/material/Typography";
 import {AccordionDetails, AccordionSummary, Box, Button, MenuItem, TextField} from "@mui/material";
@@ -7,12 +7,15 @@ import API_CONFIG from "~/apiConfig";
 import Divider from "@mui/material/Divider";
 import Accordion from '@mui/material/Accordion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CustomizedSnackbars from "~/components/snackbar"
 
 /**
  * @author Paul Geisthardt
  *
  * Editing/Creating courses and assigning students
  *
+ * @Edited by Noah Bach
+ *    Form Validation
  */
 
 type Role = "STUDENT" | "TEACHER" | "ADMIN";
@@ -174,6 +177,13 @@ export default function CreateOrEditCourse() {
     const [assignedStudentSearchQuery, setAssignedStudentSearchQuery] = useState('')
     const [availableTeacherSearchQuery, setAvailableTeacherSearchQuery] = useState('')
     const [availableStudentSearchQuery, setAvailableStudentSearchQuery] = useState('')
+    const [nameError, setNameError] = useState("")
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
 
     const [retryError, setRetryError] = useState<RetryError>({
         message: "",
@@ -268,6 +278,9 @@ export default function CreateOrEditCourse() {
             });
 
             if (!res.ok) {
+                setSnackbarMessage(`Fehler beim Laden vom Kurs: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 setRetryError({
                     message: "Failed to Load Course",
                     retryMethod: fetchCourse
@@ -279,6 +292,9 @@ export default function CreateOrEditCourse() {
             setCourse(course);
             setOriginalCourse(JSON.parse(JSON.stringify(course)));
         } catch (err: any) {
+            setSnackbarMessage(`Fehler beim Laden vom Kurs: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
             setRetryError({
                 message: `Failed to Load Course: ${err.message}`,
                 retryMethod: fetchCourse
@@ -297,6 +313,9 @@ export default function CreateOrEditCourse() {
 
             if (!res.ok) {
                 console.error(`Failed to fetch teachers: ${res.status}`);
+                setSnackbarMessage(`Fehler beim Laden vom Lehrern: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 setTeacherError(`Failed to fetch teachers: ${res.status}`)
                 return
             }
@@ -304,6 +323,9 @@ export default function CreateOrEditCourse() {
             const data: Teacher[] = await res.json();
             setAllTeachers(data);
         } catch (err: any) {
+            setSnackbarMessage(`Fehler beim Laden vom Lehrern: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
             console.error(`Error fetching teachers: ${err.message}`);
             setTeacherError(`Error fetching teachers: ${err.message}`)
         } finally {
@@ -320,6 +342,9 @@ export default function CreateOrEditCourse() {
 
             if (!res.ok) {
                 console.error(`Failed to fetch students: ${res.status}`);
+                setSnackbarMessage(`Fehler beim Laden vom Schülern: ${res.status}`);
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
                 setStudentError(`Failed to fetch students: ${res.status}`)
                 return
             }
@@ -328,6 +353,9 @@ export default function CreateOrEditCourse() {
             setAvailableStudents(data);
         } catch (err: any) {
             console.error(`Error fetching students: ${err.message}`);
+            setSnackbarMessage(`Fehler beim Laden vom Schülern: ${err.message}`);
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
             setStudentError(`Error fetching students: ${err.message}`)
         } finally {
             setLoadingStudents(false)
@@ -458,6 +486,11 @@ export default function CreateOrEditCourse() {
     const handleCreateCourse = async () => {
         if (isEdit || !courseCreateDetails.courseName.trim()) return;
 
+        if (courseCreateDetails.courseName.length > 100){
+            setNameError("Name darf nicht länger als 100 sein")
+            return
+        }
+
         setCreatingCourse(true)
         try {
             const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/full`, {
@@ -537,6 +570,9 @@ export default function CreateOrEditCourse() {
 
     const resetChanges = () => {
         setCourse(originalCourse);
+        setOriginalCourse(course);
+        setSnackbarMessage(`Zurückgesetzt`);
+        setSnackbarSeverity("success");
     }
 
     if (loadingCourse) return <>Loading ...</>
@@ -620,6 +656,8 @@ export default function CreateOrEditCourse() {
                     onChange={e => handleCourseNameChange(e.target.value)}
                     disabled={creatingCourse}
                     sx={{flex: "1 1 250px"}}
+                    helperText={nameError}
+                    error={Boolean(nameError)}
                 />
 
                 <TextField
@@ -978,6 +1016,12 @@ export default function CreateOrEditCourse() {
                     </Accordion>
                 </Box>
             </Box>
+            <CustomizedSnackbars
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+            />
         </Box>
     )
 }

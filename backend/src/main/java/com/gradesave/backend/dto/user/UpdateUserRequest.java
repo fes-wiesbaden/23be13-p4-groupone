@@ -1,10 +1,15 @@
 package com.gradesave.backend.dto.user;
 
 import com.gradesave.backend.models.Role;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-public record UpdateUserRequest(@jakarta.validation.constraints.NotBlank String username,
-                                @jakarta.validation.constraints.NotBlank String firstName,
-                                @jakarta.validation.constraints.NotBlank String lastName,
-                                @jakarta.validation.constraints.NotNull Role role, String password) {
+public record UpdateUserRequest(@NotBlank String username,
+                                @NotBlank String firstName,
+                                @NotBlank String lastName,
+                                @NotNull Role role,
+                                @Size(min = 8, max = 50, message = "Passwort muss zwischen 8 und 50 Zeichen lang sein")
+                                String password) {
 }
 

@@ -1,11 +1,14 @@
 package com.gradesave.backend.services;
 
-import com.gradesave.backend.models.Question;
-import com.gradesave.backend.models.Subject;
+import com.gradesave.backend.dto.project.QuestionnaireActivityStatus;
+import com.gradesave.backend.models.*;
+import com.gradesave.backend.repositories.ProjectQuestionRepository;
 import com.gradesave.backend.repositories.QuestionRepository;
 import com.gradesave.backend.repositories.SubjectRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -27,10 +30,14 @@ import java.util.stream.Collectors;
 public class QuestionService implements CrudService<Question, UUID>{
     private final SubjectRepository subjectRepository;
     private final QuestionRepository questionRepository;
+    private final ProjectQuestionRepository projectQuestionRepository;
+    private final ProjectService projectService;
 
-    public QuestionService(SubjectRepository subjectRepository, QuestionRepository repository) {
+    public QuestionService(SubjectRepository subjectRepository, QuestionRepository repository, ProjectQuestionRepository projectQuestionRepository, ProjectService projectService) {
         this.subjectRepository = subjectRepository;
         this.questionRepository = repository;
+        this.projectQuestionRepository = projectQuestionRepository;
+        this.projectService = projectService;
     }
 
     @Transactional
@@ -48,12 +55,28 @@ public class QuestionService implements CrudService<Question, UUID>{
 
         question.setSubjects(subjects);
 
-        return questionRepository.save(question);
+        Question created = questionRepository.save(question);
+
+        for (Subject subject : subjects) {
+            for (ProjectSubject projectSubject : subject.getProjectSubjects()) {
+                Project project = projectSubject.getProject();
+                if (project.getActivityStatus() != QuestionnaireActivityStatus.EDITING) continue;
+
+                ProjectQuestion projectQuestion = new ProjectQuestion();
+                projectQuestion.setProject(project);
+                projectQuestion.setQuestion(question);
+                project.getProjectQuestions().add(projectQuestion);
+
+                projectService.update(project.getId(), project);
+            }
+        }
+
+        return created;
     }
 
     @Override
-    public Optional<Question> getById(UUID Id) {
-        return Optional.empty();
+    public Optional<Question> getById(UUID id) {
+        return questionRepository.findById(id);
     }
 
     @Override
@@ -75,7 +98,34 @@ public class QuestionService implements CrudService<Question, UUID>{
 
     @Override
     public void deleteById(UUID id) {
-        questionRepository.deleteById(id);
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+
+        boolean linkedToLockedProject = question.getProjectQuestions()
+                .stream()
+                .map(ProjectQuestion::getProject)
+                .anyMatch(project -> project.getActivityStatus() != QuestionnaireActivityStatus.EDITING);
+
+        if (linkedToLockedProject) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Question cannot be deleted because it's used in an active project"
+            );
+        }
+
+        Set<ProjectQuestion> projectQuestionsCopy = new HashSet<>(question.getProjectQuestions());
+
+        for (ProjectQuestion projectQuestion : projectQuestionsCopy) {
+            Project project = projectQuestion.getProject();
+            if (project.getActivityStatus() != QuestionnaireActivityStatus.EDITING)
+                continue;
+
+            project.getProjectQuestions().remove(projectQuestion);
+            question.getProjectQuestions().remove(projectQuestion);
+            projectQuestionRepository.delete(projectQuestion);
+        }
+
+        questionRepository.delete(question);
     }
 
     @Override

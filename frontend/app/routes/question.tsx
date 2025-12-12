@@ -16,8 +16,10 @@ import {
   MenuItem,
 } from "@mui/material";
 import API_CONFIG from "../apiConfig";
+import {QuestionType} from "~/components/fragebogen";
 import useAlertDialog from "~/components/youSurePopup";
-import CustomizedSnackbars from "../components/snackbar";
+import CustomizedSnackbars from "~/components/snackbar";
+import Box from "@mui/material/Box";
 
 /**
  * @author: Michael Holl
@@ -33,17 +35,19 @@ import CustomizedSnackbars from "../components/snackbar";
  * @Edited by Noah Bach
  * <p>
  *    Added dialaog integration
+ *    Form Validation
  * </p>
  **/
+
 interface Subject {
   id: string;
   name: string;
 }
 
-interface Question {
+export interface Question {
   id: string;
   text: string;
-  type: "TEXT" | "GRADE";
+  type: QuestionType;
   subjects: Subject[];
 }
 
@@ -78,6 +82,7 @@ export default function Question() {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const handleSnackbarClose = () => { setSnackbarOpen(false);};
   const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Frage wirklich löschen?");
+  const [questionTextError, setQuestionTextError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,20 +113,22 @@ export default function Question() {
   }, []);
 
   const handleAddClick = () => setOpenDialog(true);
-  
+
   const handleCloseDialog = () => {
+    setQuestionTextError("");
     setSelectedSubjects([]);
     setOpenDialog(false);
   };
   
-    const handleCloseEditDialog = () => {
+  const handleCloseEditDialog = () => {
+    setQuestionTextError("");
     setSelectedSubjects([]);
     setOpenEditDialog(false);
   };
-  
+
   const handleEditClick = (row: QuestionRow) => {
     const question = row.original;
-  
+
     setEditQuestion(question);
     setSelectedSubjects(question.subjects);
     setOpenEditDialog(true);
@@ -160,6 +167,11 @@ export default function Question() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const formJson = Object.fromEntries((formData as any).entries());
+
+    if (formJson.question.length > 1000){
+      setQuestionTextError("Frage darf nicht länger als 1000 sein");
+      return
+    }
 
     const payload = {
       text: formJson.question,
@@ -200,6 +212,11 @@ export default function Question() {
     const formData = new FormData(event.currentTarget);
     const formJson = Object.fromEntries((formData as any).entries());
 
+    if (formJson.question.length > 1000){
+      setQuestionTextError("Frage darf nicht länger als 1000 sein");
+      return
+    }
+
     const payload = {
       text: formJson.question,
       type: formJson.type.toUpperCase(),
@@ -237,8 +254,10 @@ export default function Question() {
   };
 
   return (
-    <>
+    <Box p={2}>
       <DataTableWithAdd<QuestionRow>
+        title="Fragen"
+        addButtonLabel="Neue Frage"
         columns={columns}
         rows={allQuestions.map<QuestionRow>((q) => ({
           id: q.id,
@@ -271,6 +290,8 @@ export default function Question() {
               type="text"
               fullWidth
               multiline
+              helperText={questionTextError}
+              error={Boolean(questionTextError)}
             />
 
             <Autocomplete
@@ -280,7 +301,7 @@ export default function Question() {
               onChange={(event, newValue) => setSelectedSubjects(newValue)}
               getOptionLabel={(option) => option.name}
               renderInput={(params) => (
-                <TextField {...params} label="Fächer" variant="standard" />
+                <TextField {...params} label="Bildungsbereiche" variant="standard" />
               )}
             />
 
@@ -328,9 +349,11 @@ export default function Question() {
               fullWidth
               multiline
               defaultValue={editQuestion?.text || ""}
+              helperText={questionTextError}
+              error={Boolean(questionTextError)}
             />
             {/* blendet die Question ID aus */}
-            <input 
+            <input
               id="id"
               name="id"
               defaultValue={editQuestion?.id || ""}
@@ -343,7 +366,7 @@ export default function Question() {
               onChange={(event, newValue) => setSelectedSubjects(newValue)}
               getOptionLabel={(option) => option.name}
               renderInput={(params) => (
-                <TextField {...params} label="Fächer" variant="standard" />
+                <TextField {...params} label="Bildungsbereiche" variant="standard" />
               )}
             />
 
@@ -355,8 +378,8 @@ export default function Question() {
                 name="type"
                 defaultValue={editQuestion?.type || "TEXT"}
               >
-                <MenuItem value="TEXT">Text</MenuItem>
-                <MenuItem value="GRADE">Note</MenuItem>
+                <MenuItem value={QuestionType.TEXT}>Text</MenuItem>
+                <MenuItem value={QuestionType.GRADE}>Note</MenuItem>
               </Select>
             </FormControl>
           </form>
@@ -376,6 +399,6 @@ export default function Question() {
           onClose={handleSnackbarClose}
       />
       {ConfirmDialog}
-    </>
+    </Box>
   );
 }
