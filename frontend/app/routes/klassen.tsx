@@ -1,13 +1,13 @@
 import React, {useEffect, useState} from "react";
 import type {Route} from "./+types/home";
-import {deleteCourse} from "~/adminfunctions";
+// import {deleteCourse} from "~/adminfunctions";
 import DataTableWithAdd, {type DataRow,} from "../components/dataTableWithAddButton";
 import API_CONFIG from "../apiConfig";
-import {useNavigate} from "react-router";
-import type {CourseDto} from "~/types/models";
+import { useNavigate } from "react-router";
+import CustomizedSnackbars from "../components/snackbar";
+import { useLocation } from "react-router";
 import useAlertDialog from "~/components/youSurePopup";
-import CustomizedSnackbars from "~/components/snackbar"
-import Box from "@mui/material/Box";
+import type { CourseDto } from "~/types/models";
 
 /**
  * @author Noah Bach
@@ -50,91 +50,118 @@ const columns = [
 ];
 
 export default function Klassen() {
-    const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
-    const navigate = useNavigate();
+  const [allCourses, setAllCourses] = useState<CourseRow[]>([]);
+  const navigate = useNavigate();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const showSnackbar = (message: string, severity: 'success' | 'error') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.snackbarMessage) {
+      setSnackbarMessage(location.state.snackbarMessage);
+      setSnackbarSeverity(location.state.snackbarSeverity || "success");
+      setSnackbarOpen(true);
+    }
+  }, [location.state]);
 
     const [confirm, ConfirmDialog] = useAlertDialog("Wirklich löschen?", "Wollen Sie die Klasse wirklich löschen?")
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
     const handleSnackbarClose = () => {
         setSnackbarOpen(false);
     };
 
-    async function handleEditClick(row: CourseRow) {
-        navigate(`/klassen/${row.id}`);
+  async function handleEditClick(row: CourseRow) {
+    navigate(`/klassen/${row.id}`);
+  }
+
+  async function handleAddClick() {
+    navigate("/klassen/new");
+  }
+
+  async function handleDeleteClick(id: string) {
+    if (!await confirm()) return;
+  
+    try {
+      await deleteCourse(id, showSnackbar);
+      await fetchData();
+    } catch (error) {
+      console.error(error);
     }
+  }
 
-    async function handleAddClick() {
-        navigate("/klassen/new");
+
+
+  const fetchData = async () => {
+    try {
+      const resCourses = await fetch(`${API_CONFIG.BASE_URL}/api/course`, {
+        method: "GET",
+        credentials: "include",
+      });
+      const coursesData = await resCourses.json();
+
+      const mapped: CourseRow[] = coursesData.map((c: CourseDto) => {
+        return {
+          id: c.id,
+          courseName: c.courseName,
+          teacherId: c.classTeacher?.id ?? undefined,
+          teacherName: c.classTeacher
+            ? `${c.classTeacher.firstName} ${c.classTeacher.lastName}`
+            : "",
+        };
+      });
+      setAllCourses(mapped);
+    } catch (e) {
+      console.error("Error fetching courses: ", e);
     }
+  }
 
-    async function handleDeleteClick(id: string) {
-        if (!await confirm())
-            return;
+  const deleteCourse = async function(id: string, showSnackbar: (message: string, severity: "success" | "error") => void) {
+    try {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/course/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
-        if (!await deleteCourse(id)) {
-            setSnackbarMessage(`Fehler beim Löschen vom Kurs`);
-            setSnackbarSeverity("error");
-            setSnackbarOpen(true);
-            return
-        }
-        await fetchData();
+      if (!res.ok) {
+        showSnackbar(`Fehler beim Löschen der Klasse! ${res.status}`, "error");
+        return;
+      }
+
+      showSnackbar("Die Klasse wurde erfolgreich gelöscht!", "success");
+    } catch (e) {
+      console.error("Request failed: ", e);
+      showSnackbar("Fehler beim Löschen der Klasse!", "error");
     }
+  }
 
-    const fetchData = async () => {
-        try {
-            const resCourses = await fetch(`${API_CONFIG.BASE_URL}/api/course`, {
-                method: "GET",
-                credentials: "include",
-            });
-            if (!resCourses.ok) {
-                setSnackbarMessage(`Fehler beim Laden vom Kursen: ${resCourses.status}`);
-                setSnackbarSeverity("error");
-                setSnackbarOpen(true);
-                return;
-            }
-            const coursesData: CourseBareDto[] = await resCourses.json();
+  useEffect(() => {
+    (async () => {
+      await fetchData();
+    })();
+  }, []);
 
-            const mapped: CourseRow[] = coursesData.map((c: CourseBareDto) => {
-                return {
-                    id: c.id,
-                    courseName: c.courseName,
-                    teacherName: c.classTeacherName
-                };
-            });
-            setAllCourses(mapped);
-        } catch (e: any) {
-            console.error("Error fetching courses: ", e);
-            setSnackbarMessage(`Fehler beim Laden vom Kursen: ${e.message}`);
-            setSnackbarSeverity("error");
-            setSnackbarOpen(true);
-        }
-    };
-
-    useEffect(() => {
-        (async () => {
-            await fetchData();
-        })();
-    }, []);
-    return (
-        <Box p={2}>
-            <DataTableWithAdd<CourseRow>
-                title="Klassen"
-                addButtonLabel="Neue Klasse"
-                columns={columns}
-                rows={allCourses}
-                onAddClick={handleAddClick}
-                onEditClick={handleEditClick}
-                onDeleteClick={handleDeleteClick}
-            />
-            {ConfirmDialog}
-            <CustomizedSnackbars
-                open={snackbarOpen}
-                message={snackbarMessage}
-                severity={snackbarSeverity}
-                onClose={handleSnackbarClose}
-            />
-        </Box>
-    );
+  return (
+    <>
+      <DataTableWithAdd<CourseRow>
+        columns={columns}
+        rows={allCourses}
+        onAddClick={handleAddClick}
+        onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteClick}
+      />
+      {ConfirmDialog}
+      <CustomizedSnackbars
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
+    </>
+  );
 }

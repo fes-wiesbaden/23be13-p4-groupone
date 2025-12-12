@@ -502,12 +502,22 @@ export default function CreateOrEditCourse() {
 
             if (!res.ok) {
                 setCreationError(`Fehler beim erstellen vom Kurs: ${res.status}`)
+                navigate("/klassen", {
+                    state: { snackbarMessage: `Fehler beim Erstellen der Klasse: ${res.status}`, snackbarSeverity: "error" }
+                });
                 return
             }
-
-            navigate("/klassen")
+            navigate("/klassen", {
+                state: { 
+                    snackbarMessage: `Die Klasse "${courseCreateDetails.courseName}" wurde erfolgreich erstellt!`, 
+                    snackbarSeverity: "success" 
+                }
+            });
         } catch (err: any) {
             setCreationError(`Fehler beim erstellen vom Kurs: ${err.message}`)
+            navigate("/klassen", {
+                state: { snackbarMessage: `Fehler beim Erstellen: ${err.message}`, snackbarSeverity: "error" }
+            });
         } finally {
             setCreatingCourse(false)
         }
@@ -535,21 +545,24 @@ export default function CreateOrEditCourse() {
 
             if (!res.ok) {
                 setSaveError(`Fehler beim Speicher: ${res.status}`)
-                setSnackbarMessage(`Fehler beim Speichern: ${res.status}`);
-                setSnackbarSeverity("error");
-                setSnackbarOpen(true);
+                navigate("/klassen", {
+                    state: { snackbarMessage: `Fehler beim Bearbeiten: ${res.status}`, snackbarSeverity: "error" }
+                });
                 return
             }
 
             setOriginalCourse(course);
-            setSnackbarMessage(`Erfolgreich gespeichert`);
-            setSnackbarSeverity("success");
-            setSnackbarOpen(true);
+            navigate("/klassen", {
+                state: { 
+                    snackbarMessage: `Die Klasse "${course?.courseName}" wurde erfolgreich bearbeitet!`, 
+                    snackbarSeverity: "success" 
+                }
+            });
         } catch (err: any) {
             setSaveError(`Fehler beim Speichern: ${err.message}`)
-            setSnackbarMessage(`Fehler beim Speichern: ${err.message}`);
-            setSnackbarSeverity("error");
-            setSnackbarOpen(true)
+            navigate("/klassen", {
+                state: { snackbarMessage: `Fehler beim Bearbeiten: ${err.message}`, snackbarSeverity: "error" }
+            });
         } finally {
             setSaving(false);
         }
