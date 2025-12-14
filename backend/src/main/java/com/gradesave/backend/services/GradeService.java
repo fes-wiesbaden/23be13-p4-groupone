@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.gradesave.backend.dto.grade.*;
@@ -196,8 +197,40 @@ public class GradeService implements CrudService<Grade, UUID>{
 
             User currentUser = userService.getCurrentUser().orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "not logged in"));
 
+            User student = userService.getById(r.studentId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "not logged in"));
+
             r.grades().forEach(g -> {
                 // Try to find an existing grade for this student and performance
+
+                if (g.performanceId() == null) {
+
+                    Optional<ProjectSubject> projectSubjectOpt = projectSubjectRepository.findById(g.projectSubjectId());
+                    if (projectSubjectOpt.isEmpty()) {
+                        return;
+                    }
+
+                    ProjectSubject projectSubject = projectSubjectOpt.get();
+
+                    List<Grade> grades = gradeRepository.findByProjectId(projectSubject.getProject().getId());
+
+                    Optional<Grade> myGradeOpt = grades.stream().filter(mg -> mg.getProjectSubject().getId().equals(g.projectSubjectId())).findFirst();
+
+                    Grade grade;
+                    if (myGradeOpt.isEmpty()) {
+                        grade = new Grade();
+                        grade.setProjectSubject(projectSubject);
+                        grade.setStudent(student);
+                    } else {
+                        grade = myGradeOpt.get();
+                    }
+                    grade.setGrade(g.grade());
+                    gradeRepository.save(grade);
+
+                    return;
+                }
+
+
+
                 Optional<Performance> performanceOpt = performanceRepository.findById(g.performanceId());
 
                 if (performanceOpt.isEmpty())
@@ -216,12 +249,10 @@ public class GradeService implements CrudService<Grade, UUID>{
                 // If no existing grade is found, create a new one
                 if (grade == null) {
                     grade = new Grade();
-                    if (g.performanceId() != null) {
-                        grade.setPerformance(
-                                performanceRepository.findById(g.performanceId())
-                                        .orElseThrow(() -> new RuntimeException("performance id not found"))
-                        );
-                    }
+                    grade.setPerformance(
+                            performanceRepository.findById(g.performanceId())
+                                    .orElseThrow(() -> new RuntimeException("performance id not found"))
+                    );
                     if (g.projectSubjectId() != null) {
                         grade.setProjectSubject(projectSubjectRepository.findById(g.projectSubjectId())
                                 .orElseThrow(() -> new RuntimeException("project subject id not found"))

@@ -506,7 +506,7 @@ export default function Fragebogen({
                                     {sorted.gradeQuestions.map(q => {
                                         const answersFromStudent = (q.answer || []).filter(a => a.authorId === selectedStudentFilter);
                                         return (
-                                            <Box key={q.id} mb={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+                                            <Box key={q.id} mb={2} p={2} borderRadius={1}>
                                                 <Typography variant="body2" fontWeight="bold" gutterBottom>
                                                     {q.question}
                                                 </Typography>
@@ -538,7 +538,7 @@ export default function Fragebogen({
                                     {sorted.textQuestions.map(q => {
                                         const selfAnswer = (q.answer || []).find(a => a.authorId === selectedStudentFilter && a.studentId === selectedStudentFilter);
                                         return (
-                                            <Box key={q.id} mb={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+                                            <Box key={q.id} mb={2} p={2} borderRadius={1}>
                                                 <Typography variant="body2" fontWeight="bold" gutterBottom>
                                                     {q.question}
                                                 </Typography>
@@ -585,7 +585,6 @@ export default function Fragebogen({
                                                             <TableCell
                                                                 sx={{
                                                                     fontWeight: 'bold',
-                                                                    bgcolor: 'grey.100'
                                                                 }}
                                                             >
                                                                 Von ↓ / Für →
@@ -595,7 +594,6 @@ export default function Fragebogen({
                                                                     key={s.studentId}
                                                                     align="center"
                                                                     sx={{
-                                                                        bgcolor: 'grey.100',
                                                                         fontSize: '0.85em'
                                                                     }}
                                                                 >
@@ -610,7 +608,6 @@ export default function Fragebogen({
                                                                 <TableCell
                                                                     sx={{
                                                                         fontWeight: 'bold',
-                                                                        bgcolor: 'grey.50'
                                                                     }}
                                                                 >
                                                                     {author.studentName}
@@ -779,7 +776,7 @@ export default function Fragebogen({
                                                 a.studentId === student.studentId
                                             );
                                             return (
-                                                <Box key={student.studentId} mb={2} p={2} bgcolor="#f5f5f5"
+                                                <Box key={student.studentId} mb={2} p={2}
                                                      borderRadius={1}>
                                                     <Typography variant="body2" fontWeight="bold">
                                                         {student.studentName}:
@@ -826,7 +823,6 @@ export default function Fragebogen({
                                             sx={{
                                                 fontWeight: 'bold',
                                                 width: QUESTION_COL_WIDTH,
-                                                bgcolor: 'grey.100'
                                             }}
                                         >
                                             Frage
@@ -837,7 +833,6 @@ export default function Fragebogen({
                                                 align="center"
                                                 sx={{
                                                     width: STUDENT_COL_WIDTH,
-                                                    bgcolor: 'grey.100'
                                                 }}
                                             >
                                                 {s.studentName}

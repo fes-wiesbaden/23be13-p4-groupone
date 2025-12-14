@@ -474,7 +474,7 @@ export default function Questionbow() {
 
                         {viewMode === ViewType.STUDENT_ANSWERS && selectedGroup && !loadingAnswers && (
 
-                            <Box mt={2} p={2} bgcolor="#f5f5f5" borderRadius={1}>
+                            <Box mt={2} p={2} borderRadius={1}>
                                 <Typography variant="subtitle2" gutterBottom>
                                     Einreich Status
                                 </Typography>

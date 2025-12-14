@@ -1,5 +1,7 @@
 package com.gradesave.backend.dto.grade;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.UUID;
 
 /**
