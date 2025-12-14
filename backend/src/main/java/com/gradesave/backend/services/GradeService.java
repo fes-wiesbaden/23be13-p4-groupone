@@ -211,17 +211,15 @@ public class GradeService implements CrudService<Grade, UUID>{
 
                     ProjectSubject projectSubject = projectSubjectOpt.get();
 
-                    List<Grade> grades = gradeRepository.findByProjectId(projectSubject.getProject().getId());
-
-                    Optional<Grade> myGradeOpt = grades.stream().filter(mg -> mg.getProjectSubject().getId().equals(g.projectSubjectId())).findFirst();
+                    Grade myGrade = gradeRepository.findByStudentIdAndPerformanceIdOrProjectSubjectId(student.getId(), UUID.randomUUID(), projectSubject.getId());
 
                     Grade grade;
-                    if (myGradeOpt.isEmpty()) {
+                    if (myGrade == null) {
                         grade = new Grade();
                         grade.setProjectSubject(projectSubject);
                         grade.setStudent(student);
                     } else {
-                        grade = myGradeOpt.get();
+                        grade = myGrade;
                     }
                     grade.setGrade(g.grade());
                     gradeRepository.save(grade);
